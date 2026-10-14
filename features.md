@@ -1,6 +1,6 @@
 # Kavi'ka OS: features v2
 
-Version 0.2 | 14 October 2026 | Proposed specification, not implemented.
+Version 0.3 | 14 October 2026 | Proposed specification, not implemented.
 
 This expands the supplied brief into testable requirements without replacing its original goals. Technical choices and numerical targets below are proposals, not measured results or additional user commitments.
 
@@ -16,18 +16,28 @@ The original brief describes the intended experience:
 
 These statements remain the product goals. “Light” and “most programs” are aspirations to validate, not compatibility or performance guarantees.
 
+### User clarification: full Windows, including Comet
+
+> windows should have everything, like comet. remember, everything.
+
+The Windows workspace must be a full, general-purpose Windows installation, not a curated app launcher, stripped-down image, browser-only environment, or Wine substitute. Preserve the normal desktop, Start menu, File Explorer, Settings, Windows Update, security components, and app installation paths available in the selected Windows edition, including Microsoft Store where supplied.
+
+The user must be able to install and use applications of their choice, with Comet explicitly required. A compatibility test list is evidence coverage, never an allowlist limiting what may be installed; “everything” does not mean every program is preinstalled or that the current laptop's files and apps have already been migrated.
+
+Full Windows functionality is the product requirement; universal VM compatibility is not an established technical fact. If an important workload fails because of the proposed VM architecture, investigate an architecture change and discuss the trade-off rather than silently narrowing the requirement.
+
 ## Goals
 
 - **Natural switching:** a four-finger horizontal touchpad swipe or configurable shortcut moves between Linux and Windows, without restarting either environment.
 - **Continuity:** applications remain open when their workspace is hidden; returning does not relaunch them.
 - **Simple file access:** one explicitly shared folder is accessible from both environments with matching file contents.
 - **Responsive Linux:** Linux remains usable with Windows active under an agreed, measured workload.
-- **Useful Windows compatibility:** each application on a user-approved must-have list passes a real workflow test before it is labelled supported.
+- **Full Windows capability:** preserve normal Windows features and user-chosen app installation, with Comet required; maintain a growing test matrix without imposing an app allowlist.
 
 ## Non-goals
 
 - **A new kernel:** the initial product is an integration layer on an existing Linux distribution.
-- **Universal compatibility:** GPU-heavy programs, anti-cheat-dependent games, specialised drivers, DRM, and hardware peripherals need individual validation; none are promised.
+- **Unverified blanket guarantees:** GPU-heavy programs, anti-cheat-dependent games, specialised drivers, DRM, and peripherals need validation. These categories are not automatically excluded from the user's goal; failures may require revisiting the architecture.
 - **Zero overhead:** a hidden Windows VM still runs unless explicitly stopped or saved.
 - **GPU passthrough in the laptop MVP:** no suitable additional GPU has been verified.
 - **An unattended migration:** no disk conversion, repartitioning, OEM Windows-image reuse, activation bypass, or silent destructive setup.
@@ -46,7 +56,7 @@ These statements remain the product goals. “Light” and “most programs” a
 
 | ID | Requirement | Acceptance criterion | Dependency |
 |---|---|---|---|
-| F01 | Linux is the host; Windows is a real guest OS | Given a running guest, when either workspace is selected, then its applications remain available without a host reboot. | M0, M1 |
+| F01 | Full general-purpose Windows workspace; Linux host is the proposed implementation | Given a running guest, when either workspace is selected, then its applications remain available without a host reboot. Windows retains its desktop, Explorer, Settings, Update, security components, and edition-provided installation paths; no Kavi'ka app allowlist or stripped-down replacement is imposed. | M0, M1 |
 | F02 | Exactly two named workspaces for the MVP | Given the validated desktop configuration, when a four-finger horizontal swipe completes, then the adjacent Linux or Windows workspace is selected once, including while the viewer is full-screen. Test both directions. | M2; actual touchpad validation |
 | F03 | Host-owned toggle and escape | Given focus in the Windows viewer, including a captured-input state, when the configured toggle or separate escape action is used, then Linux receives control without terminating Windows. If the viewer cannot honour this, that backend fails the gate. | M2 |
 | F04 | Dedicated shared folder | Given an authenticated share connection, when a file is created in `~/Kavika/Shared` or its Windows mapping, then the other side can open the completed file with identical SHA-256 content. Test both directions. | M3 |
@@ -54,6 +64,7 @@ These statements remain the product goals. “Light” and “most programs” a
 | F06 | Fail-safe return to Linux | Given the viewer fails or the guest is unreachable, when the user switches back, then Linux remains usable and a reconnect action is offered without silently rebooting or recreating the guest. | M2, M4 |
 | F07 | Scoped access | Given the shared folder is enabled, attempts to access unshared home-directory paths or expose its service to the LAN are denied. Clipboard and USB redirection are off until separately enabled. | M3, M4 |
 | F08 | Reversible setup | Given a backed-up host configuration, when integration is removed, then prior desktop settings are restored and user files and guest disks are retained unless separately approved for deletion. | M5 |
+| F15 | Comet works as a native Windows application | Given the selected Windows build and backend, when Comet is installed from its official distribution, then launch, user-driven sign-in, browsing, assistant interaction, downloads to the shared folder, available update flow, and retained tabs/session after workspace switching are tested successfully. Report failures explicitly; do not replace it with a different browser without approval. | M1, M2, M3, M5; user performs account sign-in |
 
 ### Should have: P1
 
@@ -81,7 +92,7 @@ All values are provisional acceptance targets. Record the baseline and raw test 
 | Focus correctness | 100 of 100 switch cycles route the next click and typed test string to the intended environment; zero stuck modifiers | Controlled dummy text only; test with full-screen guest apps as well as the desktop. |
 | File correctness | All 20 fixture transfers in each direction match SHA-256; overwrite and interrupted-transfer cases have no silent corruption | Include Unicode names, spaces, empty files, and a 1 GiB file; use copies, not move/delete tests. |
 | Responsiveness | No host/guest crash or OOM kill during a 30-minute agreed mixed workload | Record RAM, memory pressure, swap, CPU, temperatures where available, and Linux interaction delays versus VM-off baseline. |
-| App compatibility | Every agreed must-have workflow passes, or the release is explicitly scoped down by the user | Record exact app/version, display backend, scenario, and result; no application list has been approved yet. |
+| App compatibility | Full-Windows baseline and Comet workflows pass, alongside additional user-required workflows | Record exact app/version, display backend, scenario, and result. Additional test coverage is not an installation allowlist; unresolved failures trigger architecture review, not silent scope reduction. |
 | Recovery | 10 viewer reconnects and 10 suspend/resume cycles preserve the test document and restore access | Save fixture edits before suspend; investigate unsaved-session continuity separately. |
 
 ## Open questions
@@ -89,7 +100,7 @@ All values are provisional acceptance targets. Record the baseline and raw test 
 | Question | Owner | Blocking |
 |---|---|---|
 | Which Windows edition and valid VM licensing route will be used? | User | Blocks guest provisioning and RDP selection, not documentation. |
-| Which Windows programs and workflows are essential? | User | Blocks compatibility sign-off. |
+| Which additional workloads should be tested first beyond the full Windows baseline and Comet? | User | Guides test coverage; does not restrict app installation. Comet is already required. |
 | Can an external test SSD or another reversible Linux environment be used? | User | Blocks laptop installation; no disk changes are authorised by this plan. |
 | Does the actual touchpad expose reliable four-finger gestures under Linux? | Implementer | Blocks F02. Touchscreen “10 touch points” in the screenshot does not answer this. |
 | Which supported Linux/KDE release and viewer build pass the hardware gates? | Implementer | Blocks a pinned installation guide. |
@@ -100,3 +111,5 @@ All values are provisional acceptance targets. Record the baseline and raw test 
 KDE supports named virtual desktops and switching animations, making it a candidate rather than a reason to build a compositor from scratch ([KDE documentation](https://docs.kde.org/stable_kf6/en/kwin/kcontrol/desktop/index.html)). A KDE community report describes four-finger horizontal switching, but also limitations on remapping; verify the selected release and touchpad instead of treating that report as a universal API guarantee ([KDE discussion](https://discuss.kde.org/t/plasma-6-7-wayland-how-can-i-remap-three-finger-touchpad-gestures-independently-of-four-finger-gestures/48621)).
 
 Looking Glass documents a requirement for two usable GPU devices, including some integrated/discrete or virtual-GPU combinations; the supplied screenshot does not establish such a configuration ([Looking Glass requirements](https://looking-glass.io/docs/B7/requirements/)). It is therefore deferred from this laptop's baseline.
+
+Comet's published requirements include 64-bit Windows 10/11, 4 GB minimum RAM and 8 GB recommended; those OS requirements do not certify the proposed VM/display configuration ([Comet operating system requirements](https://www.perplexity.ai/help-center/comet/en/articles/11734730-operating-system-requirements)). Test it inside the guest with Linux concurrently active before claiming it works in Kavi'ka OS.

@@ -5,14 +5,17 @@ This repository captures the concept and a proposed technical path. It contains 
 ## Current state
 
 - **User goal:** preserve Linux and Windows workspaces, switch with a four-finger swipe or keybind, and transfer files easily.
+- **Explicit clarification:** Windows should have “everything,” including Comet. Preserve a full general-purpose Windows installation, not a stripped-down desktop, Wine substitute, or allowlisted app collection; Comet is now a P0 requirement (F15/T16).
 - **Target observations:** HP Envy x360 14-fa0xxx, Ryzen 7 8840HS/Radeon 780M, 16 GB RAM, and about 954 GB storage from the supplied screenshot.
 - **Recommended direction:** Linux/KDE host with a real Windows VM and a dedicated shared folder; validate the display backend before building the integration.
-- **Not user-approved decisions:** exact distro/version, guest Windows edition, software stack, memory allocation, application support list, and laptop installation route.
+- **Not user-approved decisions:** exact distro/version, guest Windows edition, software stack, memory allocation, additional test coverage, and laptop installation route. A test matrix must never restrict what the user may install.
 - **Safety boundary:** this planning request does not authorise repartitioning, firmware changes, OS replacement, or VM provisioning on the laptop.
 
 ## Next task
 
-Complete M0 in [the implementation plan](implementation-plan.md), tracked in [issue #1](https://github.com/kaavi-pixel/kavika-os/issues/1). Ask for the must-have Windows applications, Windows edition/licensing route, and whether a backed-up external SSD or another reversible test environment is available.
+Complete M0 in [the implementation plan](implementation-plan.md), tracked in [issue #1](https://github.com/kaavi-pixel/kavika-os/issues/1). Full Windows and Comet are already required; ask only for additional representative workloads, the Windows edition/licensing route, and whether a backed-up external SSD or another reversible test environment is available.
+
+The VM architecture remains provisional, not more important than full Windows capability. If it blocks an important workload, compare alternatives with the user rather than silently excluding that workload or promising universal compatibility.
 
 Test the touchpad rather than assuming touchscreen touch-point support implies a working four-finger gesture. Do not start packaging a custom distro, implementing GPU passthrough, or importing the existing physical Windows partition before the feasibility gate.
 

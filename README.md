@@ -2,6 +2,8 @@
 
 A Linux-first desktop experience with a real Windows workspace one four-finger swipe away. The goal is to keep both environments available and make moving files between them straightforward.
 
+The Windows side must be full, general-purpose Windows, including Comet and normal user-chosen app installation, not a restricted collection of supported apps. A test matrix measures compatibility; it must not become an app allowlist, and a VM limitation must be reported rather than silently redefined as out of scope.
+
 **Status: planning repository, not an installable OS.** No runtime, installer, VM image, or hardware test results are included. The architecture below is a proposal to validate on the target laptop.
 
 ## Project documents

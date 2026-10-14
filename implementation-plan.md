@@ -1,12 +1,16 @@
 # Kavi'ka OS: implementation plan
 
-Version 0.2 | 14 October 2026 | Proposed roadmap.
+Version 0.3 | 14 October 2026 | Proposed roadmap.
 
 Build a reversible integration prototype before packaging a custom distribution. This plan does not authorise installation, disk changes, or Windows licence purchases, and none of the milestones below has been completed.
 
 ## Architecture decision
 
 Use Linux as the host, KDE Plasma on Wayland as the candidate desktop, and QEMU/KVM with libvirt for a Windows 11 guest. Start with a supported Fedora KDE release as the candidate test environment, but pin the exact distribution, kernel, Plasma, QEMU, libvirt, viewer, guest build, and driver versions only after M0 validation.
+
+The user has clarified that Windows should have “everything,” explicitly including Comet. Use a normal, full Windows installation with its edition-provided desktop, settings, update/security services, Store where supplied, and installation paths intact; do not use a stripped image or app allowlist.
+
+Comet is a required native Windows workflow, not an optional example or a Wine workaround. If the proposed virtualised design cannot meet important Windows requirements, review alternate architecture with the user before implementation proceeds; neither a Windows-host alternative nor reduced compatibility is automatically approved.
 
 Use a full-screen `virt-viewer`/SPICE console as the first display candidate. SPICE documents guest agents, clipboard integration, dynamic sizing, and audio, but its general manual is not evidence that every feature works on the selected Windows 11 driver stack; treat those as explicit tests ([SPICE user manual](https://www.spice-space.org/spice-user-manual.html)).
 
@@ -34,13 +38,15 @@ The supplied screenshot reports Ryzen 7 8840HS/Radeon 780M, 16 GB installed RAM,
 Proposed first benchmark profile:
 
 - **Guest CPU:** 4 vCPUs; adjust after measuring concurrent host/guest use, not by dedicating all host resources.
-- **Guest memory:** fixed 6 GiB initially; account separately for QEMU, the host, filesystem cache, and integrated graphics. Test 8 GiB only if measured host headroom supports it.
+- **Guest memory:** fixed 6 GiB as an initial measurement point, not the accepted final budget; account separately for QEMU, the host, filesystem cache, and integrated graphics. Test 8 GiB if measured host headroom supports it, and reject the profile if full-Windows/Comet use is unsatisfactory.
 - **Guest storage:** a 128 GiB maximum sparse qcow2 disk on a backed-up filesystem; monitor actual host free space. Sparse capacity is not reserved free space.
 - **Guest firmware/security:** UEFI with appropriately enrolled Secure Boot keys and an emulated TPM 2.0; verify inside Windows, not just in XML.
 - **Guest display:** virtual display, no passthrough, conservative starting resolution of 1920 × 1080 if supported, followed by native panel/DPI tests.
 - **Networking:** private libvirt NAT network with outbound guest connectivity; explicitly restrict host services to the required guest interface/subnet. NAT alone is not a host-service firewall.
 
 Microsoft lists VM requirements including at least 4 GB RAM, 64 GB storage, two virtual processors, Secure Boot capability, and virtual TPM; these are installation minima, not a promise of good performance ([Windows 11 requirements](https://learn.microsoft.com/en-gb/windows/whats-new/windows-11-requirements)). Libvirt documents UEFI, Secure Boot-capable firmware, memory/vCPU configuration, and an emulated TPM backend using `swtpm`; capability flags alone do not prove Secure Boot is enabled in the guest ([libvirt domain format](https://libvirt.org/formatdomain.html)).
+
+Comet specifies 4 GB RAM minimum and 8 GB recommended; this is an environment requirement, not an instruction to add 8 GB to the Windows allocation ([Comet requirements](https://www.perplexity.ai/help-center/comet/en/articles/11734730-operating-system-requirements)). Benchmark Comet inside the guest with Linux active; the initial 6 GiB allocation is below that recommendation and must not be declared sufficient without evidence.
 
 ## Milestones and dependencies
 
@@ -69,7 +75,7 @@ M2 and M3 can proceed independently after M1. Do not assign calendar dates until
 
 Tasks:
 
-- Obtain the must-have application list, Windows edition/licensing decision, backup/recovery readiness, and approval for a reversible Linux test route.
+- Record full Windows and Comet as fixed product requirements; gather additional representative workloads for test coverage, not an installation allowlist. Obtain the Windows edition/licensing decision, backup/recovery readiness, and approval for a reversible Linux test route.
 - Check real GPU inventory, firmware virtualisation availability, `/dev/kvm`, storage headroom, and the target release's device support.
 - Verify touchpad four-finger input separately from touchscreen support; check Wi-Fi, keyboard, audio, display brightness, touch/pen, and suspend.
 - Record VM-off CPU/RAM/battery baseline and exact software versions. Do not publish hardware identifiers, recovery keys, or raw private logs.
@@ -83,6 +89,7 @@ Tasks:
 - Provision a fresh guest on the approved test environment using user-supplied legitimate installation media and licensing.
 - Validate UEFI, Secure Boot, TPM, storage/network drivers, and guest shutdown using supported signed packages.
 - Benchmark SPICE and the chosen Windows display driver with typing, scrolling, window movement, browser use, and a short video/audio sample.
+- Verify normal Windows features and application installation remain available. Install Comet from its official distribution and test launch, user-driven sign-in, browsing, assistant interaction, and the available update flow; never collect the user's password.
 - Evaluate RDP only if the edition permits it and SPICE does not meet the agreed quality bar. Record dropped features and security configuration.
 - Verify the 6 GiB profile under a 30-minute mixed workload; stop if the host becomes unstable.
 
@@ -96,6 +103,7 @@ Tasks:
 - Restrict the VM viewer window to the Windows desktop and prevent duplicate windows.
 - Implement a configurable toggle, initially proposing `Meta+F12` after a conflict check, plus a separate host escape action.
 - Verify four-finger switching with the full-screen viewer focused, guest full-screen applications, different keyboard layouts, and held modifiers.
+- Include Comet tabs and an active browsing session in the retained-state and input tests.
 - Prefer native compositor gestures. If custom KWin support is required, verify the actual API before implementation; do not promise a script can override a hardcoded gesture.
 
 Exit: F02/F03 and the switch/focus metrics pass. A shortcut-only result is a useful prototype, but not a completed four-finger MVP.
@@ -108,6 +116,7 @@ Tasks:
 - Configure an authenticated SMB share limited to this directory and private VM network; prohibit guest/anonymous access, SMB1, wide links, and escape through symlinks.
 - Store credentials in the OS credential store or enter them interactively, never in Git, shell history, command-line arguments, or diagnostics.
 - Test read/write access in both directions, Unicode filenames, overwrites, permission failures, network interruption, and insufficient disk space.
+- Download a test file from Comet into the shared folder and verify its host-side content hash.
 - Explain that this is one shared working directory, not a backup or automatic synchronisation of both home folders. Do not edit the same file concurrently during the MVP tests.
 
 Exit: F04/F07 and all file-integrity fixtures pass; access from an unapproved LAN device is denied. Keep clipboard, drive redirection, and drag-and-drop off so they cannot bypass this boundary.
@@ -136,6 +145,7 @@ Tasks:
 - Record the exact tested dependency versions, known limitations, app compatibility matrix, and upgrade/rollback procedure.
 - Back up guest disk, UEFI NVRAM, and TPM state consistently with the guest shut down; test restoration. Keep recovery keys outside this repository.
 - Run the full tracker checklist and a real user pilot before tagging `v0.1.0`.
+- Include the full Windows baseline and Comet F15/T16 tests in release acceptance. Investigate an architecture change for important compatibility failures rather than shrinking the product into a curated app set.
 
 Exit: another clean supported test installation reproduces the approved experience, all P0 requirements pass, and the user accepts remaining limitations. A distributable OS image is a later decision, not this milestone's output.
 

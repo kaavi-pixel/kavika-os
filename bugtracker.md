@@ -37,7 +37,7 @@ Severity describes impact; priority describes sequencing. A task can have P0 pri
 | [R02 / #8](https://github.com/kaavi-pixel/kavika-os/issues/8) | Windows virtual-display performance or memory pressure may make the 16 GB setup unsuitable | P0 | Compare 6 GiB guest mixed workload against VM-off baseline; test candidate display backends. Stop or narrow scope if it fails. |
 | [R03 / #9](https://github.com/kaavi-pixel/kavika-os/issues/9) | Shared-folder configuration may leak private paths or expose SMB to the LAN | P0 | Test unauthenticated access, path/symlink escapes, firewall scope, and file integrity before enabling real files. |
 | [R04 / #10](https://github.com/kaavi-pixel/kavika-os/issues/10) | Suspend, guest updates, or viewer crashes may break session continuity | P0 | Run disconnect and suspend/resume fixtures and preserve data. Never “recover” by silently resetting the VM. |
-| [R05 / #11](https://github.com/kaavi-pixel/kavika-os/issues/11) | A must-have application may require unsupported graphics, drivers, licensing, or VM behaviour | P0 | Obtain a named app/workflow list and test each one; report unsupported apps explicitly before release. |
+| [R05 / #11](https://github.com/kaavi-pixel/kavika-os/issues/11) | The VM may fail the full-Windows requirement, including Comet or another user-chosen application | P0 | Validate the normal Windows baseline and Comet first, then expand test coverage without an app allowlist. Investigate architecture changes for important failures rather than silently reducing scope. |
 
 ## Acceptance checklist
 
@@ -55,9 +55,10 @@ All boxes start unchecked. Tick only after linking a test record with exact vers
 - [ ] T10: optional clipboard stays off until consent and stops sharing when disabled.
 - [ ] T11: 30-minute mixed workload passes on the chosen memory profile.
 - [ ] T12: viewer reconnect and host suspend/resume preserve the test session.
-- [ ] T13: exact must-have application workflows pass or scope change is approved.
+- [ ] T13: full Windows features and ordinary user-chosen app installation remain available; additional required workflows pass without an app allowlist.
 - [ ] T14: setup is repeatable; uninstall restores host settings and preserves data.
 - [ ] T15: consistent guest backup and restore include disk, NVRAM, and TPM state.
+- [ ] T16: Comet native Windows install, launch, user-driven sign-in, browsing, assistant interaction, shared-folder download, available update flow, and tab/session retention across switches pass (F15).
 
 ## Minimum defect record
 
