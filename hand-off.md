@@ -12,7 +12,7 @@ This repository captures the concept and a proposed technical path. It contains 
 
 ## Next task
 
-Complete M0 in [the implementation plan](implementation-plan.md). Ask for the must-have Windows applications, Windows edition/licensing route, and whether a backed-up external SSD or another reversible test environment is available.
+Complete M0 in [the implementation plan](implementation-plan.md), tracked in [issue #1](https://github.com/kaavi-pixel/kavika-os/issues/1). Ask for the must-have Windows applications, Windows edition/licensing route, and whether a backed-up external SSD or another reversible test environment is available.
 
 Test the touchpad rather than assuming touchscreen touch-point support implies a working four-finger gesture. Do not start packaging a custom distro, implementing GPU passthrough, or importing the existing physical Windows partition before the feasibility gate.
 

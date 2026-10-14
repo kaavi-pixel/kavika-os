@@ -56,6 +56,15 @@ M0: feasibility and permissions
 
 M2 and M3 can proceed independently after M1. Do not assign calendar dates until the setup route, available hardware access, and must-have applications are known.
 
+| Milestone | Live issue | Initial state |
+|---|---|---|
+| M0: feasibility and permissions | [#1](https://github.com/kaavi-pixel/kavika-os/issues/1) | Ready to collect decisions and evidence |
+| M1: guest and display | [#2](https://github.com/kaavi-pixel/kavika-os/issues/2) | Blocked by M0 |
+| M2: switching and input | [#3](https://github.com/kaavi-pixel/kavika-os/issues/3) | Blocked by M1 |
+| M3: file sharing | [#4](https://github.com/kaavi-pixel/kavika-os/issues/4) | Blocked by M1 |
+| M4: lifecycle and recovery | [#5](https://github.com/kaavi-pixel/kavika-os/issues/5) | Blocked by M2/M3 |
+| M5: packaging and acceptance | [#6](https://github.com/kaavi-pixel/kavika-os/issues/6) | Blocked by M4 |
+
 ### M0: feasibility and safety gate
 
 Tasks:

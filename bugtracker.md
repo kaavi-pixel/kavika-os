@@ -8,6 +8,8 @@ Initial snapshot | 14 October 2026 | No implementation or hardware testing has o
 
 Use [GitHub Issues](https://github.com/kaavi-pixel/kavika-os/issues) as the source of truth for current status. This document defines triage and the initial validation checklist; update its date and counts whenever a snapshot is refreshed.
 
+The initial live tracker contains six milestone tasks and five unverified risks, all open. No issues have been filed as confirmed bugs; each task or risk includes its dependencies and acceptance or validation criteria.
+
 - **`type:task`:** implementation work or a milestone.
 - **`type:risk`:** a possible limitation requiring validation; not a confirmed bug.
 - **`bug`:** an observed defect with environment, expected/actual behaviour, and reproduction evidence.
@@ -31,11 +33,11 @@ Severity describes impact; priority describes sequencing. A task can have P0 pri
 
 | ID | Risk, not a confirmed bug | Priority | Validation / release response |
 |---|---|---|---|
-| R01 | Four-finger gestures or the escape key may be intercepted by the full-screen viewer | P0 | Run F02/F03 and 100 switch cycles on actual hardware. Reject the backend or integration if Linux cannot reliably regain input. |
-| R02 | Windows virtual-display performance or memory pressure may make the 16 GB setup unsuitable | P0 | Compare 6 GiB guest mixed workload against VM-off baseline; test candidate display backends. Stop or narrow scope if it fails. |
-| R03 | Shared-folder configuration may leak private paths or expose SMB to the LAN | P0 | Test unauthenticated access, path/symlink escapes, firewall scope, and file integrity before enabling real files. |
-| R04 | Suspend, guest updates, or viewer crashes may break session continuity | P0 | Run disconnect and suspend/resume fixtures and preserve data. Never “recover” by silently resetting the VM. |
-| R05 | A must-have application may require unsupported graphics, drivers, licensing, or VM behaviour | P0 | Obtain a named app/workflow list and test each one; report unsupported apps explicitly before release. |
+| [R01 / #7](https://github.com/kaavi-pixel/kavika-os/issues/7) | Four-finger gestures or the escape key may be intercepted by the full-screen viewer | P0 | Run F02/F03 and 100 switch cycles on actual hardware. Reject the backend or integration if Linux cannot reliably regain input. |
+| [R02 / #8](https://github.com/kaavi-pixel/kavika-os/issues/8) | Windows virtual-display performance or memory pressure may make the 16 GB setup unsuitable | P0 | Compare 6 GiB guest mixed workload against VM-off baseline; test candidate display backends. Stop or narrow scope if it fails. |
+| [R03 / #9](https://github.com/kaavi-pixel/kavika-os/issues/9) | Shared-folder configuration may leak private paths or expose SMB to the LAN | P0 | Test unauthenticated access, path/symlink escapes, firewall scope, and file integrity before enabling real files. |
+| [R04 / #10](https://github.com/kaavi-pixel/kavika-os/issues/10) | Suspend, guest updates, or viewer crashes may break session continuity | P0 | Run disconnect and suspend/resume fixtures and preserve data. Never “recover” by silently resetting the VM. |
+| [R05 / #11](https://github.com/kaavi-pixel/kavika-os/issues/11) | A must-have application may require unsupported graphics, drivers, licensing, or VM behaviour | P0 | Obtain a named app/workflow list and test each one; report unsupported apps explicitly before release. |
 
 ## Acceptance checklist
 
