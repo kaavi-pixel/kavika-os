@@ -1,0 +1,23 @@
+# Guest media and machine state must never be committed.
+*.iso
+*.qcow2
+*.vhd
+*.vhdx
+*.vmdk
+*.img
+*.nvram
+*.sav
+*.log
+*.key
+*.pem
+.env
+.env.*
+!.env.example
+secrets/
+credentials/
+recovery-keys/
+vm-state/
+private/
+__pycache__/
+.venv/
+.DS_Store

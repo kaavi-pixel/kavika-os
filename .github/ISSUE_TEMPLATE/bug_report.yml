@@ -1,0 +1,60 @@
+name: Bug report
+description: Report an observed failure, not an untested risk.
+title: "[Bug]: "
+labels: ["bug", "status:needs-verification"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Only report observed behaviour. Remove passwords, activation/recovery keys,
+        device identifiers, private file paths, and clipboard contents from evidence.
+        This project is currently planning-only; design concerns belong in a task/risk issue.
+  - type: input
+    id: requirement
+    attributes:
+      label: Affected requirement or test
+      placeholder: "F03 / T05, or not yet mapped"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Host distro/kernel/Plasma; QEMU/libvirt/viewer; Windows build/drivers; CPU/GPU/RAM. No device IDs.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered actions, starting state, and frequency.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour and impact
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Suggested severity
+      options:
+        - "S0: data loss or security exposure"
+        - "S1: core function blocked or host unusable"
+        - "S2: non-core failure or workaround available"
+        - "S3: cosmetic or documentation"
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitised evidence and workaround
+      description: Logs, screenshots, timing data, and related issues. Review attachments before submitting.

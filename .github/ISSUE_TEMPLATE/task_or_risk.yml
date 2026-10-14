@@ -1,0 +1,32 @@
+name: Task or unverified risk
+description: Plan work or record a concern that has not been reproduced.
+title: "[Task/Risk]: "
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Task
+        - Unverified risk
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and relevant requirement
+      description: Explain the work or risk. Do not claim it is a confirmed bug without evidence.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria or validation test
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and blockers
+    validations:
+      required: true
