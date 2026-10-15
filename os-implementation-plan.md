@@ -2,7 +2,7 @@
 
 Status: active roadmap; no bootable image or passed hardware gate yet.
 
-Version 0.2 | Reviewed 15 October 2026.
+Version 0.3 | Updated 15 October 2026 for the spare Surface test target.
 
 ## Product and scope
 
@@ -13,13 +13,16 @@ from scratch. Preserve full general-purpose Windows, including Comet and normal
 user-chosen applications. VM compatibility must be measured, not promised.
 
 The supplied project changes introduce this OS roadmap and repository implementation.
-This does not authorise laptop disk changes, firmware changes, Windows purchases,
-VM provisioning on the laptop, or public distribution. Keep the repository private.
+The user now authorises complete Windows replacement on the spare Surface Pro
+and erasure of an empty 512 GB external SSD for installation media. Identify the
+actual devices before writing. HP Envy disk changes, firmware-security changes,
+Windows purchases, guest provisioning, and public distribution are not included.
+Keep the repository private.
 Preserve the approved logo and original brief unchanged.
 
 ## Architecture
 
-- Base: a supported Fedora KDE release, Plasma Wayland, x86_64 initially.
+- Base: a supported Fedora KDE release and Plasma Wayland; target architecture is pending exact Surface identification. An x86_64 upstream candidate exists but must not be assumed compatible.
 - Windows: QEMU/KVM and libvirt, with SPICE as the first viewer candidate.
 - Integration: an unprivileged session controller, desktop rules, explicit escape,
   and a private authenticated shared folder. Windows starts on demand.
@@ -53,7 +56,10 @@ obsolete release merely to make a build complete.
 
 OS0-OS2 implement the existing integration plan. OS3-OS6 extend it into an OS
 product; they do not declare the integration prototype to be a finished OS.
-Small preparation tasks can proceed early, but image composition waits for OS2.
+Full integration/release image composition remains gated by OS2. The user's
+request for a testable system permits an earlier private boot/diagnostic preview
+for the Surface, clearly labelled as incomplete; it does not pass or bypass the
+full Windows, installer-safety, or hardware acceptance gates.
 
 The later OS requirements O01–O04 are defined in `features.md`; T17–T23 in `bugtracker.md` cover image provenance, live boot, installation safety, first-run consent, host Secure Boot, upgrades/recovery, and distribution readiness. No later-stage test starts as passed.
 
@@ -66,13 +72,15 @@ The later OS requirements O01–O04 are defined in `features.md`; T17–T23 in `
 
 ## Implementation order
 
-1. Run `tools/Test-KavikaHost.ps1` on the target Windows machine. It only reads
-   hardware capacity and virtualisation indicators. Copy reviewed results into
-   `docs/validation/m0.md`; do not commit raw system dumps or identifiers.
-   Record source-machine role, UTC time and script revision/hash; the archive's
-   earlier run summary is supplied evidence, not reproduced by this review.
-2. Record Windows edition/licensing, additional representative workloads, and an
-   approved backed-up external SSD or other reversible Linux test route. An
+1. Identify the spare Surface from physical model markings or accessible firmware;
+   the user cannot sign into Windows. Select a compatible live image, then collect
+   resources/device information without depending on the PowerShell script.
+   Record source-machine role, UTC time and tool revision/hash; earlier HP/archive
+   results do not establish Surface hardware.
+2. Use the approved empty 512 GB external SSD as media and the Surface's own 1 TB
+   drive as the intended installation destination. Verify their physical identities
+   before writes and keep the HP Envy internal drive untouched. Record guest
+   Windows edition/licensing and additional representative workloads. An
    existing Windows activation is not proof of guest licensing rights.
 3. On that Linux environment, check `/dev/kvm`, GPU inventory, touchpad four-finger
    events, Wi-Fi, keyboard, audio, brightness, touch/pen and suspend. Measure
@@ -132,6 +140,9 @@ No milestones are complete merely because this plan or a script exists.
   no explicit configuration-changing commands; parser and runtime checks remain.
 - M0 evidence worksheet created. User decisions and Linux hardware testing remain.
 - No VM provisioned, image built, disk altered, or milestone declared complete.
+- Upstream Fedora KDE 44 x86_64 ISO downloaded and signature/checksum verified in
+  the sandbox; no Kavi'ka image has been built. Exact Surface identity/architecture
+  blocks final input selection. See [Surface target](docs/surface-test-target.md).
 
 The desktop theme specification drafted earlier remains unapproved design work;
 the uploaded archive contains no theme package or theme implementation. Packaging

@@ -14,6 +14,7 @@ The Windows side must be full, general-purpose Windows, including Comet and norm
 - [Implementation plan](implementation-plan.md): architecture, dependencies, milestones, and release gates.
 - [OS implementation plan](os-implementation-plan.md): roadmap from the validated integration prototype to a live ISO, installer, and maintained OS release.
 - [M0 evidence](docs/validation/m0.md): pending decisions and hardware validation record.
+- [Surface test target](docs/surface-test-target.md): current spare-device target, approved erase scope, installation-media route, and identification blocker.
 - [Archive review](docs/review-upload.md): changes reviewed, documentation corrections, and verification limits.
 - [Bug tracker](bugtracker.md): confirmed-defect policy, untested risks, and verification checklist.
 - [Hand-off](hand-off.md): current state, next task, and unresolved decisions.
@@ -58,20 +59,27 @@ Wine is optional for individual applications; it is not the Windows workspace. W
 
 The user-selected project logo is stored at [`assets/branding/kavi-ka-os-logo.png`](assets/branding/kavi-ka-os-logo.png). The supplied image is preserved unchanged; the README only sets its display width.
 
-## First target
+## First target: spare Surface Pro
 
-The supplied screenshot identifies an HP Envy x360 14-fa0xxx with an AMD Ryzen 7 8840HS, Radeon 780M graphics, 16 GB installed RAM, and approximately 954 GB total storage. These are screenshot observations, not hardware measurements or a compatibility certification.
+The user has selected an old Surface Pro with Windows 11 and approximately 1 TB internal storage as the first physical test computer. Its exact model, architecture, CPU, RAM, and GPU are not yet known; the user cannot sign into its current Windows account.
 
-The MVP should retain the graphics device for Linux and test a virtual display for Windows. Do not assume a second GPU, GPU passthrough support, smooth GPU-heavy workloads, or an available Windows VM licence.
+The user explicitly permits replacing Windows on that spare Surface and erasing an empty 512 GB external SSD for installation media. The external SSD carries the installer; the intended installation uses the Surface's own 1 TB drive, not a 512 GB capacity limit.
+
+The earlier HP Envy x360/Ryzen/16 GB evidence belongs to the helper computer, not this Surface. Do not carry its resource allocation into the Surface build; identify the Surface first and test the live environment before installation.
+
+See the [Surface test plan](docs/surface-test-target.md) for no-login identification and the recorded erase scope. Keep the HP Envy's internal drive untouched.
 
 ## Scope and safety
 
 - **In scope:** repository development toward a reversible prototype and, after validation, an installable Fedora-based OS. Build, installation, and release work have separate gates in the OS implementation plan.
-- **Not yet approved:** repartitioning, replacing the current Windows installation, changing firmware settings, or provisioning a VM on the user's laptop.
+- **Approved target scope:** replace Windows on the spare Surface and erase the empty 512 GB external SSD for media. Identify the exact physical disks before writes; no erasure has occurred.
+- **Outside that approval:** HP Envy internal-disk changes, other drives, firmware-security changes, Windows licence purchases, and public distribution. Guest provisioning remains a separate opt-in step.
 - **Not included:** Windows installation media, activation keys, VM disks, recovery keys, device identifiers, or the original hardware screenshot.
 - **Licensing:** no project-wide open-source licence has been selected. Third-party components retain their own licences; a Windows licence decision remains a setup gate.
 
-The user has requested development toward an installable OS. Start with milestone M0 in the implementation plan, then follow the OS implementation plan through prototype, packaging, live media, installation, and release. Image building follows the feasibility and integration gates.
+The user has requested a testable OS for the spare Surface. An explicitly labelled private boot/diagnostic preview may be built before all integration gates pass, but the full installer/release gates remain; booting a preview is not proof of full Windows functionality.
+
+An upstream Fedora KDE 44 x86_64 ISO has been integrity-verified in the build sandbox. It remains unmodified Fedora, not a Kavi'ka image, and is not selected for the Surface until its architecture is known.
 
 ## Preliminary Windows checks
 

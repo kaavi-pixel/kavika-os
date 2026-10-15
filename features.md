@@ -1,6 +1,6 @@
 # Kavi'ka OS: features v2
 
-Version 0.5 | 15 October 2026 | Product specification; diagnostics only implemented.
+Version 0.6 | 15 October 2026 | Product specification; spare Surface selected, diagnostics only implemented.
 
 This expands the supplied brief into testable requirements without replacing its original goals. Technical choices and numerical targets below are proposals, not measured results or additional user commitments.
 
@@ -33,6 +33,14 @@ Full Windows functionality is the product requirement; universal VM compatibilit
 - **Simple file access:** one explicitly shared folder is accessible from both environments with matching file contents.
 - **Responsive Linux:** Linux remains usable with Windows active under an agreed, measured workload.
 - **Full Windows capability:** preserve normal Windows features and user-chosen app installation, with Comet required; maintain a growing test matrix without imposing an app allowlist.
+
+### First physical target
+
+The primary test machine is now an old Surface Pro with Windows 11 and approximately 1 TB of internal storage, not the earlier HP Envy. The user authorises replacing the Surface's Windows installation and erasing an empty 512 GB external SSD for installation media; precise device identification remains mandatory before writing either disk.
+
+The Windows account password is unknown. Obtain model/architecture information from physical markings or firmware and then a compatible live environment, rather than making Windows sign-in a prerequisite. RAM, CPU, GPU, and exact model remain unknown; no resource or compatibility claims transfer from the HP.
+
+The external medium does not limit the size of the installation on the Surface's internal drive. See [the Surface test target](docs/surface-test-target.md) for scope and the staged test route.
 
 ## Non-goals
 
@@ -118,7 +126,7 @@ All values are provisional acceptance targets. Record the baseline and raw test 
 |---|---|---|
 | Which Windows edition and valid VM licensing route will be used? | User | Blocks guest provisioning and RDP selection, not documentation. |
 | Which additional workloads should be tested first beyond the full Windows baseline and Comet? | User | Guides test coverage; does not restrict app installation. Comet is already required. |
-| Can an external test SSD or another reversible Linux environment be used? | User | Blocks laptop installation; no disk changes are authorised by this plan. |
+| What is the exact Surface model/architecture and physical disk identity? | User / implementer | Blocks target-image selection and destructive installation. Windows replacement and external-media erasure are already approved for the named spare devices. |
 | Does the actual touchpad expose reliable four-finger gestures under Linux? | Implementer | Blocks F02. Touchscreen “10 touch points” in the screenshot does not answer this. |
 | Which supported Linux/KDE release and viewer build pass the hardware gates? | Implementer | Blocks a pinned installation guide. |
 | Is optional clipboard sharing desired, and should Windows start at login? | User | Non-blocking; defaults are clipboard off and Windows started on demand. |
@@ -141,6 +149,6 @@ This choice does not guarantee that concurrent Linux and Windows use will feel l
 
 ### Graphics and application validation
 
-Looking Glass documents a requirement for two usable GPU devices, including some integrated/discrete or virtual-GPU combinations; the supplied screenshot does not establish such a configuration ([Looking Glass requirements](https://looking-glass.io/docs/B7/requirements/)). It is therefore deferred from this laptop's baseline.
+Looking Glass documents a requirement for two usable GPU devices, including some integrated/discrete or virtual-GPU combinations ([Looking Glass requirements](https://looking-glass.io/docs/B7/requirements/)). No such configuration has been verified on the Surface, so it remains deferred from the baseline.
 
 Comet's published requirements include 64-bit Windows 10/11, 4 GB minimum RAM and 8 GB recommended; those OS requirements do not certify the proposed VM/display configuration ([Comet operating system requirements](https://www.perplexity.ai/help-center/comet/en/articles/11734730-operating-system-requirements)). Test it inside the guest with Linux concurrently active before claiming it works in Kavi'ka OS.

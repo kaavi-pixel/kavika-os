@@ -1,8 +1,8 @@
 # Kavi'ka OS: implementation plan
 
-Version 0.4 | 15 October 2026 | Integration roadmap; preliminary diagnostics added.
+Version 0.5 | 15 October 2026 | Integration roadmap; spare Surface is the primary test target.
 
-Build a reversible integration prototype before packaging a custom distribution. This plan does not authorise installation, disk changes, or Windows licence purchases, and none of the milestones below has been completed.
+Build a validated integration before claiming a complete OS. The user now authorises Windows replacement on the spare Surface and erasure of the empty external SSD for media; match exact disks before writes, keep the HP's drive untouched, and do not infer permission for firmware changes or licence purchases. None of the milestones below has been completed.
 
 The supplied project changes extend the roadmap toward an installable OS.
 [The OS implementation plan](os-implementation-plan.md) extends this prototype
@@ -39,9 +39,11 @@ The controller should use libvirt state events plus bounded retries, not blind s
 
 ## Hardware envelope
 
-The supplied screenshot reports Ryzen 7 8840HS/Radeon 780M, 16 GB installed RAM, and 954 GB storage. The image does not establish the complete GPU inventory, available virtualisation settings, Linux device support, Windows edition, or free space available after a safe Linux setup.
+The primary target is an old Surface Pro with user-reported Windows 11 and 1 TB storage. Exact model/architecture, CPU, RAM, GPU, firmware access, and Linux support remain unknown; Windows sign-in is unavailable.
 
-Proposed first benchmark profile:
+The earlier Ryzen 7 8840HS/Radeon 780M, 16 GB RAM, and storage screenshot belongs to the HP Envy helper. It is not evidence for sizing the Surface guest; collect target facts through [the no-login identification/live-test route](docs/surface-test-target.md).
+
+Historical benchmark proposal for the HP, not an approved Surface configuration:
 
 - **Guest CPU:** 4 vCPUs; adjust after measuring concurrent host/guest use, not by dedicating all host resources.
 - **Guest memory:** fixed 6 GiB as an initial measurement point, not the accepted final budget; account separately for QEMU, the host, filesystem cache, and integrated graphics. Test 8 GiB if measured host headroom supports it, and reject the profile if full-Windows/Comet use is unsatisfactory.
@@ -52,7 +54,7 @@ Proposed first benchmark profile:
 
 Microsoft lists VM requirements including at least 4 GB RAM, 64 GB storage, two virtual processors, Secure Boot capability, and virtual TPM; these are installation minima, not a promise of good performance ([Windows 11 requirements](https://learn.microsoft.com/en-gb/windows/whats-new/windows-11-requirements)). Libvirt documents UEFI, Secure Boot-capable firmware, memory/vCPU configuration, and an emulated TPM backend using `swtpm`; capability flags alone do not prove Secure Boot is enabled in the guest ([libvirt domain format](https://libvirt.org/formatdomain.html)).
 
-Comet specifies 4 GB RAM minimum and 8 GB recommended; this is an environment requirement, not an instruction to add 8 GB to the Windows allocation ([Comet requirements](https://www.perplexity.ai/help-center/comet/en/articles/11734730-operating-system-requirements)). Benchmark Comet inside the guest with Linux active; the initial 6 GiB allocation is below that recommendation and must not be declared sufficient without evidence.
+Comet specifies 4 GB RAM minimum and 8 GB recommended; this is an environment requirement, not an instruction to add 8 GB to the Windows allocation ([Comet requirements](https://www.perplexity.ai/help-center/comet/en/articles/11734730-operating-system-requirements)). Select a Surface-specific guest allocation only after identifying its memory and CPU; the historical 6 GiB proposal is below that recommendation and is not a validated default.
 
 ## Milestones and dependencies
 
@@ -83,7 +85,8 @@ This table is the prototype issue map. OS0–OS2 map onto M0–M5; the OS plan a
 
 Tasks:
 
-- Review `tools/Test-KavikaHost.ps1` and collect target-machine output when approved. Record source machine role, collection time, script version/hash, and reviewed fields; keep supplied-but-unreproduced values separate from independently verified results.
+- Identify the Surface model/architecture from physical markings or firmware first. Windows sign-in is unavailable, so the PowerShell tool is optional rather than a blocker; collect resource/device information from a compatible live environment.
+- Record source machine role, collection time, tool version/hash, and reviewed fields; keep the historical HP/archive observations separate from Surface results.
 - Record full Windows and Comet as fixed product requirements; gather additional representative workloads for test coverage, not an installation allowlist. Obtain the Windows edition/licensing decision, backup/recovery readiness, and approval for a reversible Linux test route.
 - Check real GPU inventory, firmware virtualisation availability, `/dev/kvm`, storage headroom, and the target release's device support.
 - Verify touchpad four-finger input separately from touchscreen support; check Wi-Fi, keyboard, audio, display brightness, touch/pen, and suspend.
@@ -100,7 +103,7 @@ Tasks:
 - Benchmark SPICE and the chosen Windows display driver with typing, scrolling, window movement, browser use, and a short video/audio sample.
 - Verify normal Windows features and application installation remain available. Install Comet from its official distribution and test launch, user-driven sign-in, browsing, assistant interaction, and the available update flow; never collect the user's password.
 - Evaluate RDP only if the edition permits it and SPICE does not meet the agreed quality bar. Record dropped features and security configuration.
-- Verify the 6 GiB profile under a 30-minute mixed workload; stop if the host becomes unstable.
+- Verify the Surface-specific profile under a 30-minute mixed workload; do not automatically use the earlier HP's 6 GiB guest allocation, and stop if the host becomes unstable.
 
 Exit: one documented backend passes a usable desktop workflow with no passthrough. If neither backend passes, stop at feasibility; do not call the MVP working.
 
