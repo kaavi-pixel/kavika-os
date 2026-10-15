@@ -1,6 +1,6 @@
 # Kavi'ka OS: features v2
 
-Version 0.3 | 14 October 2026 | Proposed specification, not implemented.
+Version 0.4 | 15 October 2026 | Proposed specification, not implemented.
 
 This expands the supplied brief into testable requirements without replacing its original goals. Technical choices and numerical targets below are proposals, not measured results or additional user commitments.
 
@@ -108,7 +108,21 @@ All values are provisional acceptance targets. Record the baseline and raw test 
 
 ## Technical rationale
 
-KDE supports named virtual desktops and switching animations, making it a candidate rather than a reason to build a compositor from scratch ([KDE documentation](https://docs.kde.org/stable_kf6/en/kwin/kcontrol/desktop/index.html)). A KDE community report describes four-finger horizontal switching, but also limitations on remapping; verify the selected release and touchpad instead of treating that report as a universal API guarantee ([KDE discussion](https://discuss.kde.org/t/plasma-6-7-wayland-how-can-i-remap-three-finger-touchpad-gestures-independently-of-four-finger-gestures/48621)).
+### Why Fedora KDE Plasma Desktop?
+
+The proposed Linux base is Fedora KDE Plasma Desktop on Wayland. This is an initial architecture choice to validate, not a tested conclusion that it is the only or best distribution for the laptop.
+
+- **Workspace controls fit the concept:** KDE provides named virtual desktops, switching animations, and rules that place particular application windows on a chosen desktop, giving us building blocks for a dedicated Windows workspace without writing a desktop environment from scratch ([KDE virtual desktops](https://docs.kde.org/stable_kf6/en/kwin/kcontrol/desktop/index.html), [KDE window behaviour](https://docs.kde.org/stable_kf6/en/kwin/kcontrol/windowbehaviour/index.html)).
+- **The VM stack is documented:** Fedora documents QEMU/KVM, libvirt, virt-manager, and virt-viewer, matching the proposed Windows guest architecture ([Fedora virtualisation guide](https://docs.fedoraproject.org/en-US/quick-docs/virtualization-getting-started/)).
+- **The desktop can become Kavi'ka's own interface:** Fedora KDE emphasises customisation and updated drivers and kernels; that makes it a reasonable starting point for our branding and integration, without proving compatibility or performance on this laptop ([Fedora KDE](https://fedoraproject.org/kde/)).
+
+The maintenance trade-off is Fedora's approximately 13-month update period per release, which requires planned upgrades and regression testing rather than leaving one installation unchanged for years ([Fedora KDE](https://fedoraproject.org/kde/)). We should pin the release and component versions only after M0 validation and rerun acceptance tests when upgrading.
+
+KDE's available controls do not establish that our exact full-screen viewer/gesture combination works. A KDE community report describes four-finger horizontal switching, but also limitations on remapping; verify the selected release and touchpad instead of treating that report as a universal API guarantee ([KDE discussion](https://discuss.kde.org/t/plasma-6-7-wayland-how-can-i-remap-three-finger-touchpad-gestures-independently-of-four-finger-gestures/48621)).
+
+This choice does not guarantee that concurrent Linux and Windows use will feel lightweight, or that every Windows workload works. Full Windows, explicitly including Comet, remains the requirement; a failed VM approach must prompt architecture review rather than an app allowlist or silent scope reduction.
+
+### Graphics and application validation
 
 Looking Glass documents a requirement for two usable GPU devices, including some integrated/discrete or virtual-GPU combinations; the supplied screenshot does not establish such a configuration ([Looking Glass requirements](https://looking-glass.io/docs/B7/requirements/)). It is therefore deferred from this laptop's baseline.
 

@@ -5,6 +5,7 @@ This repository captures the concept and a proposed technical path. It contains 
 ## Current state
 
 - **User goal:** preserve Linux and Windows workspaces, switch with a four-finger swipe or keybind, and transfer files easily.
+- **Approved logo:** `assets/branding/kavi-ka-os-logo.png`, supplied and selected by the user on 15 October 2026. Keep the original artwork unchanged unless a new variant is requested.
 - **Explicit clarification:** Windows should have “everything,” including Comet. Preserve a full general-purpose Windows installation, not a stripped-down desktop, Wine substitute, or allowlisted app collection; Comet is now a P0 requirement (F15/T16).
 - **Target observations:** HP Envy x360 14-fa0xxx, Ryzen 7 8840HS/Radeon 780M, 16 GB RAM, and about 954 GB storage from the supplied screenshot.
 - **Recommended direction:** Linux/KDE host with a real Windows VM and a dedicated shared folder; validate the display backend before building the integration.
