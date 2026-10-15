@@ -15,11 +15,21 @@ The Windows side must be full, general-purpose Windows, including Comet and norm
 - [Original brief](docs/original-features.md): supplied text, with Markdown heading syntax repaired only.
 - [GitHub Issues](https://github.com/kaavi-pixel/kavika-os/issues): live task and risk tracking.
 
+## Linux distribution
+
+The proposed Linux base is **Fedora KDE Plasma Desktop**, using KDE Plasma on Wayland. Fedora is the distribution; KDE Plasma is the desktop environment.
+
+- **Linux host:** Fedora KDE Plasma Desktop for native Linux applications and workspace switching.
+- **Windows workspace:** a full Windows 11 installation in a QEMU/KVM virtual machine managed by libvirt, including Comet and normal user-chosen applications.
+- **Release version:** not pinned yet. Select a supported Fedora release and record the exact versions after the M0 hardware and gesture checks pass.
+
+This is the initial implementation target, not a claim that the laptop or every Windows workload has already been validated. If testing exposes an important compatibility limitation, revisit the architecture rather than silently reducing the full-Windows requirement.
+
 ## Proposed experience
 
 ```text
 Laptop
-└── Linux + KDE Plasma Wayland
+└── Fedora KDE Plasma Desktop (Wayland)
     ├── Linux workspace: native applications
     └── Windows workspace: full-screen VM viewer
         └── Windows 11 in QEMU/KVM, managed by libvirt
