@@ -1,6 +1,6 @@
 # Kavi'ka OS: hand-off
 
-This repository captures the concept and a proposed technical path. It contains no runnable OS implementation and no passing hardware tests.
+This repository contains the product specification, prototype and OS roadmaps, and a preliminary Windows diagnostic script. There is no runnable desktop integration or bootable OS, and no hardware acceptance gate has passed.
 
 ## Current state
 
@@ -11,8 +11,18 @@ This repository captures the concept and a proposed technical path. It contains 
 - **Recommended direction:** Linux/KDE host with a real Windows VM and a dedicated shared folder; validate the display backend before building the integration.
 - **Not user-approved decisions:** exact distro/version, guest Windows edition, software stack, memory allocation, additional test coverage, and laptop installation route. A test matrix must never restrict what the user may install.
 - **Safety boundary:** this planning request does not authorise repartitioning, firmware changes, OS replacement, or VM provisioning on the laptop.
+- **Imported additions:** `os-implementation-plan.md`, `tools/Test-KavikaHost.ps1`, and `docs/validation/m0.md`; the script is preserved unchanged from the supplied archive.
+- **Evidence status:** Windows 11 Home Single Language and capacity/virtualisation values are archive-reported, not reproduced in this review. Guest edition/licensing and Linux device/KVM checks remain unresolved.
+- **Review record:** [archive review](docs/review-upload.md) documents corrected status, expanded release tests, and preflight limitations.
 
 ## Next task
+
+The supplied project changes add a roadmap toward an installable OS.
+Follow [the OS implementation plan](os-implementation-plan.md) after the existing
+feasibility and integration gates. A read-only Windows preflight is available at
+`tools/Test-KavikaHost.ps1`; record reviewed target-machine evidence in
+`docs/validation/m0.md`. Repository development is distinct from laptop disk
+changes or VM provisioning; those need separate approval. No OS image has been built.
 
 Complete M0 in [the implementation plan](implementation-plan.md), tracked in [issue #1](https://github.com/kaavi-pixel/kavika-os/issues/1). Full Windows and Comet are already required; ask only for additional representative workloads, the Windows edition/licensing route, and whether a backed-up external SSD or another reversible test environment is available.
 

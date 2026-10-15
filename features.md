@@ -1,6 +1,6 @@
 # Kavi'ka OS: features v2
 
-Version 0.4 | 15 October 2026 | Proposed specification, not implemented.
+Version 0.5 | 15 October 2026 | Product specification; diagnostics only implemented.
 
 This expands the supplied brief into testable requirements without replacing its original goals. Technical choices and numerical targets below are proposals, not measured results or additional user commitments.
 
@@ -81,6 +81,23 @@ Full Windows functionality is the product requirement; universal VM compatibilit
 ### Not in the first release
 
 Universal drag-and-drop, automatic clipboard-file transfer, arbitrary gesture remapping, custom Windows branding, a bootable distro image, and guaranteed native gaming performance are outside the first release. A shared folder, not drag-and-drop, is the required file-transfer mechanism.
+
+Scope update: the supplied project changes extend delivery to an installable OS.
+The integration prototype is the first deliverable, not a finished OS. Live media
+and an installable OS follow its validation under [the OS implementation plan](os-implementation-plan.md).
+
+### Installable-OS delivery requirements
+
+These are required for the later OS release, not reasons to skip the prototype gates. Preserve existing feature IDs; use O-prefixed IDs for distribution deliverables.
+
+| ID | Requirement | Acceptance criterion | Dependency |
+|---|---|---|---|
+| O01 | Bootable Linux live image | Given an isolated builder and pinned inputs, when an ISO is built, then it boots in a disposable UEFI VM into KDE, exposes diagnostics and the installer, and contains no Windows media, guest disk, credentials, or user data. Booting live media performs no automatic installation. | OS3; T17/T18 |
+| O02 | Explicit, safe installation and first boot | Given expendable test disks, when installation is requested, then the installer requires explicit target selection and confirmation, creates a working user desktop, and leaves non-selected test disks unchanged. First boot requires explicit opt-in before guest provisioning. | OS4; T19/T20 |
+| O03 | Validated host security and hardware | Given the candidate image and separately approved test route, when live boot and installation are tested, then the intended host Secure Boot path and device suite pass, followed by the full Windows/Comet and switching suite. Host Secure Boot is tested separately from guest Secure Boot. | OS3–OS5; T21 and prototype tests |
+| O04 | Maintainable, documented release | Given a candidate release, when another isolated build and an upgrade/recovery test are run, then the procedure is repeatable, versions/manifests/checksums are recorded, and rollback/recovery works. Licence, trademark, signing, and publication decisions must be resolved before distribution. Byte-identical reproducibility is a separate claim requiring evidence. | OS6; T22/T23 |
+
+The diagnostic script is an implemented preliminary tool, not implementation of F01–F15 or O01–O04. Its output does not pass a Linux or Windows-workspace acceptance gate.
 
 ## Success metrics
 

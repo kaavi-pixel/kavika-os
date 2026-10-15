@@ -1,8 +1,14 @@
 # Kavi'ka OS: implementation plan
 
-Version 0.3 | 14 October 2026 | Proposed roadmap.
+Version 0.4 | 15 October 2026 | Integration roadmap; preliminary diagnostics added.
 
 Build a reversible integration prototype before packaging a custom distribution. This plan does not authorise installation, disk changes, or Windows licence purchases, and none of the milestones below has been completed.
+
+The supplied project changes extend the roadmap toward an installable OS.
+[The OS implementation plan](os-implementation-plan.md) extends this prototype
+through packaging, live media, installation and release after these gates pass.
+
+The Windows preflight tool now exists, and the archive supplies a preliminary run summary in [the M0 worksheet](docs/validation/m0.md). This review statically inspected the tool but did not execute it; M0 remains open and M1–M5 remain uncompleted.
 
 ## Architecture decision
 
@@ -71,10 +77,13 @@ M2 and M3 can proceed independently after M1. Do not assign calendar dates until
 | M4: lifecycle and recovery | [#5](https://github.com/kaavi-pixel/kavika-os/issues/5) | Blocked by M2/M3 |
 | M5: packaging and acceptance | [#6](https://github.com/kaavi-pixel/kavika-os/issues/6) | Blocked by M4 |
 
+This table is the prototype issue map. OS0–OS2 map onto M0–M5; the OS plan adds OS3–OS6 for live media, installation, hardware pilot, and release. A live image is not an output of M5, and prototype `v0.1.0` must be labelled as such rather than marketed as an installable OS release.
+
 ### M0: feasibility and safety gate
 
 Tasks:
 
+- Review `tools/Test-KavikaHost.ps1` and collect target-machine output when approved. Record source machine role, collection time, script version/hash, and reviewed fields; keep supplied-but-unreproduced values separate from independently verified results.
 - Record full Windows and Comet as fixed product requirements; gather additional representative workloads for test coverage, not an installation allowlist. Obtain the Windows edition/licensing decision, backup/recovery readiness, and approval for a reversible Linux test route.
 - Check real GPU inventory, firmware virtualisation availability, `/dev/kvm`, storage headroom, and the target release's device support.
 - Verify touchpad four-finger input separately from touchscreen support; check Wi-Fi, keyboard, audio, display brightness, touch/pen, and suspend.

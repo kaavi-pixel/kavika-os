@@ -1,14 +1,14 @@
 # Kavi'ka OS: bug tracker
 
-Initial snapshot | 14 October 2026 | No implementation or hardware testing has occurred.
+Reviewed snapshot | 15 October 2026 | Preliminary diagnostic tool exists; no integration or OS acceptance gate has passed.
 
-**Confirmed bugs: none recorded.** This means there is no tested implementation yet, not that the proposed system is bug-free. The entries below are unverified risks and planned tests, not invented defect reports.
+**Confirmed runtime bugs: none recorded.** The archive reports a preliminary Windows preflight run, which this review did not reproduce; the desktop integration and OS remain untested. Documentation inconsistencies and static-review concerns below are not invented runtime defect reports.
 
 ## Live tracking policy
 
 Use [GitHub Issues](https://github.com/kaavi-pixel/kavika-os/issues) as the source of truth for current status. This document defines triage and the initial validation checklist; update its date and counts whenever a snapshot is refreshed.
 
-The initial live tracker contains six milestone tasks and five unverified risks, all open. No issues have been filed as confirmed bugs; each task or risk includes its dependencies and acceptance or validation criteria.
+The reviewed live tracker contains ten milestone tasks and five unverified risks, all open. OS0–OS2 reuse prototype issues #1–#6; OS3–OS6 are separately tracked in [#12](https://github.com/kaavi-pixel/kavika-os/issues/12), [#13](https://github.com/kaavi-pixel/kavika-os/issues/13), [#14](https://github.com/kaavi-pixel/kavika-os/issues/14), and [#15](https://github.com/kaavi-pixel/kavika-os/issues/15). No issue has been filed as a confirmed runtime bug.
 
 - **`type:task`:** implementation work or a milestone.
 - **`type:risk`:** a possible limitation requiring validation; not a confirmed bug.
@@ -34,7 +34,7 @@ Severity describes impact; priority describes sequencing. A task can have P0 pri
 | ID | Risk, not a confirmed bug | Priority | Validation / release response |
 |---|---|---|---|
 | [R01 / #7](https://github.com/kaavi-pixel/kavika-os/issues/7) | Four-finger gestures or the escape key may be intercepted by the full-screen viewer | P0 | Run F02/F03 and 100 switch cycles on actual hardware. Reject the backend or integration if Linux cannot reliably regain input. |
-| [R02 / #8](https://github.com/kaavi-pixel/kavika-os/issues/8) | Windows virtual-display performance or memory pressure may make the 16 GB setup unsuitable | P0 | Compare 6 GiB guest mixed workload against VM-off baseline; test candidate display backends. Stop or narrow scope if it fails. |
+| [R02 / #8](https://github.com/kaavi-pixel/kavika-os/issues/8) | Windows virtual-display performance or memory pressure may make the 16 GB setup unsuitable | P0 | Compare 6 GiB guest mixed workload against VM-off baseline; test candidate display backends. Stop and investigate architecture alternatives if it fails; do not silently narrow the full-Windows requirement. |
 | [R03 / #9](https://github.com/kaavi-pixel/kavika-os/issues/9) | Shared-folder configuration may leak private paths or expose SMB to the LAN | P0 | Test unauthenticated access, path/symlink escapes, firewall scope, and file integrity before enabling real files. |
 | [R04 / #10](https://github.com/kaavi-pixel/kavika-os/issues/10) | Suspend, guest updates, or viewer crashes may break session continuity | P0 | Run disconnect and suspend/resume fixtures and preserve data. Never “recover” by silently resetting the VM. |
 | [R05 / #11](https://github.com/kaavi-pixel/kavika-os/issues/11) | The VM may fail the full-Windows requirement, including Comet or another user-chosen application | P0 | Validate the normal Windows baseline and Comet first, then expand test coverage without an app allowlist. Investigate architecture changes for important failures rather than silently reducing scope. |
@@ -59,6 +59,31 @@ All boxes start unchecked. Tick only after linking a test record with exact vers
 - [ ] T14: setup is repeatable; uninstall restores host settings and preserves data.
 - [ ] T15: consistent guest backup and restore include disk, NVRAM, and TPM state.
 - [ ] T16: Comet native Windows install, launch, user-driven sign-in, browsing, assistant interaction, shared-folder download, available update flow, and tab/session retention across switches pass (F15).
+
+### Installable-OS acceptance
+
+These extend the prototype checklist; they do not replace or pass it.
+
+- [ ] T17: isolated build records source revision, selected supported Fedora release, input/repository snapshots, tool versions, package manifest, reviewed logs, and ISO checksum (O01/OS3).
+- [ ] T18: ISO live-boots into KDE in a disposable UEFI VM, exposes diagnostics/installer, performs no automatic installation, and contains no Windows payload, guest disk, credentials, or user data (O01/OS3).
+- [ ] T19: installation requires explicit target confirmation, succeeds on a blank disposable disk, and leaves attached non-selected expendable disks unchanged; fixture hashes confirm this (O02/OS4).
+- [ ] T20: first boot creates a usable desktop and requests explicit opt-in before Windows provisioning or sensitive share/redirection changes (O02/OS4).
+- [ ] T21: intended host UEFI/Secure Boot chain and target-laptop live-device suite pass; guest security and full switching/Windows/Comet regression are separately verified (O03/OS3–OS5).
+- [ ] T22: supported base upgrade and recovery/rollback preserve user/guest data; a second isolated build demonstrates procedural repeatability, with byte-identical reproducibility claimed only if measured (O04/OS6).
+- [ ] T23: licence/trademark/redistribution decisions, third-party notices, signing/trust distribution, update ownership, known limitations, and publication approval are recorded (O04/OS6).
+
+## Review findings and follow-up
+
+| ID | Finding | Classification and state | Follow-up |
+|---|---|---|---|
+| D01 | README/tracker still said no implementation existed despite the new preflight script | Documentation inconsistency; corrected in this review | Keep diagnostic-tool progress distinct from desktop/OS completion. |
+| D02 | OS1 gate incorrectly included F08, while OS2 omitted explicit T14/T15 | Gate mapping inconsistency; corrected | F08/T14/T15 belong to OS2/M5. |
+| D03 | “Ran successfully in this workspace” lacked source-machine provenance | Evidence gap; unresolved, wording corrected | Identify source machine role and script hash; collect reviewed target-machine results before M0 acceptance. |
+| S01 | Script key `installedMemoryGiB` describes `TotalPhysicalMemory`, not installed module totals | Static-review naming mismatch; code unchanged | Rename/document the field and test output before treating it as installed RAM. Worksheet now warns about the distinction. |
+| S02 | All CIM queries share a generic failure handler | Static-review robustness concern; not a reproduced failure | Test failed/denied queries; consider partial results and sanitised per-check errors in later tool work. |
+| R06 | Custom image composition, disk selection, signing, or upgrades may fail despite a working prototype | Unverified OS-release concern covered by tasks #12–#15, not a sixth live risk issue | Require O01–O04 and T17–T23; no physical-disk exposure during builder/installer tests. |
+
+See [the archive review](docs/review-upload.md) for review scope and verification limits. The preflight tool was preserved unchanged; no runtime fix or test is claimed.
 
 ## Minimum defect record
 

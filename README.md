@@ -6,12 +6,15 @@ A Linux-first desktop experience with a real Windows workspace one four-finger s
 
 The Windows side must be full, general-purpose Windows, including Comet and normal user-chosen app installation, not a restricted collection of supported apps. A test matrix measures compatibility; it must not become an app allowlist, and a VM limitation must be reported rather than silently redefined as out of scope.
 
-**Status: planning repository, not an installable OS.** No runtime, installer, VM image, or hardware test results are included. The architecture below is a proposal to validate on the target laptop.
+**Status: early development, not an installable OS.** The repository includes a preliminary Windows diagnostic script and an installable-OS roadmap, but no session controller, installer, guest image, or bootable ISO. The supplied archive records a Windows preflight run; this review did not reproduce it, and no Linux, VM-performance, or hardware acceptance gate has passed.
 
 ## Project documents
 
 - [Features v2](features.md): revised product specification, preserving the original goal wording.
 - [Implementation plan](implementation-plan.md): architecture, dependencies, milestones, and release gates.
+- [OS implementation plan](os-implementation-plan.md): roadmap from the validated integration prototype to a live ISO, installer, and maintained OS release.
+- [M0 evidence](docs/validation/m0.md): pending decisions and hardware validation record.
+- [Archive review](docs/review-upload.md): changes reviewed, documentation corrections, and verification limits.
 - [Bug tracker](bugtracker.md): confirmed-defect policy, untested risks, and verification checklist.
 - [Hand-off](hand-off.md): current state, next task, and unresolved decisions.
 - [Original brief](docs/original-features.md): supplied text, with Markdown heading syntax repaired only.
@@ -63,9 +66,21 @@ The MVP should retain the graphics device for Linux and test a virtual display f
 
 ## Scope and safety
 
-- **In scope:** feature design, an implementation roadmap, issue tracking, and a later reversible prototype.
+- **In scope:** repository development toward a reversible prototype and, after validation, an installable Fedora-based OS. Build, installation, and release work have separate gates in the OS implementation plan.
 - **Not yet approved:** repartitioning, replacing the current Windows installation, changing firmware settings, or provisioning a VM on the user's laptop.
 - **Not included:** Windows installation media, activation keys, VM disks, recovery keys, device identifiers, or the original hardware screenshot.
 - **Licensing:** no project-wide open-source licence has been selected. Third-party components retain their own licences; a Windows licence decision remains a setup gate.
 
-Start with milestone M0 in the implementation plan. Do not turn this repository into a distro image before the laptop feasibility gates pass.
+The user has requested development toward an installable OS. Start with milestone M0 in the implementation plan, then follow the OS implementation plan through prototype, packaging, live media, installation, and release. Image building follows the feasibility and integration gates.
+
+## Preliminary Windows checks
+
+[`tools/Test-KavikaHost.ps1`](tools/Test-KavikaHost.ps1) queries Windows CIM information and prints a JSON report. Static review found no explicit configuration-changing commands; it was not executed during this review, and its existence is not a compatibility pass.
+
+Run it only on the intended Windows test machine after reviewing the script:
+
+```powershell
+.\tools\Test-KavikaHost.ps1
+```
+
+Do not disable execution-policy or security controls just to run a downloaded script. Review the output before recording selected results in the M0 worksheet; Windows checks do not establish Linux touchpad, KVM, graphics, or sleep support.
