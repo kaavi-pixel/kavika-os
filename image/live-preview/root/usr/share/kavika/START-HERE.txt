@@ -1,0 +1,61 @@
+KAVI'KA OS 0.1.0 · SURFACE PRO 8 LIVE PREVIEW
+
+This is a private, disposable Linux boot-and-hardware preview based on Fedora KDE 44.
+It is not a finished operating-system release. Do not use it as a daily system.
+
+WHAT YOU CAN TEST
+  - Booting KDE on the Surface Pro 8 (Wi-Fi, model 1983).
+  - Your original logo as a proportion-preserving wallpaper.
+  - Two Linux virtual desktops and the Meta+F12 workspace toggle.
+  - Display, USB keyboard/mouse, network, sound, battery and sleep manually.
+  - Read-only hardware reporting without device serials, keys or user files.
+
+WHAT IS NOT INCLUDED
+  - A running Windows VM, Windows installer, Windows licence, or Comet.
+  - Cross-OS file sharing, VM resource management, or instant Windows switching.
+  - A validated internal-disk installer or persistent custom OS installation.
+  - A Surface-specific kernel: this preview keeps Fedora's upstream kernel.
+
+The "Windows (not installed)" desktop is another LINUX workspace, not Windows.
+It is visibly labelled so this navigation preview cannot be mistaken for a working VM.
+
+USE EXTERNAL INPUT
+Bring the USB keyboard and mouse you confirmed you have, with a USB-C hub/adapter.
+The Surface project flags Type Cover/touchpad, touch and pen support as requiring
+its custom kernel. Those inputs are not promised in this stock-kernel preview.
+Cameras are also not promised. Do not change firmware keys just to force a boot.
+
+FIRST SESSION
+  1. Confirm you can see the desktop and move the mouse.
+  2. Open Kavi'ka Test Centre (it opens automatically; a desktop shortcut is provided).
+  3. View the hardware report. Check actual RAM, CPU model and internal disk capacity.
+  4. Press Meta+F12 several times to test the two preview desktops.
+  5. Test Wi-Fi, speakers and keyboard using ordinary KDE controls.
+  6. Save the hardware report, review it, and share only that report if desired.
+  7. Shut down through KDE. Remove the installer media before booting Windows again.
+
+STORAGE
+The casing marking supplied by the owner says 128 GB, not 1 TB. That is a factory
+marking; actual capacity may differ if the SSD was changed. The report checks the
+currently installed drive. Do not assume a 128 GiB Windows guest can fit alongside
+Linux on a factory 128 GB disk.
+
+This preview does not mount or erase the Surface's Windows drive automatically.
+The regular graphical installation launcher is disabled. Upstream installer
+packages remain in the base image; do not bypass the guard or run Anaconda manually.
+
+Live-session files and settings are temporary and normally disappear at shutdown.
+Do not save important work here. Saving a report into the live home folder does
+not make it persistent. No report is uploaded automatically.
+
+The 512 GB external SSD is installation media, not a limit on a future destination
+drive. The HP Envy internal drive is never an installation target.
+
+SECURITY AND LIMITATIONS
+The original Fedora kernel and bootloader are retained. Physical Surface Secure Boot
+and hardware behaviour have not been certified by a VM test. If boot is blocked,
+record the message and stop rather than disabling protection or enrolling keys blindly.
+
+This live system uses Fedora's live account and is not designed to hold secrets.
+Do not add production accounts or confidential data. The project is private and
+has not approved public redistribution.

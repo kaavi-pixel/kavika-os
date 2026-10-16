@@ -1,0 +1,12 @@
+{
+  "KPlugin": {
+    "Id": "kavika-preview",
+    "Name": "Kavi'ka preview workspace toggle",
+    "Description": "Meta+F12 switches between two Linux preview workspaces; no Windows guest is included.",
+    "Version": "0.1.0",
+    "EnabledByDefault": false
+  },
+  "X-Plasma-API": "javascript",
+  "X-Plasma-MainScript": "code/main.js",
+  "KPackageStructure": "KWin/Script"
+}

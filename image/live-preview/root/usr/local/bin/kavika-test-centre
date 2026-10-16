@@ -1,0 +1,50 @@
+#!/usr/bin/bash
+set -u
+export PATH=/usr/local/bin:/usr/bin:/bin
+
+while true; do
+    choice=$(kdialog --title "Kavi'ka OS · Live preview" \
+        --icon /usr/share/kavika/logo.png \
+        --menu "Surface Pro 8 test preview. Windows is not installed. Internal installation is disabled." \
+        guide "Read the test guide" \
+        hardware "View hardware report" \
+        save "Save a hardware report" \
+        switch "Switch workspace (Meta+F12)" \
+        windows "Windows workspace status" \
+        settings "Open system settings" \
+        close "Close") || exit 0
+    case "$choice" in
+        guide)
+            kdialog --title "Kavi'ka test guide" --textbox /usr/share/kavika/START-HERE.txt 760 600
+            ;;
+        hardware)
+            report=$(mktemp)
+            kavika-hardware > "$report"
+            kdialog --title "Hardware report · not an acceptance pass" --textbox "$report" 800 600
+            rm -f -- "$report"
+            ;;
+        save)
+            output=$(kdialog --getsavefilename "$HOME/kavika-hardware.json" "*.json" \
+                --title "Save report; the live session is temporary") || continue
+            [ -n "$output" ] || continue
+            if [ -e "$output" ]; then
+                kdialog --warningyesno "Replace the existing report file?" || continue
+            fi
+            if kavika-hardware > "$output"; then
+                kdialog --msgbox "Report saved. Review it before sharing. Files in the live home folder disappear after shutdown unless you copy them somewhere persistent."
+            else
+                kdialog --error "Could not save the report. Check the destination."
+            fi
+            ;;
+        switch)
+            qdbus-qt6 org.kde.kglobalaccel /component/kwin invokeShortcut KavikaToggle \
+                || kdialog --sorry "Use Meta+F12 or the virtual desktop controls in System Settings."
+            ;;
+        windows)
+            kdialog --title "Windows is not installed" --msgbox \
+                "This preview has two Linux workspaces to test navigation. The second is labelled Windows (not installed); it is NOT Windows or an emulator. A real Windows guest, Comet, file sharing and VM lifecycle controls are still to be implemented and tested. No Windows software or licence is included."
+            ;;
+        settings) systemsettings ;;
+        close) exit 0 ;;
+    esac
+done

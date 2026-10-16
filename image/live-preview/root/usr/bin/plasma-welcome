@@ -1,0 +1,4 @@
+#!/usr/bin/sh
+# The upstream live welcome advertises installation; this diagnostic preview
+# uses Kavi'ka Test Centre instead. No installation release is provided.
+exit 0

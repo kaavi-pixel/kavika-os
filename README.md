@@ -6,7 +6,9 @@ A Linux-first desktop experience with a real Windows workspace one four-finger s
 
 The Windows side must be full, general-purpose Windows, including Comet and normal user-chosen app installation, not a restricted collection of supported apps. A test matrix measures compatibility; it must not become an app allowlist, and a VM limitation must be reported rather than silently redefined as out of scope.
 
-**Status: early development, not an installable OS.** The repository includes a preliminary Windows diagnostic script and an installable-OS roadmap, but no session controller, installer, guest image, or bootable ISO. The supplied archive records a Windows preflight run; this review did not reproduce it, and no Linux, VM-performance, or hardware acceptance gate has passed.
+**Status: paused development checkpoint, not an installation release.** A Fedora-based diagnostic ISO and its source are implemented. The preceding candidate reached KDE/Test Centre and passed the two-Linux-workspace toggle checks; the latest wallpaper-startup fix still needs a fresh-image boot check. No ISO is approved for flashing yet, and Windows/Comet, cross-OS integration and supported installation are not included.
+
+See [the preview guide](docs/live-preview.md), [build instructions](docs/build.md), and [validation record](docs/validation/live-preview-0.1.0.md) before using an image. A desktop named “Windows (not installed)” is a Linux workspace, not a Windows implementation.
 
 ## Project documents
 
@@ -14,10 +16,10 @@ The Windows side must be full, general-purpose Windows, including Comet and norm
 - [Implementation plan](implementation-plan.md): architecture, dependencies, milestones, and release gates.
 - [OS implementation plan](os-implementation-plan.md): roadmap from the validated integration prototype to a live ISO, installer, and maintained OS release.
 - [M0 evidence](docs/validation/m0.md): pending decisions and hardware validation record.
-- [Surface test target](docs/surface-test-target.md): current spare-device target, approved erase scope, installation-media route, and identification blocker.
+- [Surface test target](docs/surface-test-target.md): identified model, approved erase scope, media route, and remaining hardware checks.
 - [Archive review](docs/review-upload.md): changes reviewed, documentation corrections, and verification limits.
 - [Bug tracker](bugtracker.md): confirmed-defect policy, untested risks, and verification checklist.
-- [Hand-off](hand-off.md): current state, next task, and unresolved decisions.
+- [Handoff](handoff.md): paused checkpoint, exact validation boundary, permissions and resume instructions.
 - [Original brief](docs/original-features.md): supplied text, with Markdown heading syntax repaired only.
 - [GitHub Issues](https://github.com/kaavi-pixel/kavika-os/issues): live task and risk tracking.
 
@@ -27,7 +29,7 @@ The proposed Linux base is **Fedora KDE Plasma Desktop**, using KDE Plasma on Wa
 
 - **Linux host:** Fedora KDE Plasma Desktop for native Linux applications and workspace switching.
 - **Windows workspace:** a full Windows 11 installation in a QEMU/KVM virtual machine managed by libvirt, including Comet and normal user-chosen applications.
-- **Release version:** not pinned yet. Select a supported Fedora release and record the exact versions after the M0 hardware and gesture checks pass.
+- **Preview base:** Fedora KDE 44, upstream image `44-1.7.x86_64`, stock kernel `6.19.10-300.fc44.x86_64`. This pins the diagnostic build, not a hardware-approved production configuration.
 
 This is the initial implementation target, not a claim that the laptop or every Windows workload has already been validated. If testing exposes an important compatibility limitation, revisit the architecture rather than silently reducing the full-Windows requirement.
 
@@ -61,11 +63,13 @@ The user-selected project logo is stored at [`assets/branding/kavi-ka-os-logo.pn
 
 ## First target: spare Surface Pro
 
-The user has selected an old Surface Pro with Windows 11 and approximately 1 TB internal storage as the first physical test computer. Its exact model, architecture, CPU, RAM, and GPU are not yet known; the user cannot sign into its current Windows account.
+The printed model **1983** identifies a **Surface Pro 8 Wi-Fi** ([Microsoft service guide](https://learn.microsoft.com/en-us/surface/service-guides/surface-pro8/surface-pro8-device-information-and-service-parts)). This is an Intel/x86_64 model family; the exact CPU and RAM still need measurement ([Microsoft specifications](https://support.microsoft.com/en-us/surface/models/surface-pro-8-features-and-specs)).
 
-The user explicitly permits replacing Windows on that spare Surface and erasing an empty 512 GB external SSD for installation media. The external SSD carries the installer; the intended installation uses the Surface's own 1 TB drive, not a 512 GB capacity limit.
+The user reports a **128 GB factory marking**, superseding the earlier 1 TB estimate; actual installed drive capacity is still unmeasured. The user explicitly permits replacing Windows on this Surface and erasing the empty 512 GB external SSD for media. That SSD carries the image, not a capacity limit on a future installation. USB keyboard, mouse, and the necessary connection hardware are available.
 
-The earlier HP Envy x360/Ryzen/16 GB evidence belongs to the helper computer, not this Surface. Do not carry its resource allocation into the Surface build; identify the Surface first and test the live environment before installation.
+The earlier HP Envy x360/Ryzen/16 GB evidence belongs to the helper computer, not this Surface. Do not carry its RAM or 128 GiB guest-disk proposal into the Surface build. Measure the actual disk and RAM and validate a storage budget before provisioning Windows.
+
+The linux-surface compatibility matrix lists Surface Pro 8 Type Cover/touchpad, touch and pen support as requiring its custom kernel; the preview instead uses Fedora's stock kernel and external input for the first test ([linux-surface device matrix](https://github.com/linux-surface/linux-surface/wiki/Supported-Devices-and-Features)). Native input, cameras, sleep, and Secure Boot remain unvalidated on this device; no firmware-security changes are authorised.
 
 See the [Surface test plan](docs/surface-test-target.md) for no-login identification and the recorded erase scope. Keep the HP Envy's internal drive untouched.
 
@@ -73,13 +77,15 @@ See the [Surface test plan](docs/surface-test-target.md) for no-login identifica
 
 - **In scope:** repository development toward a reversible prototype and, after validation, an installable Fedora-based OS. Build, installation, and release work have separate gates in the OS implementation plan.
 - **Approved target scope:** replace Windows on the spare Surface and erase the empty 512 GB external SSD for media. Identify the exact physical disks before writes; no erasure has occurred.
-- **Outside that approval:** HP Envy internal-disk changes, other drives, firmware-security changes, Windows licence purchases, and public distribution. Guest provisioning remains a separate opt-in step.
+- **Outside that approval:** HP Envy internal-disk changes, other drives, firmware-security changes, Windows licence purchases, and a public ISO release. Guest provisioning remains a separate opt-in step.
 - **Not included:** Windows installation media, activation keys, VM disks, recovery keys, device identifiers, or the original hardware screenshot.
 - **Licensing:** no project-wide open-source licence has been selected. Third-party components retain their own licences; a Windows licence decision remains a setup gate.
 
 The user has requested a testable OS for the spare Surface. An explicitly labelled private boot/diagnostic preview may be built before all integration gates pass, but the full installer/release gates remain; booting a preview is not proof of full Windows functionality.
 
-An upstream Fedora KDE 44 x86_64 ISO has been integrity-verified in the build sandbox. It remains unmodified Fedora, not a Kavi'ka image, and is not selected for the Surface until its architecture is known.
+On 16 October the user requested a stop at a good checkpoint and a GitHub update after being informed that the existing repository is public. Source and documentation are updated in that repository without changing visibility; the ISO is not published or released.
+
+The preview is composed from an integrity-verified Fedora KDE 44 x86_64 image plus a project-owned live-session overlay. The original Fedora kernel and base filesystem remain unchanged; this is not a custom Surface-kernel build or a completed Linux/Windows OS.
 
 ## Preliminary Windows checks
 

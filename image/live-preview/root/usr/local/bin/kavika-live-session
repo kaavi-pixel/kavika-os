@@ -1,0 +1,36 @@
+#!/usr/bin/bash
+# Runs only in the live user's session. No disk formatting, mounting, or network upload.
+set -u
+export PATH=/usr/local/bin:/usr/bin:/bin
+mkdir -p "$HOME/.local/state/kavika"
+exec >>"$HOME/.local/state/kavika/session.log" 2>&1
+echo "KAVIKA_SESSION_START"
+
+# Retry the actual wallpaper operation, not merely the object's existence:
+# Plasma publishes its D-Bus object before all methods are usable at startup.
+ready=0
+for attempt in $(seq 1 45); do
+    if plasma-apply-wallpaperimage --fill-mode preserveAspectFit /usr/share/kavika/logo.png; then
+        ready=1
+        break
+    fi
+    sleep 2
+done
+if [ "$ready" -eq 1 ]; then
+    qdbus-qt6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript '
+        const all = desktops();
+        for (let i = 0; i < all.length; i++) {
+            all[i].currentConfigGroup = ["Wallpaper", "org.kde.image", "General"];
+            all[i].writeConfig("Color", "#D2AD2D");
+        }
+    ' || true
+fi
+
+mkdir -p "$HOME/Desktop"
+cp /usr/share/applications/kavika-test-centre.desktop "$HOME/Desktop/"
+chmod u+x "$HOME/Desktop/kavika-test-centre.desktop"
+
+# The live ISO is not an installation release. Remove only live-session installer shortcuts.
+rm -f "$HOME/Desktop/liveinst.desktop" "$HOME/Desktop/org.fedoraproject.AnacondaInstaller.desktop"
+echo "KAVIKA_SESSION_READY"
+kavika-test-centre

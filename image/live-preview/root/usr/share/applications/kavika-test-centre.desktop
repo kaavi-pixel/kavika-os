@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Kavi'ka Test Centre
+Comment=Live preview guide, hardware report and workspace test
+Exec=/usr/local/bin/kavika-test-centre
+Icon=/usr/share/kavika/logo.png
+Terminal=false
+Categories=System;

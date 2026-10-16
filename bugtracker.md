@@ -1,16 +1,16 @@
 # Kavi'ka OS: bug tracker
 
-Reviewed snapshot | 15 October 2026 | Preliminary diagnostic tool exists; no integration or OS acceptance gate has passed.
+Reviewed snapshot | 16 October 2026 | Diagnostic live preview built; no full integration or installed-OS acceptance gate has passed.
 
-The primary physical target is now the spare Surface Pro (model/architecture/resources unknown, Windows 11 and approximately 1 TB storage user-reported). The user approved replacing its Windows installation and erasing the empty 512 GB external SSD for media; exact disk identification and hardware validation remain blockers, not general erase consent.
+The primary target is Surface Pro 8 Wi-Fi, model 1983, Intel/x86_64 family; sources and evidence are in [the target record](docs/surface-test-target.md). The user's 128 GB factory marking supersedes the earlier 1 TB estimate; actual capacity and RAM are unknown. External keyboard/mouse are available. Windows replacement and erasure of the empty 512 GB media are approved; exact disk identification and validation remain blockers, not general erase consent.
 
-**Confirmed runtime bugs: none recorded.** The archive reports a preliminary Windows preflight run, which this review did not reproduce; the desktop integration and OS remain untested. Documentation inconsistencies and static-review concerns below are not invented runtime defect reports.
+The archive reports a preliminary Windows preflight run, which this review did not reproduce. Live-preview-specific tests and any observed defects are recorded separately in [preview validation](docs/validation/live-preview-0.1.0.md); they must not be presented as full Windows or physical Surface acceptance.
 
 ## Live tracking policy
 
 Use [GitHub Issues](https://github.com/kaavi-pixel/kavika-os/issues) as the source of truth for current status. This document defines triage and the initial validation checklist; update its date and counts whenever a snapshot is refreshed.
 
-The reviewed live tracker contains ten milestone tasks and five unverified risks, all open. OS0–OS2 reuse prototype issues #1–#6; OS3–OS6 are separately tracked in [#12](https://github.com/kaavi-pixel/kavika-os/issues/12), [#13](https://github.com/kaavi-pixel/kavika-os/issues/13), [#14](https://github.com/kaavi-pixel/kavika-os/issues/14), and [#15](https://github.com/kaavi-pixel/kavika-os/issues/15). No issue has been filed as a confirmed runtime bug.
+The checked GitHub tracker contains ten milestone tasks and five unverified risks, all open. OS0–OS2 reuse prototype issues #1–#6; OS3–OS6 are separately tracked in [#12](https://github.com/kaavi-pixel/kavika-os/issues/12), [#13](https://github.com/kaavi-pixel/kavika-os/issues/13), [#14](https://github.com/kaavi-pixel/kavika-os/issues/14), and [#15](https://github.com/kaavi-pixel/kavika-os/issues/15). Preview defects B01–B05/P01 below are checkpoint records linked from the live task, not newly created standalone GitHub issues. The user requested the source/docs update after the public-visibility notice; no ISO release or visibility change is included.
 
 - **`type:task`:** implementation work or a milestone.
 - **`type:risk`:** a possible limitation requiring validation; not a confirmed bug.
@@ -36,7 +36,7 @@ Severity describes impact; priority describes sequencing. A task can have P0 pri
 | ID | Risk, not a confirmed bug | Priority | Validation / release response |
 |---|---|---|---|
 | [R01 / #7](https://github.com/kaavi-pixel/kavika-os/issues/7) | Four-finger gestures or the escape key may be intercepted by the full-screen viewer | P0 | Run F02/F03 and 100 switch cycles on actual hardware. Reject the backend or integration if Linux cannot reliably regain input. |
-| [R02 / #8](https://github.com/kaavi-pixel/kavika-os/issues/8) | Unknown Surface resources or virtual-display performance may make concurrent Linux/Windows unsuitable | P0 | Identify Surface CPU/RAM/architecture first; choose a measured target-specific profile instead of assuming the HP's 16 GB RAM or 6 GiB guest. Compare mixed workload with VM-off baseline; investigate architecture alternatives rather than silently narrowing full Windows. |
+| [R02 / #8](https://github.com/kaavi-pixel/kavika-os/issues/8) | Unknown Surface RAM/actual storage or virtual-display performance may make concurrent Linux/Windows unsuitable | P0 | Measure CPU/RAM/storage; do not use the HP's 6 GiB RAM/128 GiB guest-disk proposal. Factory marking is 128 GB, not the earlier 1 TB estimate. Compare mixed workload with VM-off baseline; investigate alternatives rather than narrowing full Windows. |
 | [R03 / #9](https://github.com/kaavi-pixel/kavika-os/issues/9) | Shared-folder configuration may leak private paths or expose SMB to the LAN | P0 | Test unauthenticated access, path/symlink escapes, firewall scope, and file integrity before enabling real files. |
 | [R04 / #10](https://github.com/kaavi-pixel/kavika-os/issues/10) | Suspend, guest updates, or viewer crashes may break session continuity | P0 | Run disconnect and suspend/resume fixtures and preserve data. Never “recover” by silently resetting the VM. |
 | [R05 / #11](https://github.com/kaavi-pixel/kavika-os/issues/11) | The VM may fail the full-Windows requirement, including Comet or another user-chosen application | P0 | Validate the normal Windows baseline and Comet first, then expand test coverage without an app allowlist. Investigate architecture changes for important failures rather than silently reducing scope. |
@@ -85,6 +85,23 @@ These extend the prototype checklist; they do not replace or pass it.
 | S01 | Script key `installedMemoryGiB` describes `TotalPhysicalMemory`, not installed module totals | Static-review naming mismatch; code unchanged | Rename/document the field and test output before treating it as installed RAM. Worksheet now warns about the distinction. |
 | S02 | All CIM queries share a generic failure handler | Static-review robustness concern; not a reproduced failure | Test failed/denied queries; consider partial results and sanitised per-check errors in later tool work. |
 | R06 | Custom image composition, disk selection, signing, or upgrades may fail despite a working prototype | Unverified OS-release concern covered by tasks #12–#15, not a sixth live risk issue | Require O01–O04 and T17–T23; no physical-disk exposure during builder/installer tests. |
+| D04 | Surface target was previously recorded as unidentified / approximately 1 TB | Corrected after user model and factory marking | Model 1983 / Pro 8 Wi-Fi; 128 GB factory marking, actual installed capacity unmeasured; no serial retained. |
+| R07 | Stock-kernel preview may lack native Surface input | Hardware validation pending under #14 | Use confirmed USB keyboard/mouse; native input/custom-kernel and Secure Boot paths require separate validation. |
+
+## Live-preview defects and packaging corrections
+
+| ID | Observed result | Correction / verification |
+|---|---|---|
+| B01 | Upstream live KDE setup replaces the preview's workspace `kwinrc` | Corrected through `livesys-session-extra`; previous candidate verified two named desktops and toggle both ways. Final candidate regression remains. |
+| B02 | First VM desktop showed an SELinux AVC alert; guest inspection later found `/`, `/etc`, `/usr` and overlay ancestors labelled `tmpfs_t` | Post-policy-load relabelling verified on the previous candidate: expected labels, enforcing SELinux and working console login. The earlier pre-pivot attempt was ineffective and removed. Final candidate regression remains. |
+| B03 | GRUB reported syntax errors before showing the boot menu | Reproduced with `grub-script-check` on the unmodified upstream config: nested function declaration at line 6. Normalize to a top-level video function, preserve platform choices and require a parser pass; regression test added. Initial suspicion about the title apostrophe was not supported. |
+| B04 | First desktop opened Fedora's installer-oriented Welcome Centre | Previous candidate opened Test Centre without that Welcome Centre after disabling its preview launcher; final candidate regression remains. |
+| B05 | Wallpaper setup reported a missing D-Bus method during startup although it existed once Plasma finished loading | Object existence was not a sufficient readiness check. Retry the actual `plasma-apply-wallpaperimage --fill-mode preserveAspectFit` operation instead; bounded retry regression added. |
+| P01 | Internal image manifest contained a Python test cache | Exclude `__pycache__`/bytecode during composition; check final manifest |
+
+These records refer to disposable VM/internal-build observations, not Surface failures. They do not change the untested status of Windows, Comet, installer safety or four-finger input.
+
+Work is paused at the user's request. Resume from [handoff.md](handoff.md); do not mark the newest image ready or close milestones based on the previous candidate's results.
 
 See [the archive review](docs/review-upload.md) for review scope and verification limits. The preflight tool was preserved unchanged; no runtime fix or test is claimed.
 

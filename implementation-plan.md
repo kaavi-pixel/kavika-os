@@ -1,6 +1,8 @@
 # Kavi'ka OS: implementation plan
 
-Version 0.5 | 15 October 2026 | Integration roadmap; spare Surface is the primary test target.
+Version 0.6 | 16 October 2026 | Integration roadmap; Surface Pro 8 diagnostic preview in validation.
+
+Execution is paused at the user's request. Resume from [handoff.md](handoff.md); latest-image validation is outstanding, and no physical installation is ready.
 
 Build a validated integration before claiming a complete OS. The user now authorises Windows replacement on the spare Surface and erasure of the empty external SSD for media; match exact disks before writes, keep the HP's drive untouched, and do not infer permission for firmware changes or licence purchases. None of the milestones below has been completed.
 
@@ -8,7 +10,7 @@ The supplied project changes extend the roadmap toward an installable OS.
 [The OS implementation plan](os-implementation-plan.md) extends this prototype
 through packaging, live media, installation and release after these gates pass.
 
-The Windows preflight tool now exists, and the archive supplies a preliminary run summary in [the M0 worksheet](docs/validation/m0.md). This review statically inspected the tool but did not execute it; M0 remains open and M1–M5 remain uncompleted.
+The Windows preflight tool exists, and the archive supplies a preliminary run summary in [the M0 worksheet](docs/validation/m0.md). A separate Fedora 44 diagnostic live image now exists; its limited checks are recorded in [preview validation](docs/validation/live-preview-0.1.0.md). M0 remains open and M1–M5 remain uncompleted.
 
 ## Architecture decision
 
@@ -39,7 +41,9 @@ The controller should use libvirt state events plus bounded retries, not blind s
 
 ## Hardware envelope
 
-The primary target is an old Surface Pro with user-reported Windows 11 and 1 TB storage. Exact model/architecture, CPU, RAM, GPU, firmware access, and Linux support remain unknown; Windows sign-in is unavailable.
+The primary target is model 1983, Surface Pro 8 Wi-Fi ([Microsoft service guide](https://learn.microsoft.com/en-us/surface/service-guides/surface-pro8/surface-pro8-device-information-and-service-parts)). The Intel/x86_64 family is established, but exact CPU/RAM and actual hardware configuration need measurement ([Microsoft specifications](https://support.microsoft.com/en-us/surface/models/surface-pro-8-features-and-specs)). The user reports Windows 11 and a 128 GB factory marking, superseding the earlier 1 TB estimate; installed drive capacity, firmware access and Linux support remain untested.
+
+The first preview uses stock Fedora with external USB keyboard/mouse, which the user has confirmed are available. Do not allocate a 128 GiB guest on an assumed 128 GB physical disk: collect actual storage/RAM, reserve Linux/update/free-space headroom, then make an explicit Windows storage decision. The 512 GB SSD is currently approved as installer media, not automatically committed to permanent guest storage.
 
 The earlier Ryzen 7 8840HS/Radeon 780M, 16 GB RAM, and storage screenshot belongs to the HP Envy helper. It is not evidence for sizing the Surface guest; collect target facts through [the no-login identification/live-test route](docs/surface-test-target.md).
 
@@ -85,7 +89,7 @@ This table is the prototype issue map. OS0–OS2 map onto M0–M5; the OS plan a
 
 Tasks:
 
-- Identify the Surface model/architecture from physical markings or firmware first. Windows sign-in is unavailable, so the PowerShell tool is optional rather than a blocker; collect resource/device information from a compatible live environment.
+- Model identification is complete: Surface Pro 8 Wi-Fi, Intel/x86_64 family. Boot the diagnostic preview and collect actual resources/device information; Windows sign-in and the PowerShell tool are not prerequisites.
 - Record source machine role, collection time, tool version/hash, and reviewed fields; keep the historical HP/archive observations separate from Surface results.
 - Record full Windows and Comet as fixed product requirements; gather additional representative workloads for test coverage, not an installation allowlist. Obtain the Windows edition/licensing decision, backup/recovery readiness, and approval for a reversible Linux test route.
 - Check real GPU inventory, firmware virtualisation availability, `/dev/kvm`, storage headroom, and the target release's device support.

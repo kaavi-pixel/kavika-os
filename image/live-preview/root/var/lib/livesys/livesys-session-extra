@@ -1,0 +1,7 @@
+#!/usr/bin/sh
+# Sourced by Fedora livesys AFTER its KDE defaults, before live-user ownership/relabel.
+# Only RAM-backed live-session configuration is changed.
+mkdir -p /home/liveuser/.config/autostart
+cp /etc/skel/.config/kwinrc /home/liveuser/.config/kwinrc
+cp /etc/skel/.config/kded_device_automounterrc /home/liveuser/.config/
+cp /usr/share/kavika/disable-welcome.desktop /home/liveuser/.config/autostart/org.kde.plasma-welcome.desktop

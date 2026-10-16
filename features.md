@@ -1,6 +1,8 @@
 # Kavi'ka OS: features v2
 
-Version 0.6 | 15 October 2026 | Product specification; spare Surface selected, diagnostics only implemented.
+Version 0.7 | 16 October 2026 | Product specification; Surface Pro 8 identified, diagnostic live preview built.
+
+Work is paused at the user's request. The newest wallpaper-startup change has not passed a fresh-image boot check; see [handoff.md](handoff.md) before resuming or treating an image as ready for the Surface.
 
 This expands the supplied brief into testable requirements without replacing its original goals. Technical choices and numerical targets below are proposals, not measured results or additional user commitments.
 
@@ -36,11 +38,19 @@ Full Windows functionality is the product requirement; universal VM compatibilit
 
 ### First physical target
 
-The primary test machine is now an old Surface Pro with Windows 11 and approximately 1 TB of internal storage, not the earlier HP Envy. The user authorises replacing the Surface's Windows installation and erasing an empty 512 GB external SSD for installation media; precise device identification remains mandatory before writing either disk.
+The primary test machine is Surface Pro 8 Wi-Fi, identified by the user's model 1983 marking ([Microsoft service guide](https://learn.microsoft.com/en-us/surface/service-guides/surface-pro8/surface-pro8-device-information-and-service-parts)). The user reports Windows 11 and a 128 GB factory marking, replacing the earlier 1 TB estimate; actual installed capacity remains unmeasured. The user authorises replacing its Windows installation and erasing an empty 512 GB external SSD for media; precise disk identification remains mandatory before writing either disk.
 
-The Windows account password is unknown. Obtain model/architecture information from physical markings or firmware and then a compatible live environment, rather than making Windows sign-in a prerequisite. RAM, CPU, GPU, and exact model remain unknown; no resource or compatibility claims transfer from the HP.
+The Windows account password is unknown; signing in is not a prerequisite for the live-test route. The model family is Intel/x86_64, but exact CPU, RAM, installed GPU configuration and storage need live measurement ([Microsoft specifications](https://support.microsoft.com/en-us/surface/models/surface-pro-8-features-and-specs)). External USB keyboard and mouse are available; no resource or compatibility claims transfer from the HP.
 
 The external medium does not limit the size of the installation on the Surface's internal drive. See [the Surface test target](docs/surface-test-target.md) for scope and the staged test route.
+
+### What the first preview implements
+
+The 0.1.0 live preview pins Fedora KDE 44 x86_64, adds the unchanged logo, Test Centre, a privacy-filtered hardware report and a `Meta+F12` two-desktop demonstration. The second desktop is labelled “Windows (not installed)”; both desktops are Linux. Implementation and runtime validation are tracked separately in [the preview evidence](docs/validation/live-preview-0.1.0.md).
+
+Windows, Comet, a guest VM, cross-OS file sharing, four-finger acceptance, persistence and installation are not provided by this preview. Full Windows remains the requirement; diagnostic media is an earlier testing aid, not a scope reduction or completion of F01–F15/O01–O04.
+
+Surface Pro 8 native Type Cover/touchpad, touch and pen are listed with a custom-kernel requirement by linux-surface, so the stock-kernel first preview uses the available external inputs ([linux-surface matrix](https://github.com/linux-surface/linux-surface/wiki/Supported-Devices-and-Features)). A custom-kernel/signing path requires separate implementation and testing; no automatic firmware changes are permitted.
 
 ## Non-goals
 
@@ -105,7 +115,7 @@ These are required for the later OS release, not reasons to skip the prototype g
 | O03 | Validated host security and hardware | Given the candidate image and separately approved test route, when live boot and installation are tested, then the intended host Secure Boot path and device suite pass, followed by the full Windows/Comet and switching suite. Host Secure Boot is tested separately from guest Secure Boot. | OS3–OS5; T21 and prototype tests |
 | O04 | Maintainable, documented release | Given a candidate release, when another isolated build and an upgrade/recovery test are run, then the procedure is repeatable, versions/manifests/checksums are recorded, and rollback/recovery works. Licence, trademark, signing, and publication decisions must be resolved before distribution. Byte-identical reproducibility is a separate claim requiring evidence. | OS6; T22/T23 |
 
-The diagnostic script is an implemented preliminary tool, not implementation of F01–F15 or O01–O04. Its output does not pass a Linux or Windows-workspace acceptance gate.
+The diagnostic tools and live preview are preliminary implementations, not completion of F01–F15 or O01–O04. In particular, the preview intentionally lacks the installer required for O01's eventual release gate.
 
 ## Success metrics
 
@@ -126,7 +136,7 @@ All values are provisional acceptance targets. Record the baseline and raw test 
 |---|---|---|
 | Which Windows edition and valid VM licensing route will be used? | User | Blocks guest provisioning and RDP selection, not documentation. |
 | Which additional workloads should be tested first beyond the full Windows baseline and Comet? | User | Guides test coverage; does not restrict app installation. Comet is already required. |
-| What is the exact Surface model/architecture and physical disk identity? | User / implementer | Blocks target-image selection and destructive installation. Windows replacement and external-media erasure are already approved for the named spare devices. |
+| What are the actual Surface RAM, CPU and installed disk capacity/identity? | User / implementer | Model 1983/Pro 8 Wi-Fi and Intel/x86_64 family are established; live measurements still block guest sizing and destructive installation. Erase scope is already approved. |
 | Does the actual touchpad expose reliable four-finger gestures under Linux? | Implementer | Blocks F02. Touchscreen “10 touch points” in the screenshot does not answer this. |
 | Which supported Linux/KDE release and viewer build pass the hardware gates? | Implementer | Blocks a pinned installation guide. |
 | Is optional clipboard sharing desired, and should Windows start at login? | User | Non-blocking; defaults are clipboard off and Windows started on demand. |
@@ -141,7 +151,7 @@ The proposed Linux base is Fedora KDE Plasma Desktop on Wayland. This is an init
 - **The VM stack is documented:** Fedora documents QEMU/KVM, libvirt, virt-manager, and virt-viewer, matching the proposed Windows guest architecture ([Fedora virtualisation guide](https://docs.fedoraproject.org/en-US/quick-docs/virtualization-getting-started/)).
 - **The desktop can become Kavi'ka's own interface:** Fedora KDE emphasises customisation and updated drivers and kernels; that makes it a reasonable starting point for our branding and integration, without proving compatibility or performance on this laptop ([Fedora KDE](https://fedoraproject.org/kde/)).
 
-The maintenance trade-off is Fedora's approximately 13-month update period per release, which requires planned upgrades and regression testing rather than leaving one installation unchanged for years ([Fedora KDE](https://fedoraproject.org/kde/)). We should pin the release and component versions only after M0 validation and rerun acceptance tests when upgrading.
+The maintenance trade-off is Fedora's approximately 13-month update period per release, which requires planned upgrades and regression testing rather than leaving one installation unchanged for years ([Fedora KDE](https://fedoraproject.org/kde/)). Fedora 44 is pinned for the diagnostic preview; a production dependency set still requires M0 validation and upgrade regression tests.
 
 KDE's available controls do not establish that our exact full-screen viewer/gesture combination works. A KDE community report describes four-finger horizontal switching, but also limitations on remapping; verify the selected release and touchpad instead of treating that report as a universal API guarantee ([KDE discussion](https://discuss.kde.org/t/plasma-6-7-wayland-how-can-i-remap-three-finger-touchpad-gestures-independently-of-four-finger-gestures/48621)).
 

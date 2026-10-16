@@ -1,0 +1,13 @@
+[Desktops]
+Number=2
+Rows=1
+Id_1=ea104163-dc14-45f7-9e43-147a325dd501
+Id_2=ea104163-dc14-45f7-9e43-147a325dd502
+Name_1=Linux
+Name_2=Windows (not installed)
+
+[Plugins]
+kavika-previewEnabled=true
+
+[Wayland]
+FollowLocale1=true

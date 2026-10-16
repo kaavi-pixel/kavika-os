@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Kavi'ka live preview
+Exec=/usr/local/bin/kavika-live-session
+OnlyShowIn=KDE;
+X-KDE-autostart-after=panel

@@ -1,0 +1,88 @@
+{
+  "name": "Kavika OS 0.1.0 Surface Pro 8 live preview",
+  "base": "Fedora-KDE-Desktop-Live-44-1.7.x86_64.iso",
+  "base_sha256": "c8295961d4c41adbf785a31a17c21a971d3b7415fda72dcad0c11c49577bf03a",
+  "output_sha256": "226d4fc0c57b18c43a725503664c59dcbb7e7767fa479be331760a91f5b5fc82",
+  "output_bytes": 3370254336,
+  "architecture": "x86_64",
+  "installer_supported": false,
+  "windows_included": false,
+  "surface_kernel_included": false,
+  "persistence_supported": false,
+  "logo_sha256": "f2cdcad70f8c289e5ac1628f9c2092647c6eae91e1cbbb813d6fe595a644fd6d",
+  "builder_sha256": "6aeee48d182cdd842d416e61570dd3863107953134fe4a5725bd1dd28f07c382",
+  "payload_files": [
+    {
+      "path": "updates/etc/skel/.config/kded_device_automounterrc",
+      "sha256": "ff46ca2a3bea1675aa45c77a292be9ea6b4d3a7a7d62dd8edad08d41a92923d2"
+    },
+    {
+      "path": "updates/etc/skel/.config/kwinrc",
+      "sha256": "45755fb68f1461ec4e6f3a858ba0e2b4f91f94847c5a67218836f17bf64626ba"
+    },
+    {
+      "path": "updates/etc/xdg/autostart/kavika-live.desktop",
+      "sha256": "923efa818963611d7bf93b9d365e2681c2faccb1ba884ad3547c6a02b1707163"
+    },
+    {
+      "path": "updates/etc/xdg/autostart/liveinst-setup.desktop",
+      "sha256": "b544502b7213d3ab4b1a9730ec952aa4e8af69c59812cf74e558762489a3ac64"
+    },
+    {
+      "path": "updates/usr/bin/liveinst",
+      "sha256": "8fbea0b27e2aa7b8cfe653f86ae56813558faff7746e6968eb96fbe3a750b316"
+    },
+    {
+      "path": "updates/usr/bin/plasma-welcome",
+      "sha256": "1726954fd9bd5329a9200f2a702fc0e894504982297a7cf6eb5c11dff5a26bc0"
+    },
+    {
+      "path": "updates/usr/lib/systemd/system/systemd-tmpfiles-setup.service.d/20-kavika-labels.conf",
+      "sha256": "8c506ab8d2fca3d2813b231960b451f9e1c1347462a67a565c0beda258b0daf2"
+    },
+    {
+      "path": "updates/usr/local/bin/kavika-hardware",
+      "sha256": "d09e8e7cd731eba4b6bdbc9329a529271e5687e78f34c93135904b171779e238"
+    },
+    {
+      "path": "updates/usr/local/bin/kavika-live-session",
+      "sha256": "1dcbbc7b8c92d36c69b7fdb338cb744fd259aab55c7a602437f5fde5887be6e7"
+    },
+    {
+      "path": "updates/usr/local/bin/kavika-test-centre",
+      "sha256": "96319baa8178828b314ec701e9fa38dffacdc5f338e3a205d5f7d52e727a32f4"
+    },
+    {
+      "path": "updates/usr/share/applications/kavika-test-centre.desktop",
+      "sha256": "78b4a91f4cc13b2698d632ddcf10ec137c6e53cecf66be643144bbc9e604e351"
+    },
+    {
+      "path": "updates/usr/share/applications/liveinst.desktop",
+      "sha256": "b544502b7213d3ab4b1a9730ec952aa4e8af69c59812cf74e558762489a3ac64"
+    },
+    {
+      "path": "updates/usr/share/kavika/START-HERE.txt",
+      "sha256": "c4fd1edc45909d1952b1964e4b654610b47a7f53ffe791882bed1a5a759623e9"
+    },
+    {
+      "path": "updates/usr/share/kavika/disable-welcome.desktop",
+      "sha256": "f7d9c5de2b52bb5f2f7acf6785e1b53785c8aac8fd1d39c005f192b3d5ac3757"
+    },
+    {
+      "path": "updates/usr/share/kavika/logo.png",
+      "sha256": "f2cdcad70f8c289e5ac1628f9c2092647c6eae91e1cbbb813d6fe595a644fd6d"
+    },
+    {
+      "path": "updates/usr/share/kwin/scripts/kavika-preview/contents/code/main.js",
+      "sha256": "1064407efdf0872f85e9a78af534a43fbed8f758bc8b5e4e8ef7e87f05bebb5d"
+    },
+    {
+      "path": "updates/usr/share/kwin/scripts/kavika-preview/metadata.json",
+      "sha256": "30c5c2546b979d83f0dcf75d84d41e538f38ba621a3a2149133ebee5ce6e39ed"
+    },
+    {
+      "path": "updates/var/lib/livesys/livesys-session-extra",
+      "sha256": "25f7cdd6f66ac3ce042842869d997c2f8ae94132c46b13bd30cca757b6376e68"
+    }
+  ]
+}

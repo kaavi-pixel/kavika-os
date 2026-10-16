@@ -1,0 +1,9 @@
+#!/usr/bin/bash
+# Deliberately replaces the ordinary launcher only in this disposable preview.
+if [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+    /usr/bin/kdialog --title "Live preview only" --sorry \
+        "Internal installation is disabled in this Kavi'ka diagnostic preview. Test the desktop and save the hardware report first. This image has no Windows workspace and is not an installation release."
+else
+    printf '%s\n' "Kavi'ka live preview: installation is disabled. Use a separately validated installation release."
+fi
+exit 1

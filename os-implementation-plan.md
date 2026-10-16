@@ -1,8 +1,8 @@
 # Kavi'ka OS: OS implementation plan
 
-Status: active roadmap; no bootable image or passed hardware gate yet.
+Status: paused source/build checkpoint; latest wallpaper fix awaits fresh-image validation. No installed-OS or Surface hardware gate passed.
 
-Version 0.3 | Updated 15 October 2026 for the spare Surface test target.
+Version 0.4 | Updated 16 October 2026 for the identified Surface Pro 8 and live preview.
 
 ## Product and scope
 
@@ -16,13 +16,14 @@ The supplied project changes introduce this OS roadmap and repository implementa
 The user now authorises complete Windows replacement on the spare Surface Pro
 and erasure of an empty 512 GB external SSD for installation media. Identify the
 actual devices before writing. HP Envy disk changes, firmware-security changes,
-Windows purchases, guest provisioning, and public distribution are not included.
-Keep the repository private.
+Windows purchases, guest provisioning, and a public ISO release are not included.
+The user requested this checkpoint's source/docs be updated in the existing public
+repository after the visibility notice; do not change its visibility.
 Preserve the approved logo and original brief unchanged.
 
 ## Architecture
 
-- Base: a supported Fedora KDE release and Plasma Wayland; target architecture is pending exact Surface identification. An x86_64 upstream candidate exists but must not be assumed compatible.
+- Base: Fedora KDE 44 `44-1.7.x86_64` is pinned for the diagnostic preview; Surface Pro 8 Wi-Fi is an Intel/x86_64 target. Hardware approval remains pending; see the sourced [target record](docs/surface-test-target.md).
 - Windows: QEMU/KVM and libvirt, with SPICE as the first viewer candidate.
 - Integration: an unprivileged session controller, desktop rules, explicit escape,
   and a private authenticated shared folder. Windows starts on demand.
@@ -37,10 +38,11 @@ Preserve the approved logo and original brief unchanged.
 - Windows installation media, licence keys, user files, guest disks, and account
   credentials are never bundled in the Linux ISO or source repository.
 
-The exact Fedora release and dependencies remain unpinned until hardware validation.
-Record upstream source revisions, package versions, repository configuration and
-checksums before the first image build. Do not guess package groups or reuse an
-obsolete release merely to make a build complete.
+The preview pins its upstream ISO SHA-256 and records payload hashes and build
+tools; the production package set remains subject to hardware validation.
+Its small initramfs live-update overlay is an interim diagnostic build mechanism,
+not a replacement for the planned RPM-based installation/update pipeline.
+See [build instructions](docs/build.md) and [preview evidence](docs/validation/live-preview-0.1.0.md).
 
 ## Delivery stages
 
@@ -72,13 +74,14 @@ The later OS requirements O01–O04 are defined in `features.md`; T17–T23 in `
 
 ## Implementation order
 
-1. Identify the spare Surface from physical model markings or accessible firmware;
-   the user cannot sign into Windows. Select a compatible live image, then collect
-   resources/device information without depending on the PowerShell script.
+1. Model identification is complete: Surface Pro 8 Wi-Fi, model 1983. Validate the
+   x86_64 diagnostic preview in a disposable VM, then collect live Surface
+   resources/device information without depending on Windows or PowerShell.
    Record source-machine role, UTC time and tool revision/hash; earlier HP/archive
    results do not establish Surface hardware.
-2. Use the approved empty 512 GB external SSD as media and the Surface's own 1 TB
-   drive as the intended installation destination. Verify their physical identities
+2. Use the approved empty 512 GB external SSD as media and the Surface's internal
+   drive as the eventual installation destination. Its factory marking is 128 GB,
+   replacing the earlier 1 TB assumption; measure actual capacity and identities
    before writes and keep the HP Envy internal drive untouched. Record guest
    Windows edition/licensing and additional representative workloads. An
    existing Windows activation is not proof of guest licensing rights.
@@ -86,8 +89,8 @@ The later OS requirements O01–O04 are defined in `features.md`; T17–T23 in `
    events, Wi-Fi, keyboard, audio, brightness, touch/pen and suspend. Measure
    VM-off CPU, memory and battery baseline and record exact software versions.
 4. Manually validate a fresh Windows guest and viewer before writing provisioning
-   automation. Test the initial 6 GiB memory proposal against Comet and concurrent
-   Linux work; change or reject it based on measured performance.
+   automation. Choose a Surface-specific memory/storage budget against Comet and
+   concurrent Linux work; do not reuse the HP's 6 GiB/128 GiB proposal.
 5. Implement and test a narrow controller with libvirt state events, bounded
    timeouts, duplicate-launch protection and reconnect. Never force power-off on
    timeout. Add workspace rules only against the validated Plasma API.
@@ -139,10 +142,12 @@ No milestones are complete merely because this plan or a script exists.
   archive-reported and not reproduced during this review. Static inspection found
   no explicit configuration-changing commands; parser and runtime checks remain.
 - M0 evidence worksheet created. User decisions and Linux hardware testing remain.
-- No VM provisioned, image built, disk altered, or milestone declared complete.
-- Upstream Fedora KDE 44 x86_64 ISO downloaded and signature/checksum verified in
-  the sandbox; no Kavi'ka image has been built. Exact Surface identity/architecture
-  blocks final input selection. See [Surface target](docs/surface-test-target.md).
+- No Windows VM provisioned, user disk altered, or milestone declared complete.
+- Fedora KDE 44 input signature/checksum verified and a diagnostic preview built
+  in the sandbox. Disposable VM validation and physical hardware validation are
+  separate; consult [current evidence](docs/validation/live-preview-0.1.0.md).
+- Surface model is identified; actual RAM/storage, native input, KVM, security
+  and full Windows/Comet feasibility remain outstanding.
 
 The desktop theme specification drafted earlier remains unapproved design work;
 the uploaded archive contains no theme package or theme implementation. Packaging
