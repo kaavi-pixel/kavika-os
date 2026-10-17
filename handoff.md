@@ -12,7 +12,10 @@ B05's wallpaper readiness retry is not visually validated on this image. KDE/Tes
 
 ## Current host/test constraint
 
-- QEMU on the Windows helper uses software TCG and ran extremely slowly; don't repeat the full boot routinely. Validate WHPX with a tiny guest that actually executes, or move to a Linux/KVM-capable host. No firmware changes or Surface-disk use as a workaround.
+- QEMU TCG made the full Fedora guest extremely slow and was stopped; do not rerun that full boot routinely.
+- **WHPX capability probe:** a separate 64-MiB real-mode boot sector under `accel=whpx` wrote its expected marker and exited through QEMU's debug-exit device (return code 33). This proves WHPX can execute a tiny guest on this helper; it does not validate Fedora, KDE, graphics, or Surface hardware.
+- **Next VM test:** the launcher now accepts `--accel whpx` and saves diagnostics to `qemu.stderr.log`, while preserving the ISO hash check, disposable QCOW2/UEFI vars, and no physical disk/shared-folder exposure. Launch the current ISO once with WHPX using a fresh empty VM directory. Inspect graphics, serial output and stderr. If graphics stays black or boot stalls, stop and diagnose from logs or move to Linux/KVM; do not fall back to full TCG on this helper.
+- Recheck free RAM before starting a 4-GiB guest; the launch guard is 5 GiB free RAM.
 
 ## Product requirements
 

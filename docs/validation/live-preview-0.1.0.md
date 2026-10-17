@@ -11,11 +11,16 @@ Checkpoint: 17 October 2026. Paused development checkpoint; not a release and no
 | ISO media integrity | `checkisomd5` PASS | Integrity is not usability proof |
 | Derived ISO SHA-256 | `10074299b974eb005d0a38144d74b0dc02e1fa128684eb0f81b9cc9829a177ac` | `C:\\Users\\kavsb\\Downloads\\Kavika-OS-0.1.0-Surface-Pro-8-Live-Preview.iso`; 3370254336 bytes |
 | QEMU boot | UEFI boot through GRUB; serial log reached `Fedora Linux 44 (KDE Plasma Desktop Edition)` and `localhost-live login:` | QEMU GTK graphics remained black; KDE desktop/Test Centre not verified |
-| VM safety boundary | Disposable QCOW2 disk, no physical disk passthrough, user-mode NAT, 4 GiB guest RAM, software TCG | Not the planned KVM/libvirt Windows workspace |
+| VM safety boundary | Disposable QCOW2 disk, no physical disk passthrough, user-mode NAT, 4 GiB guest RAM; QEMU command configured for TCG | Linux diagnostic sandbox, not the planned KVM/libvirt Windows workspace. WHPX probe below is separate and does not test this ISO |
 | Surface hardware | Not tested | Do not flash/install; no hardware matrix or installer validation |
 | Product requirements | Not implemented in this ISO | No Windows 11 guest, Comet, integration, persistence, update/recovery or supported install |
 
-Current local ISO (`Downloads/Kavika-OS-0.1.0-Surface-Pro-8-Live-Preview.iso`) SHA-256: `10074299b974eb005d0a38144d74b0dc02e1fa128684eb0f81b9cc9829a177ac`; output size: 3370254336 bytes; embedded `checkisomd5` passed. The iso.sha256 and manifest files tracked in this repository describe an earlier build hash `226d4fc0c57b18c43a725503664c59dcbb7e7767fa479be331760a91f5b5fc82` and must not be used for the current local ISO. The matching local sidecar/manifest exist beside the Downloads ISO, and the QEMU launcher pins the current local hash.
+Current local ISO (`Downloads/Kavika-OS-0.1.0-Surface-Pro-8-Live-Preview.iso`) SHA-256: `10074299b974eb005d0a38144d74b0dc02e1fa128684eb0f81b9cc9829a177ac`; output size: 3370254336 bytes; embedded `checkisomd5` passed. The tracked repository sidecar/manifest are an older build and must not be used for the local ISO.
+
+## QEMU accelerator probe (separate artifact)
+
+On the helper, QEMU 11.1 executed a tiny 64-MiB real-mode guest under WHPX, wrote the expected marker (byte 0x57), and exited through QEMU debug-exit (return code 33). This proves tiny-guest execution only—not Fedora/KDE graphics or this ISO. The earlier full Fedora attempt used TCG, reached serial login, and displayed a black GTK window.
+
 
 ## Next actions
 

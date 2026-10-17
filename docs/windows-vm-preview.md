@@ -4,9 +4,9 @@ This is a **throwaway Fedora-based Linux diagnostic VM** to resume the handoff's
 
 ## Isolation and resource budget
 
-The launcher validates the ISO file size and SHA-256 against the validation record before it creates VM storage. It creates only a new, sparse 24 GiB QCOW2 file and private disposable UEFI variable file inside an otherwise-empty VM directory. It does not pass through physical disks, share a host folder, or bridge the VM onto the local network. Networking is QEMU user-mode NAT. The empty QCOW2 is not an installation target for this preview; do not start Anaconda from the live session.
+The launcher verifies the ISO hash/size, current 5-GiB free-RAM guard, and an empty VM directory before creating any guest storage. It creates only a private 24-GiB QCOW2 disk and disposable UEFI variable file. The QEMU command has no physical disk passthrough or shared-folder option; networking is user-mode NAT. The QCOW2 is not a Fedora installation target—do not start Anaconda.
 
-The Windows hypervisor on this helper reports no SLAT for nested virtualization. The Windows VM launcher requires **at least 5 GiB free RAM** (4-GiB guest plus 1-GiB headroom), checks current free RAM, and uses slow TCG software emulation. It does not check installed RAM or use WHPX. Recheck free memory before launch; the Fedora desktop may be very slow. This test VM does not validate Surface hardware.
+The Windows hypervisor reports no SLAT for nested virtualization. The launcher checks for **5 GiB free RAM** before allocating the 4-GiB guest and defaults to slow TCG. A tiny real-mode guest has been verified under WHPX on this helper; that does not establish that Fedora/KDE will work there. The launcher accepts `--accel whpx` and writes QEMU diagnostics to `qemu.stderr.log`. Recheck free RAM immediately before launch. This test VM does not validate Surface hardware.
 
 ## Launch on the configured Windows helper
 
@@ -20,7 +20,7 @@ python .\tools\launch-preview-vm-windows.py `
   --vm-dir "C:\Users\<your-user>\Kavika-Preview-Test"
 ```
 
-The launcher refuses to reuse a non-empty VM directory. It opens a QEMU GUI window; if the VM firmware shows a boot menu, choose the Fedora live preview. On first boot, inspect the visible Linux desktop/Test Centre and KWin workspace toggle manually; check the generated `qemu.log` alongside the VM manifest. The VM is expected to boot from UEFI; if it fails, close it and capture the error/log. No previous-candidate evidence transfers to a new ISO hash.
+Use the new `--accel whpx` option only after the tiny WHPX probe passes. The probe only showed tiny guest CPU execution, so GUI/KDE may still fail. Inspect the QEMU window, serial `qemu.log`, and `qemu.stderr.log` before claiming a GUI boot. If display remains black or boot stalls, stop the VM and preserve logs for diagnosis. Never fall back to full TCG on this host for another long boot.
 
 ## Start/stop and cleanup
 
