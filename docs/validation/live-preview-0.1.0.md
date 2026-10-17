@@ -1,6 +1,6 @@
 # Kavi'ka OS 0.1.0: live-preview validation
 
-Checkpoint: 17 October 2026. Paused development checkpoint; not a release and not approved for flashing.
+Checkpoint: 17 October 2026. Paused development checkpoint; not a release and not approved for flashing. The exact local ISO hash and matching untracked sidecar/manifest are recorded below. Repository tracked sidecar/manifest remain a superseded build and must not be used for this ISO. No ISO is published.
 
 | Gate | Result | Limitation |
 |---|---|---|
@@ -15,7 +15,7 @@ Checkpoint: 17 October 2026. Paused development checkpoint; not a release and no
 | Surface hardware | Not tested | Do not flash/install; no hardware matrix or installer validation |
 | Product requirements | Not implemented in this ISO | No Windows 11 guest, Comet, integration, persistence, update/recovery or supported install |
 
-This artifact is a Fedora-based Linux diagnostic preview, not the Kavi'ka dual-environment product. The black QEMU graphics window is the immediate blocker to validating its graphical surface; serial login alone does not prove KDE/Test Centre works. Prior GUI passes belong to a different ISO hash and must not be carried over.
+Current local ISO (`Downloads/Kavika-OS-0.1.0-Surface-Pro-8-Live-Preview.iso`) SHA-256: `10074299b974eb005d0a38144d74b0dc02e1fa128684eb0f81b9cc9829a177ac`; output size: 3370254336 bytes; embedded `checkisomd5` passed. The iso.sha256 and manifest files tracked in this repository describe an earlier build hash `226d4fc0c57b18c43a725503664c59dcbb7e7767fa479be331760a91f5b5fc82` and must not be used for the current local ISO. The matching local sidecar/manifest exist beside the Downloads ISO, and the QEMU launcher pins the current local hash.
 
 ## Next actions
 

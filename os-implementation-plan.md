@@ -1,8 +1,8 @@
 # Kavi'ka OS: OS implementation plan
 
-Status: paused source/build checkpoint; latest wallpaper fix awaits fresh-image validation. No installed-OS or Surface hardware gate passed.
+Checkpoint updated 17 October 2026. WSL Ubuntu produced the pinned Fedora-derived diagnostic ISO; its embedded media checksum passed and QEMU reached Fedora 44 live-session login over serial. The graphics window remained black, so KDE is unverified. No Surface boot/write, installer, full Windows/Comet integration, or ISO publication has occurred. See [current validation](docs/validation/live-preview-0.1.0.md).
 
-Version 0.4 | Updated 16 October 2026 for the identified Surface Pro 8 and live preview.
+Version 0.4 | Updated 17 October 2026 for Surface Pro 8 and the current diagnostic-preview gate.
 
 ## Product and scope
 
@@ -133,19 +133,16 @@ calling the OS maintainable. Track upstream security updates and rerun integrati
 acceptance after kernel, Plasma, viewer, libvirt or Windows changes.
 
 Use GitHub Issues for live milestone state, linking evidence before closure.
-No milestones are complete merely because this plan or a script exists.
+- High-severity plan/delivery gates remain OPEN: KDE graphics boot, Surface hardware acceptance, Windows/Comet guest, supported installer, recovery/update, and project/release license. The exact currently verified milestone and blocked conditions are in the validation record. No Surface flash/install authorization has been granted by this diagnostic run.
 
 ## Current execution status
 
 - OS roadmap created and the prototype/OS release boundary documented.
-- Read-only Windows preflight implemented; execution results are preliminary,
-  archive-reported and not reproduced during this review. Static inspection found
-  no explicit configuration-changing commands; parser and runtime checks remain.
-- M0 evidence worksheet created. User decisions and Linux hardware testing remain.
+- WSL build completed from the pinned Fedora KDE 44 input; current local derived ISO SHA-256 is recorded in validation evidence.
+- Current QEMU test reached Fedora live-session login on serial; GTK graphics black, so KDE/Test Centre remain unverified.
+- No Surface boot/write, supported installer, Windows/Comet guest, integration, or milestone acceptance is complete.
 - No Windows VM provisioned, user disk altered, or milestone declared complete.
-- Fedora KDE 44 input signature/checksum verified and a diagnostic preview built
-  in the sandbox. Disposable VM validation and physical hardware validation are
-  separate; consult [current evidence](docs/validation/live-preview-0.1.0.md).
+- Fedora KDE 44 input signature/checksum verified; current diagnostic ISO and its exact validation boundary are recorded in [current evidence](docs/validation/live-preview-0.1.0.md).
 - Surface model is identified; actual RAM/storage, native input, KVM, security
   and full Windows/Comet feasibility remain outstanding.
 
