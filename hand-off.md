@@ -1,5 +1,3 @@
 # Kavi'ka OS: hand-off
 
-Work is paused at the user's request on 16 October 2026. The canonical, updated checkpoint is now [handoff.md](handoff.md); this file remains so existing links keep working.
-
-The diagnostic preview source is implemented and its core desktop behaviour was tested in a disposable VM. The latest wallpaper-startup change still needs a fresh-image boot check; do not flash or install from this checkpoint.
+Checkpoint updated 17 October 2026. The canonical handoff is [handoff.md](handoff.md). This alias is retained for existing links. The latest ISO reached Fedora 44 live-session login in QEMU on serial console, but the graphical window remained black. The software-emulated test was stopped; do not repeat that TCG run. See the canonical handoff and [validation record](docs/validation/live-preview-0.1.0.md) for the WHPX/KVM next gate and current limits. Not ready to flash or install.

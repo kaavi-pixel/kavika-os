@@ -6,7 +6,7 @@ A Linux-first desktop experience with a real Windows workspace one four-finger s
 
 The Windows side must be full, general-purpose Windows, including Comet and normal user-chosen app installation, not a restricted collection of supported apps. A test matrix measures compatibility; it must not become an app allowlist, and a VM limitation must be reported rather than silently redefined as out of scope.
 
-**Status: paused development checkpoint, not an installation release.** A Fedora-based diagnostic ISO and its source are implemented. The preceding candidate reached KDE/Test Centre and passed the two-Linux-workspace toggle checks; the latest wallpaper-startup fix still needs a fresh-image boot check. No ISO is approved for flashing yet, and Windows/Comet, cross-OS integration and supported installation are not included.
+**Status: paused development checkpoint, not an installation release.** A Fedora-based diagnostic ISO and its source are implemented. The current image booted in an isolated QEMU VM through to the Fedora 44 live-session login on serial console. The QEMU graphics window remained black, so KDE desktop, Kavi'ka Test Centre and the wallpaper fix remain unverified. No ISO is approved for flashing; Windows/Comet, cross-OS integration and supported installation are not included.
 
 See [the preview guide](docs/live-preview.md), [build instructions](docs/build.md), and [validation record](docs/validation/live-preview-0.1.0.md) before using an image. A desktop named “Windows (not installed)” is a Linux workspace, not a Windows implementation.
 
@@ -15,7 +15,10 @@ See [the preview guide](docs/live-preview.md), [build instructions](docs/build.m
 - [Features v2](features.md): revised product specification, preserving the original goal wording.
 - [Implementation plan](implementation-plan.md): architecture, dependencies, milestones, and release gates.
 - [OS implementation plan](os-implementation-plan.md): roadmap from the validated integration prototype to a live ISO, installer, and maintained OS release.
-- [M0 evidence](docs/validation/m0.md): pending decisions and hardware validation record.
+- [Windows preview VM guide](docs/windows-vm-preview.md): disposable Linux smoke-test guest, not the full Windows product workspace.
+- [Get a diagnostic ISO](docs/getting-the-iso.md): prepare an isolated Ubuntu-on-WSL builder, verify Fedora input and build the explicitly non-installable preview.
+- [Build instructions](docs/build.md): pinned source, builder prerequisites, and validation limits.
+
 - [Surface test target](docs/surface-test-target.md): identified model, approved erase scope, media route, and remaining hardware checks.
 - [Archive review](docs/review-upload.md): changes reviewed, documentation corrections, and verification limits.
 - [Bug tracker](bugtracker.md): confirmed-defect policy, untested risks, and verification checklist.
