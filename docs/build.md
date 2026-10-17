@@ -1,6 +1,6 @@
 # Kavi'ka OS: diagnostic preview build
 
-This builder composes an experimental, non-installation live image from one exact upstream Fedora KDE ISO. It neither installs an OS nor mounts/chroots into user disks; the full RPM-based distribution pipeline remains future work.
+The repository contains a Fedora-based live diagnostic preview, **not** the full Kavi'ka Linux/Windows product and not an installation release. This guide supports reproducing the pinned source build; booting and installation require separate validation gates.
 
 ## Pinned input
 
@@ -9,17 +9,17 @@ This builder composes an experimental, non-installation live image from one exac
 | Base | `Fedora-KDE-Desktop-Live-44-1.7.x86_64.iso` |
 | Base SHA-256 | `c8295961d4c41adbf785a31a17c21a971d3b7415fda72dcad0c11c49577bf03a` |
 | Architecture | x86_64 |
-| Kernel | `6.19.10-300.fc44.x86_64`, unchanged upstream kernel |
-| Payload source | `image/live-preview/root/` and original `assets/branding/kavi-ka-os-logo.png` |
-| Windows, guest disk, secrets | Not included |
+| Kernel | Fedora's upstream stock kernel; no Surface-specific kernel |
+| Payload source | `image/live-preview/root/` and `assets/branding/kavi-ka-os-logo.png` |
+| Windows VM, Comet, guest disk, credentials | Not included |
 
-Obtain the base and signed checksum through the [Fedora KDE download page](https://fedoraproject.org/kde/download); the build performed for this preview verified the checksum signature as well as the ISO hash. The script enforces the pinned hash but does not independently download or verify a signing key.
+Obtain the Fedora ISO from the official [Fedora KDE download page](https://fedoraproject.org/kde/download) and follow Fedora's checksum/signature verification instructions. The builder independently checks the pinned SHA-256, but does not retrieve or verify Fedora's signing key itself.
 
-## Builder requirements and commands
+## Build prerequisites and commands
 
-Use an isolated Linux builder with Python 3.11 or newer, `xorriso`, GNU `cpio`, `grub-script-check` and `implantisomd5` from isomd5sum. Allow room for the approximately 3.37 GB base, another approximately 3.37 GB output and temporary overlay files; no root privileges are needed for composition.
+The validated recipe targets an isolated Linux builder with Python 3.11+, `pycdlib` 1.22+, xorriso, GNU cpio, `grub-script-check`, `implantisomd5` (isomd5sum), and Bash. Keep at least 10 GB of free scratch space. Never pass a block device as an image output, mount or chroot into the host's drives, or run Fedora installer/image tools on an everyday host.
 
-From a clean repository checkout, run:
+From a clean repository checkout:
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
@@ -32,24 +32,17 @@ python3 tools/build-live-preview.py \
   --output "$PWD/build/Kavika-OS-0.1.0-Surface-Pro-8-Live-Preview.iso"
 ```
 
-Output must be a new `.iso` file, never a device or existing file. The builder emits the ISO, a SHA-256 sidecar and a JSON manifest containing input/output hashes, original-logo hash and payload-file hashes. Do not commit binary images, guest disks or raw device reports.
+The output must be a new `.iso` in an existing directory. The builder produces an ISO, SHA-256 sidecar and JSON manifest of the base, output, builder, logo and payload hashes. Do not commit built ISO files, VM disks, or raw hardware reports.
 
-## Composition mechanism
+The builder normalizes staged shell payloads and runs `bash -n` on the three packaged shell entry points, then checks generated GRUB syntax with `grub-script-check` before composition. These are syntax/build preflights only; they do not establish that the live desktop or Kavi'ka services boot.
 
-The original ISO's `LiveOS/squashfs.img` contains EROFS on this pinned build; the builder does not unpack or rewrite it. It adds a cpio archive containing `/updates`, appends it as a second GRUB initrd, and relies on the pinned initramfs's existing `20-apply-live-updates.sh` pre-pivot hook to copy those files into the RAM-backed live root.
 
-The builder preserves the Fedora live-root label and uses xorriso's boot replay to preserve the existing hybrid/UEFI structure. It changes menu wording, adds serial logging for the diskless VM check, and regenerates the embedded media MD5. This mechanism is tied to the exact verified upstream image, not a generic recipe for arbitrary Fedora releases.
+The builder retains the pinned Fedora squashfs and appends a `newc` cpio `/updates` archive to the initramfs path. It relies on the pinned Fedora initramfs `20-apply-live-updates.sh` hook to apply that overlay to the RAM-backed live root at boot. It changes the GRUB menu, preserves the upstream live volume label, adds serial logging, and regenerates Fedora's embedded media checksum. This mechanism is tied to the exact pinned Fedora ISO, not a generic Fedora build recipe.
 
-A `systemd-tmpfiles-setup.service` drop-in relabels affected ancestor directories non-recursively and the small payload recursively, after SELinux policy is loaded but before ordinary services and live-user setup. The earlier pre-pivot attempt did not correct the observed `tmpfs_t` directory labels and was removed. This affects only the RAM-backed live root; SELinux is not disabled. Fedora's supported `livesys-session-extra` hook reapplies workspace defaults after the upstream KDE setup writes its own `kwinrc`.
+The staged payload scripts are normalized to Unix line endings, syntax-checked with `bash -n`, and the generated GRUB configuration is checked with `grub-script-check` before composition. These checks are build preflights, not GUI boot evidence. SELinux remains enforcing; the overlay label fix and `livesys-session-extra` workspace setup are project-specific.
 
-The pinned upstream GRUB config declares functions inside an `if` block; both the booted GRUB and the build-host parser reject that structure. The builder moves the video function to top level while preserving its platform-specific module choices. Menu branding uses quote-neutral “Kavika”; the apostrophe is preserved in the desktop branding. The complete generated configuration must pass `grub-script-check` before ISO composition.
+Before booting the preview anywhere, verify the image SHA-256 sidecar and embedded media check. The exact local build record and current hash are in [the validation record](validation/live-preview-0.1.0.md); do not use the older tracked sidecar/manifest for the current local ISO. Boot a fresh, disposable UEFI VM with no physical disks or writable shared host folders before considering physical preview testing. Record the exact tested ISO hash and boot result. The QEMU-on-Windows helper, if used, performs software emulation and is slow; a started VM process is not evidence that KDE booted successfully.
 
-The original logo is copied without changes. Python bytecode/cache files are excluded from the payload; no sandbox paths or compiled test caches should be packaged.
+Physical Surface boot, Secure Boot, native Surface input, Windows/Comet, file sharing, gestures, performance, persistence and installation are separate gates. This preview does not include Windows or a supported internal-disk installer. It must not be flashed as an install/release image or used as a daily operating system.
 
-## Validation scope
-
-Run output SHA-256 and embedded media checksum checks, inspect boot metadata, then test a diskless UEFI VM. No writable hard disk should be exposed during the first boot check.
-
-Record whether KDE, Test Centre, hardware reporting, workspace toggle and installer guard work, with exact tool versions. Physical Surface boot/input, Secure Boot, Windows, installation, persistence and performance are separate gates. See [the build validation record](validation/live-preview-0.1.0.md).
-
-Do not claim byte-identical reproducibility from a single successful build. Fixed payload timestamps and a pinned base aid repeatability, but independent clean builds and their complete inputs still need comparison.
+Do not claim reproducible builds based on one build. A pinned base, fixed payload timestamps and manifests aid repeatability, but independent clean builds and a full recorded toolchain are required to prove it.
