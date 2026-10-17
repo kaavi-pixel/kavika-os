@@ -10,7 +10,8 @@ Checkpoint: 17 October 2026. Paused development checkpoint; not a release and no
 | Shell/GRUB preflight | Packaged shell scripts pass `bash -n`; generated GRUB config passes `grub-script-check` | Only in Linux builder environment |
 | ISO media integrity | `checkisomd5` PASS | Integrity is not usability proof |
 | Derived ISO SHA-256 | `10074299b974eb005d0a38144d74b0dc02e1fa128684eb0f81b9cc9829a177ac` | `C:\\Users\\kavsb\\Downloads\\Kavika-OS-0.1.0-Surface-Pro-8-Live-Preview.iso`; 3370254336 bytes |
-| QEMU boot | UEFI boot through GRUB; serial log reached `Fedora Linux 44 (KDE Plasma Desktop Edition)` and `localhost-live login:` | QEMU GTK graphics remained black; KDE desktop/Test Centre not verified |
+| QEMU boot | UEFI/GRUB boot and serial logs reached Fedora 44 live-session login in the prior **TCG** attempt. A later WHPX launch of this same ISO stayed black; its serial/stderr logs were empty when inspected, and no visible desktop was confirmed | KDE/Test Centre and project GUI functions remain unverified on this hash. WHPX tiny-guest capability probe is separate evidence, not ISO validation |
+
 | VM safety boundary | Disposable QCOW2 disk, no physical disk passthrough, user-mode NAT, 4 GiB guest RAM; QEMU command configured for TCG | Linux diagnostic sandbox, not the planned KVM/libvirt Windows workspace. WHPX probe below is separate and does not test this ISO |
 | Surface hardware | Not tested | Do not flash/install; no hardware matrix or installer validation |
 | Product requirements | Not implemented in this ISO | No Windows 11 guest, Comet, integration, persistence, update/recovery or supported install |
