@@ -6,7 +6,7 @@ Checkpoint updated 17 October 2026. This remains a diagnostic image, not an inst
 
 The latest ISO was built from the pinned Fedora KDE 44 base in WSL Ubuntu. SHA-256: `10074299b974eb005d0a38144d74b0dc02e1fa128684eb0f81b9cc9829a177ac`; `checkisomd5` passed. File: `C:\\Users\\kavsb\\Downloads\\Kavika-OS-0.1.0-Surface-Pro-8-Live-Preview.iso` (3,370,254,336 bytes).
 
-A fresh disposable WHPX boot of the current ISO (SHA-256 `10074299b974eb005d0a38144d74b0dc02e1fa128684eb0f81b9cc9829a177ac`) produced a blank black display. QEMU serial and stderr logs were empty when inspected; no Fedora login or graphical session was confirmed. The earlier TCG attempt reached Fedora live-session login over serial but also displayed black. A QEMU process remains running from the WHPX test; close it before another VM test. No physical disk or host folder was attached; only disposable QCOW2 storage and user-mode NAT were configured. No Surface boot/install occurred.
+On 19 October 2026 a disposable WHPX guest booted the current ISO (`10074299…`) to a working KDE desktop with the Test Centre, valid hardware report, enforcing SELinux and no failed units. **Meta+F12 workspace switching fails**: the image has one desktop because CRLF line endings in the overlay broke the livesys setup script. The fix is in the builder (all overlay text files normalized, `.gitattributes` added) but no new ISO has been built, so the fix is unvalidated. No physical disk, shared folder or Surface was used.
 
 B05's wallpaper readiness retry is not visually validated on this image. KDE/Test Centre passes belong to a previous ISO candidate and must not transfer to the current hash.
 
@@ -38,7 +38,7 @@ The ISO contains no Windows guest, Comet, cross-OS file sharing, persistence, su
 
 ## Evidence and limits
 
-- The ISO's embedded checksum passes. The earlier TCG attempt reached Fedora live-session login over serial; the later WHPX test showed a black display with empty logs. Current GUI state remains unverified.
+- The ISO's embedded checksum passes. A WHPX guest reaches the KDE desktop and the Test Centre works; Meta+F12 workspace switching fails (CRLF defect, fix not yet rebuilt). Surface hardware is untested.
 - Previous candidate (different SHA-256: `bb581a008dbc7ef17843468f32bd1c1f33e64063c703d5c8ac0693f46a2d921a`) reached KDE/Test Centre and passed listed workspace, report CLI and SELinux checks. Not evidence for current image.
 - Tests: Windows checkout 14 passed, 1 skipped for unavailable GRUB parser; Linux tree 14 passed including parser. `git diff --check` passed.
 - Surface boot, native input, network, audio/camera, suspend/resume, Windows/Comet, file sharing, gestures, persistence, installation, update/recovery, release licensing and maintenance remain unverified or unimplemented.
@@ -46,11 +46,11 @@ The ISO contains no Windows guest, Comet, cross-OS file sharing, persistence, su
 
 ## Resume plan
 
-1. Do not start another VM while QEMU process PID 23428 is still present. Close it normally before further VM diagnostics.
-2. The Downloads ISO, its sidecar, and manifest agree on SHA-256 `10074299b974eb005d0a38144d74b0dc02e1fa128684eb0f81b9cc9829a177ac` and size 3,370,254,336 bytes. All 18 manifest payload hashes match the present source payloads, including the logo, when CRLF-to-LF normalization is accounted for. However, manifest builder SHA-256 `d1578511e3bbfc0acdc70c1d50c3a577b74c614c585dd9025288b4b5d3046191` matches neither available builder snapshot. The exact Fedora base ISO was not found in searched build/download locations, so its local hash cannot be rechecked. The exact artifact provenance remains unresolved; do not claim this source tree produced that ISO or use it as a flash candidate.
-3. Keep the canonical WSL tree and Windows checkout separate until their changes are reviewed and deliberately reconciled. The Windows builder has uncommitted edits and is not provenance for the current ISO.
-4. Identify the original builder snapshot or explicitly record provenance as unknown. Then rebuild only from the verified canonical source and exact Fedora base into a new output path; verify base/output hashes, embedded integrity, and manifest. Boot that exact hash in a fresh disposable accelerated VM and inspect GUI, serial, and stderr. Do not transfer validation from another ISO hash.
-5. Before any Surface test, pass current-image GUI, source/provenance, and non-destructive hardware boot gates. Never flash this diagnostic ISO: supported installer, full Windows 11/Comet workspace, recovery/update, and maintenance are still absent.
+1. Obtain the pinned Fedora KDE 44 base ISO (the previous copy was not found locally; it must hash to `c8295961d4c41adbf785a31a17c21a971d3b7415fda72dcad0c11c49577bf03a`). Rebuild into a new output path from the verified canonical source in WSL, then run the checksum and manifest checks.
+2. Boot the new hash in a disposable WHPX guest and repeat the functional test in `docs/validation/live-preview-0.1.0.md`. The workspace toggle (Meta+F12) must work. Capture with the QEMU monitor `screendump`.
+3. The current ISO's recorded builder hash `d1578511e3bbfc0acdc70c1d50c3a577b74c614c585dd9025288b4b5d3046191` matches no available builder, so its provenance stays unresolved. Do not use it as a flash candidate.
+4. Only after the rebuilt image passes, run non-destructive Surface live-media tests (graphics, input, Wi-Fi, audio, camera, sleep, Secure Boot). No disk writes, partitioning, firmware changes or installation without a fresh explicit go/no-go.
+5. Still absent: full Windows 11 plus Comet, file sharing, gestures, supported installer, recovery and update. This is a diagnostic image and must not be flashed as the product.
 
 ## Repository/publishing
 

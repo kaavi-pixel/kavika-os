@@ -1,0 +1,3 @@
+# Live-image payload is Linux-only: keep LF endings on every platform.
+image/live-preview/root/** text eol=lf
+*.png binary

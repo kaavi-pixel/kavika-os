@@ -83,11 +83,37 @@ class PreviewTests(unittest.TestCase):
         self.assertNotIn("selinux=0", builder.grub_preview(
             "linux root=live:CDLABEL=Fedora-KDE-Live-44\n"))
 
+    def test_payload_shell_scripts_are_normalized_to_unix_line_endings(self):
+        source = bytes.fromhex("23212f62696e2f626173680d0a6563686f2072656164790d0a")
+        expected = bytes.fromhex("23212f62696e2f626173680a6563686f2072656164790a")
+        self.assertEqual(builder.normalize_shell_payload(source), expected)
+
+    def test_payload_text_files_are_normalized_but_binary_files_are_untouched(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "etc/skel/.config").mkdir(parents=True)
+            (root / "var/lib/livesys").mkdir(parents=True)
+            kwin = root / "etc/skel/.config/kwinrc"
+            kwin.write_bytes(b"[Desktops]\r\nNumber=2\r\n")
+            session = root / "var/lib/livesys/livesys-session-extra"
+            session.write_bytes(b"#!/usr/bin/sh\r\nmkdir -p /home/liveuser/.config/autostart\r\n")
+            png = root / "logo.png"
+            binary = b"\x89PNG\r\n\x1a\n\x00\r\n\x00data"
+            png.write_bytes(binary)
+            builder.normalize_payload_tree(root)
+            self.assertEqual(kwin.read_bytes(), b"[Desktops]\nNumber=2\n")
+            self.assertNotIn(b"\r", session.read_bytes())
+            self.assertEqual(png.read_bytes(), binary)
+
+    def test_repository_forces_lf_for_live_payload(self):
+        attributes = (ROOT / ".gitattributes").read_text()
+        self.assertIn("image/live-preview/root/** text eol=lf", attributes)
+
     def test_wallpaper_retries_the_real_operation(self):
         session = (ROOT / "image/live-preview/root/usr/local/bin/kavika-live-session").read_text()
         self.assertIn("if plasma-apply-wallpaperimage --fill-mode preserveAspectFit", session)
         self.assertIn("seq 1 45", session)
-
 
 if __name__ == "__main__":
     unittest.main()

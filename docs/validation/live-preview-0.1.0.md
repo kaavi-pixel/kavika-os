@@ -23,9 +23,31 @@ Current local ISO (`Downloads/Kavika-OS-0.1.0-Surface-Pro-8-Live-Preview.iso`) S
 On the helper, QEMU 11.1 executed a tiny 64-MiB real-mode guest under WHPX, wrote the expected marker (byte 0x57), and exited through QEMU debug-exit (return code 33). This proves tiny-guest execution only—not Fedora/KDE graphics or this ISO. The earlier full Fedora attempt used TCG, reached serial login, and displayed a black GTK window.
 
 
+## WHPX functional test of `10074299…` (19 October 2026)
+
+Disposable QEMU/WHPX guest (4 GiB, 2 vCPU, UEFI, private 8-GiB QCOW2, user-mode NAT, no physical disk, no shared folder). The display was captured with the QEMU monitor `screendump` and keystrokes were sent with `sendkey`. Serial output was read from the guest's own `/dev/ttyS0`.
+
+| Check | Result |
+|---|---|
+| Boot to desktop | PASS: GRUB entry "Kavika OS 0.1.0 - LIVE PREVIEW (no install)", serial login in about 40 s, KDE Plasma desktop on screen after about 3 min under this configuration |
+| Branding | PASS: mustard background with logo wallpaper, "Kavi'ka Test Centre" desktop icon |
+| Test Centre menu and guide | PASS: menu opens; guide text matches `START-HERE.txt` |
+| Hardware report (GUI and CLI) | PASS: valid JSON; no disk serials, UUIDs, MACs or IPs collected (the only `serial`/`uuid` string match is the report's own disclaimer) |
+| Installer guard | PASS on the console path: `liveinst` prints that installation is disabled and exits 1. The GUI dialog path was not exercised |
+| SELinux and units | PASS: `Enforcing`; zero failed systemd units |
+| Network | PASS: virtio NIC up with a NAT address |
+| **Meta+F12 / Switch workspace** | **FAIL: only "Desktop 1" exists (`Number=1`). The preview's two workspaces were never created, so the toggle does nothing** |
+| Windows/Comet, sharing, gestures, persistence, installer, Surface hardware | Not present or not tested |
+
+Root cause of the workspace failure: the overlay files were packaged with CRLF line endings. In the booted image `livesys-session-extra` contains 7 CR characters, so its `mkdir` and `cp` commands created `/home/liveuser/.config/autostart\r` and `kwinrc\r` (literal CR in the names). The two-desktop `kwinrc` was therefore never applied. The same CRs are in the config and desktop-entry files (the image also reports `kavika-live.desktop` as executable and world-writable). The earlier builder normalized only five shell scripts.
+
+Fix, not yet in a rebuilt ISO: `tools/build-live-preview.py` now normalizes every text file in the overlay, leaves binary files untouched, and `.gitattributes` forces LF for the payload. Tests cover both. A rebuild creates a new ISO hash, so none of the results above transfer to it.
+
+The GTK window of the launcher stayed black in the capture tool even though the monitor screendump shows a rendered desktop for the same ISO. Whether the GTK window itself displays correctly is not established; the capture method may be at fault.
+
 ## Next actions
 
-1. Diagnose the blank QEMU graphics output from serial logs and exact guest/host configuration; do not presume the cause. A QEMU process or login prompt is not a graphical boot pass.
+1. Rebuild with the CRLF fix from a verified base ISO, then repeat the functional test above on the new hash. Meta+F12 must switch between two workspaces before the image advances.
 2. Reconcile WSL and Windows worktrees and use one canonical source commit. Run tests and shell/GRUB checks on the exact tree used to rebuild.
 3. Boot the rebuilt exact ISO in QEMU until KDE, logo/wallpaper, Test Centre/report privacy, workspace switching and installer guard are visually verified. Record its SHA-256 with results.
 4. Boot the verified image from external media on the Surface for non-destructive compatibility tests only. Identify CPU/RAM/storage and verify graphics, input, Wi-Fi, audio, camera, sleep/resume and Secure Boot state. No disk writes, firmware/security changes, or installation without a fresh explicit user go/no-go.
