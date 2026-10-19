@@ -1,8 +1,8 @@
 # Kavi'ka OS: OS implementation plan
 
-Checkpoint updated 17 October 2026. WSL Ubuntu produced the pinned Fedora-derived diagnostic ISO; its embedded media checksum passed and QEMU reached Fedora 44 live-session login over serial. The graphics window remained black, so KDE is unverified. No Surface boot/write, installer, full Windows/Comet integration, or ISO publication has occurred. See [current validation](docs/validation/live-preview-0.1.0.md).
+Checkpoint updated 19 October 2026. WSL Ubuntu produced the pinned Fedora-derived diagnostic ISO. A WHPX-accelerated disposable VM booted the previous build to a working KDE desktop; the Test Centre, hardware report, installer guard, SELinux and network checks passed, but the Meta+F12 workspace switch failed because overlay files had CRLF line endings. The source fix is committed and a fixed ISO is rebuilt; it is not yet re-tested. A second machine, a Fedora-running Surface Laptop Studio, is available for KVM and virtual-machine testing; the Surface Pro 8 remains the final target. Nothing has run on a Surface yet.
 
-Version 0.4 | Updated 17 October 2026 for Surface Pro 8 and the current diagnostic-preview gate.
+Version 0.5 | Updated 19 October 2026 for the Surface Pro 8 target, the Surface Laptop Studio test machine and the current diagnostic-preview gate.
 
 ## Product and scope
 
@@ -13,7 +13,7 @@ from scratch. Preserve full general-purpose Windows, including Comet and normal
 user-chosen applications. VM compatibility must be measured, not promised.
 
 The supplied project changes introduce this OS roadmap and repository implementation.
-The user now authorises complete Windows replacement on the spare Surface Pro
+The user now authorises complete Windows replacement on the Surface Pro 8 (not the Laptop Studio)
 and erasure of an empty 512 GB external SSD for installation media. Identify the
 actual devices before writing. HP Envy disk changes, firmware-security changes,
 Windows purchases, guest provisioning, and a public ISO release are not included.
@@ -23,7 +23,7 @@ Preserve the approved logo and original brief unchanged.
 
 ## Architecture
 
-- Base: Fedora KDE 44 `44-1.7.x86_64` is pinned for the diagnostic preview; Surface Pro 8 Wi-Fi is an Intel/x86_64 target. Hardware approval remains pending; see the sourced [target record](docs/surface-test-target.md).
+- Base: Fedora KDE 44 `44-1.7.x86_64` is pinned for the diagnostic preview; Surface Pro 8 Wi-Fi (final target) and Surface Laptop Studio (Fedora test machine) are Intel/x86_64 Tiger Lake machines. Hardware approval remains pending; see the sourced [target record](docs/surface-test-target.md).
 - Windows: QEMU/KVM and libvirt, with SPICE as the first viewer candidate.
 - Integration: an unprivileged session controller, desktop rules, explicit escape,
   and a private authenticated shared folder. Windows starts on demand.

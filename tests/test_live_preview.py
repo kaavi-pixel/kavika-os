@@ -110,6 +110,54 @@ class PreviewTests(unittest.TestCase):
         attributes = (ROOT / ".gitattributes").read_text()
         self.assertIn("image/live-preview/root/** text eol=lf", attributes)
 
+    def test_target_matching_is_exact_for_both_surfaces(self):
+        pro = hardware.match_target("Surface Pro 8")
+        self.assertTrue(pro["matched"])
+        self.assertEqual(pro["id"], "surface-pro-8")
+        studio = hardware.match_target("Surface Laptop Studio")
+        self.assertEqual(studio["id"], "surface-laptop-studio")
+        self.assertIn("test machine", studio["role"])
+        self.assertFalse(hardware.match_target("Surface Laptop Studio 2")["matched"])
+        self.assertFalse(hardware.match_target("Standard PC (Q35 + ICH9, 2009)")["matched"])
+        self.assertFalse(hardware.match_target(None)["matched"])
+
+    def test_secure_boot_variable_is_parsed(self):
+        self.assertTrue(hardware.parse_secure_boot(bytes([6, 0, 0, 0, 1])))
+        self.assertFalse(hardware.parse_secure_boot(bytes([6, 0, 0, 0, 0])))
+        self.assertIsNone(hardware.parse_secure_boot(None))
+        self.assertIsNone(hardware.parse_secure_boot(b"\x06"))
+
+    def test_input_report_never_contains_device_names(self):
+        sample = "\n\n".join([
+            'N: Name="Microsoft Surface Keyboard"',
+            'N: Name="Microsoft Surface Touchpad"',
+            'N: Name="Private Headphones BT"',
+            'N: Name="IPTS Touch"',
+            'N: Name="Surface Pen"',
+        ])
+        result = hardware.classify_input(sample)
+        self.assertEqual(result, {"has_keyboard": True, "has_touchpad": True,
+                                  "has_touchscreen": True, "has_pen": True})
+        self.assertNotIn("Headphones", str(result))
+        self.assertEqual(hardware.classify_input(""), {"has_keyboard": False, "has_touchpad": False,
+                                                       "has_touchscreen": False, "has_pen": False})
+
+    def test_audio_cards_keep_only_short_names(self):
+        sample = " 0 [sofhdadsp      ]: sof-hda-dsp - sof-hda-dsp\n                      Microsoft Corporation Surface\n"
+        self.assertEqual(hardware.parse_audio_cards(sample), ["sof-hda-dsp"])
+
+    def test_surface_kernel_modules_are_filtered(self):
+        sample = "surface_aggregator 1 0 - Live\nkvm_intel 1 0 - Live\nsurface_hid 1 0 - Live\n"
+        self.assertEqual(hardware.surface_modules(sample), ["surface_aggregator", "surface_hid"])
+
+    def test_report_has_expected_fields_and_no_identifiers(self):
+        data = hardware.report()
+        text = str(data).lower()
+        for banned in ("serial_number", "uuid", "mac_address", "ip_address"):
+            self.assertNotIn(banned, text.replace("serial numbers, uuids", ""))
+        for key in ("target", "secure_boot_enabled", "input", "firmware_version", "display_panels"):
+            self.assertIn(key, data)
+
     def test_wallpaper_retries_the_real_operation(self):
         session = (ROOT / "image/live-preview/root/usr/local/bin/kavika-live-session").read_text()
         self.assertIn("if plasma-apply-wallpaperimage --fill-mode preserveAspectFit", session)

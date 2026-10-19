@@ -1,14 +1,26 @@
-KAVI'KA OS 0.1.0 · SURFACE PRO 8 LIVE PREVIEW
+KAVI'KA OS 0.1.0 · SURFACE LIVE PREVIEW
 
 This is a private, disposable Linux boot-and-hardware preview based on Fedora KDE 44.
 It is not a finished operating-system release. Do not use it as a daily system.
 
+TWO TEST MACHINES
+  - Surface Laptop Studio (Intel Core i5-11300H, 16 GiB): the TEST machine. It
+    already runs Fedora, has KVM-capable hardware, and is where this preview and
+    later Windows-in-a-VM experiments are tried first.
+  - Surface Pro 8 (Wi-Fi, model 1983): the FINAL install target. Nothing here
+    has been tested on it yet.
+The hardware report names which machine it is running on. Anything proven on the
+Laptop Studio is evidence only, not proof for the Pro 8: the two have different
+chips, panels and input hardware.
+
 WHAT YOU CAN TEST
-  - Booting KDE on the Surface Pro 8 (Wi-Fi, model 1983).
+  - Booting KDE on either Surface.
   - Your original logo as a proportion-preserving wallpaper.
   - Two Linux virtual desktops and the Meta+F12 workspace toggle.
   - Display, USB keyboard/mouse, network, sound, battery and sleep manually.
-  - Read-only hardware reporting without device serials, keys or user files.
+  - A read-only hardware report: model, firmware, KVM, Secure Boot, TPM, display,
+    Wi-Fi, Bluetooth, audio, camera nodes and whether native input is detected,
+    without serials, UUIDs, MAC/IP addresses, keys or user files.
 
 WHAT IS NOT INCLUDED
   - A running Windows VM, Windows installer, Windows licence, or Comet.
@@ -19,28 +31,31 @@ WHAT IS NOT INCLUDED
 The "Windows (not installed)" desktop is another LINUX workspace, not Windows.
 It is visibly labelled so this navigation preview cannot be mistaken for a working VM.
 
-USE EXTERNAL INPUT
-Bring the USB keyboard and mouse you confirmed you have, with a USB-C hub/adapter.
-The Surface project flags Type Cover/touchpad, touch and pen support as requiring
-its custom kernel. Those inputs are not promised in this stock-kernel preview.
-Cameras are also not promised. Do not change firmware keys just to force a boot.
+INPUT ON THE STOCK KERNEL
+The linux-surface project lists touchscreen and pen (and, on the Pro 8, the Type
+Cover keyboard/touchpad) as needing its custom kernel. Native input is therefore
+not promised here. Bring a USB keyboard and mouse with a USB-C hub or adapter.
+The Laptop Studio's built-in keyboard may already work because Fedora ships
+generic drivers; the report records what was detected rather than assuming it.
+Cameras are not promised either. Do not change firmware keys just to force a boot.
 
 FIRST SESSION
   1. Confirm you can see the desktop and move the mouse.
   2. Open Kavi'ka Test Centre (it opens automatically; a desktop shortcut is provided).
-  3. View the hardware report. Check actual RAM, CPU model and internal disk capacity.
+  3. View the hardware report. Check the matched target, CPU, RAM, internal disk
+     capacity, KVM and Secure Boot status.
   4. Press Meta+F12 several times to test the two preview desktops.
   5. Test Wi-Fi, speakers and keyboard using ordinary KDE controls.
   6. Save the hardware report, review it, and share only that report if desired.
-  7. Shut down through KDE. Remove the installer media before booting Windows again.
+  7. Shut down through KDE and remove the boot medium before restarting.
 
 STORAGE
-The casing marking supplied by the owner says 128 GB, not 1 TB. That is a factory
-marking; actual capacity may differ if the SSD was changed. The report checks the
-currently installed drive. Do not assume a 128 GiB Windows guest can fit alongside
-Linux on a factory 128 GB disk.
+The Pro 8 casing is marked 128 GB (an owner-reported factory marking); actual
+capacity may differ if the SSD was changed. The report checks the installed drive.
+Do not assume a 128 GiB Windows guest fits beside Linux on a 128 GB disk. The
+Laptop Studio's disk is reported separately and is not a stand-in for the Pro 8.
 
-This preview does not mount or erase the Surface's Windows drive automatically.
+This preview does not mount or erase either Surface's internal drive.
 The regular graphical installation launcher is disabled. Upstream installer
 packages remain in the base image; do not bypass the guard or run Anaconda manually.
 
@@ -48,7 +63,7 @@ Live-session files and settings are temporary and normally disappear at shutdown
 Do not save important work here. Saving a report into the live home folder does
 not make it persistent. No report is uploaded automatically.
 
-The 512 GB external SSD is installation media, not a limit on a future destination
+The external boot SSD is installation media, not a limit on a future destination
 drive. The HP Envy internal drive is never an installation target.
 
 SECURITY AND LIMITATIONS

@@ -6,7 +6,7 @@ A Linux-first desktop experience with a real Windows workspace one four-finger s
 
 The Windows side must be full, general-purpose Windows, including Comet and normal user-chosen app installation, not a restricted collection of supported apps. A test matrix measures compatibility; it must not become an app allowlist, and a VM limitation must be reported rather than silently redefined as out of scope.
 
-**Status: paused development checkpoint, not an installation release.** A Fedora-based diagnostic ISO and its source are implemented. The current image booted in an isolated QEMU VM through to the Fedora 44 live-session login on serial console. The QEMU graphics window remained black, so KDE desktop, Kavi'ka Test Centre and the wallpaper fix remain unverified. No ISO is approved for flashing; Windows/Comet, cross-OS integration and supported installation are not included.
+**Status: development checkpoint, not an installation release.** A Fedora-based diagnostic ISO and its source are implemented. The previous build reached a working KDE desktop in a disposable VM, and the Test Centre, hardware report, installer guard, SELinux and networking checks passed there. Its Meta+F12 workspace switch failed because of a line-ending defect that is now fixed in source; the fixed image is rebuilt but not yet re-tested. No ISO is approved for flashing. Windows/Comet, cross-OS integration, a Surface-specific kernel and supported installation are not included. Nothing has been run on a Surface yet.
 
 See [the preview guide](docs/live-preview.md), [build instructions](docs/build.md), and [validation record](docs/validation/live-preview-0.1.0.md) before using an image. A desktop named “Windows (not installed)” is a Linux workspace, not a Windows implementation.
 
@@ -19,7 +19,8 @@ See [the preview guide](docs/live-preview.md), [build instructions](docs/build.m
 - [Get a diagnostic ISO](docs/getting-the-iso.md): prepare an isolated Ubuntu-on-WSL builder, verify Fedora input and build the explicitly non-installable preview.
 - [Build instructions](docs/build.md): pinned source, builder prerequisites, and validation limits.
 
-- [Surface test target](docs/surface-test-target.md): identified model, approved erase scope, media route, and remaining hardware checks.
+- [Surface test targets](docs/surface-test-target.md): the Pro 8 final target, approved erase scope, media route, and remaining hardware checks.
+- [Surface Laptop Studio test machine](docs/surface-laptop-studio-test-machine.md): the Fedora machine used for KVM and VM testing, how it differs from the Pro 8, and the safe test steps.
 - [Archive review](docs/review-upload.md): changes reviewed, documentation corrections, and verification limits.
 - [Bug tracker](bugtracker.md): confirmed-defect policy, untested risks, and verification checklist.
 - [Handoff](handoff.md): paused checkpoint, exact validation boundary, permissions and resume instructions.
@@ -64,23 +65,28 @@ Wine is optional for individual applications; it is not the Windows workspace. W
 
 The user-selected project logo is stored at [`assets/branding/kavi-ka-os-logo.png`](assets/branding/kavi-ka-os-logo.png). The supplied image is preserved unchanged; the README only sets its display width.
 
-## First target: spare Surface Pro
+## Targets: Surface Pro 8 and Surface Laptop Studio
 
-The printed model **1983** identifies a **Surface Pro 8 Wi-Fi** ([Microsoft service guide](https://learn.microsoft.com/en-us/surface/service-guides/surface-pro8/surface-pro8-device-information-and-service-parts)). This is an Intel/x86_64 model family; the exact CPU and RAM still need measurement ([Microsoft specifications](https://support.microsoft.com/en-us/surface/models/surface-pro-8-features-and-specs)).
+| Machine | Role |
+|---|---|
+| **Surface Pro 8 Wi-Fi (model 1983)** | Final install target. Intel x86_64; exact CPU and RAM still need measuring ([Microsoft specifications](https://support.microsoft.com/en-us/surface/models/surface-pro-8-features-and-specs)). |
+| **Surface Laptop Studio** (Core i5-11300H, 16 GiB, Iris Xe) | Test machine that already runs Fedora 44. It has a KVM-capable Intel CPU, so it is where the Linux preview and Windows-in-a-VM experiments are tried first. |
 
-The user reports a **128 GB factory marking**, superseding the earlier 1 TB estimate; actual installed drive capacity is still unmeasured. The user explicitly permits replacing Windows on this Surface and erasing the empty 512 GB external SSD for media. That SSD carries the image, not a capacity limit on a future installation. USB keyboard, mouse, and the necessary connection hardware are available.
+Both are Intel Tiger Lake machines, so CPU virtualisation, the Iris Xe graphics driver and the stock kernel behave similarly. The Laptop Studio is **not** a proxy for the Pro 8's Type Cover, touch, pen, tablet mode, cameras or storage budget. Treat everything learned on it as evidence, never proof.
 
-The earlier HP Envy x360/Ryzen/16 GB evidence belongs to the helper computer, not this Surface. Do not carry its RAM or 128 GiB guest-disk proposal into the Surface build. Measure the actual disk and RAM and validate a storage budget before provisioning Windows.
+The printed model **1983** identifies the Pro 8 as a **Wi-Fi model** ([Microsoft service guide](https://learn.microsoft.com/en-us/surface/service-guides/surface-pro8/surface-pro8-device-information-and-service-parts)). The owner reports a **128 GB factory marking** on it; actual installed capacity is still unmeasured, and a 128 GiB Windows guest disk is not a safe default. The owner permits replacing Windows on the Pro 8 and erasing the empty 512 GB external SSD used for media. That SSD carries the image; it is not a capacity limit on a future installation. USB keyboard, mouse and connection hardware are available.
 
-The linux-surface compatibility matrix lists Surface Pro 8 Type Cover/touchpad, touch and pen support as requiring its custom kernel; the preview instead uses Fedora's stock kernel and external input for the first test ([linux-surface device matrix](https://github.com/linux-surface/linux-surface/wiki/Supported-Devices-and-Features)). Native input, cameras, sleep, and Secure Boot remain unvalidated on this device; no firmware-security changes are authorised.
+The linux-surface compatibility matrix lists touchscreen and pen on both machines, and the Pro 8's Type Cover keyboard and touchpad, as needing its custom kernel ([linux-surface device matrix](https://github.com/linux-surface/linux-surface/wiki/Supported-Devices-and-Features)). The preview uses Fedora's stock kernel, so native Surface input is not promised. Cameras, sleep and Secure Boot remain unvalidated on both machines. No firmware-security changes are authorised.
 
-See the [Surface test plan](docs/surface-test-target.md) for no-login identification and the recorded erase scope. Keep the HP Envy's internal drive untouched.
+The earlier HP Envy x360 (Ryzen 7 8840HS, 16 GB) is the build and emulation helper, not a Surface. Do not carry its numbers into either Surface build. The Laptop Studio holds the owner's working Fedora installation: never write an image to its internal drive or change its firmware settings without a fresh, explicit instruction.
+
+See [the Surface test targets](docs/surface-test-target.md) and [the Laptop Studio page](docs/surface-laptop-studio-test-machine.md).
 
 ## Scope and safety
 
 - **In scope:** repository development toward a reversible prototype and, after validation, an installable Fedora-based OS. Build, installation, and release work have separate gates in the OS implementation plan.
-- **Approved target scope:** replace Windows on the spare Surface and erase the empty 512 GB external SSD for media. Identify the exact physical disks before writes; no erasure has occurred.
-- **Outside that approval:** HP Envy internal-disk changes, other drives, firmware-security changes, Windows licence purchases, and a public ISO release. Guest provisioning remains a separate opt-in step.
+- **Approved target scope:** replace Windows on the Surface Pro 8 and erase the empty 512 GB external SSD for media. Identify the exact physical disks before writes; no erasure has occurred. This approval does **not** cover the Laptop Studio's disk.
+- **Outside that approval:** HP Envy and Laptop Studio internal-disk changes, other drives, firmware-security changes, Windows licence purchases, and a public ISO release. Guest provisioning remains a separate opt-in step.
 - **Not included:** Windows installation media, activation keys, VM disks, recovery keys, device identifiers, or the original hardware screenshot.
 - **Licensing:** no project-wide open-source licence has been selected. Third-party components retain their own licences; a Windows licence decision remains a setup gate.
 

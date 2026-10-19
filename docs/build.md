@@ -13,7 +13,7 @@ The repository contains a Fedora-based live diagnostic preview, **not** the full
 | Payload source | `image/live-preview/root/` and `assets/branding/kavi-ka-os-logo.png` |
 | Windows VM, Comet, guest disk, credentials | Not included |
 
-Obtain the Fedora ISO from the official [Fedora KDE download page](https://fedoraproject.org/kde/download) and follow Fedora's checksum/signature verification instructions. The builder independently checks the pinned SHA-256, but does not retrieve or verify Fedora's signing key itself.
+Obtain the Fedora ISO from the official [Fedora KDE download page](https://fedoraproject.org/kde/download) (mirror directory `releases/44/KDE/x86_64/iso/`) and follow Fedora's checksum/signature verification instructions. The builder independently checks the pinned SHA-256, but does not retrieve or verify Fedora's signing key itself.
 
 ## Build prerequisites and commands
 

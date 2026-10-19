@@ -45,9 +45,30 @@ Fix, not yet in a rebuilt ISO: `tools/build-live-preview.py` now normalizes ever
 
 The GTK window of the launcher stayed black in the capture tool even though the monitor screendump shows a rendered desktop for the same ISO. Whether the GTK window itself displays correctly is not established; the capture method may be at fault.
 
+## Rebuild with fixes (19 October 2026), not yet booted
+
+Built in WSL Ubuntu from the pinned Fedora KDE 44 base (SHA-256 verified, `c8295961…`) after the CRLF fix and the two-machine hardware report.
+
+| Item | Value |
+|---|---|
+| File | `Kavika-OS-0.1.1-Surface-Live-Preview-20261019-065635.iso` (the file name says 0.1.1; the strings inside the image and manifest still say 0.1.0) |
+| SHA-256 | `57a851a70b1f6fdb17c0b1c1801bad52e4237c0888aaa88c5c15a5a2c2cfefd9` |
+| Size | 3,370,319,872 bytes |
+| Builder SHA-256 (recorded in manifest) | `b91410112fd58f8ee539c2a1bb7ee2576cdd663280e19b96ae19f04d27fa25e0`; matches the builder used in the Linux build copy |
+| Fedora base | `c8295961d4c41adbf785a31a17c21a971d3b7415fda72dcad0c11c49577bf03a` (re-downloaded and checked this session) |
+| Embedded media check | `checkisomd5`: PASS |
+| Sidecar check | `sha256sum -c`: OK |
+| Tests (Linux, with the GRUB parser) | 30 passed, 0 skipped |
+| Shell syntax | `bash -n` passes for the three packaged scripts and the new preflight script |
+| Line endings | The build copy is normalized to LF before the tests run; no CR remained afterwards. The builder also normalizes the packaged overlay. This is a source check, not a check of the booted image |
+
+This ISO is not yet booted. At the time of the build the helper had only about 3.7 GiB of free RAM, under the 5 GiB guard for a 4 GiB guest, so the boot test was deferred rather than forced. **None of the results for `10074299…` transfer to this hash.** Its provenance is known: base hash, builder hash and payload hashes are all recorded and the builder is the committed one.
+
+What changed in the image: every overlay text file now has LF endings (the fix for the workspace-switch defect), the hardware report covers both Surface machines, and the guide and Test Centre text name both machines.
+
 ## Next actions
 
-1. Rebuild with the CRLF fix from a verified base ISO, then repeat the functional test above on the new hash. Meta+F12 must switch between two workspaces before the image advances.
+1. Boot the rebuilt ISO (`57a851a7…`) in a disposable VM and repeat the functional test above. Meta+F12 must switch between two workspaces before the image advances. Prefer the Surface Laptop Studio with KVM (`tools/launch-preview-vm-linux.py`); the Windows helper needs at least 5 GiB free RAM.
 2. Reconcile WSL and Windows worktrees and use one canonical source commit. Run tests and shell/GRUB checks on the exact tree used to rebuild.
 3. Boot the rebuilt exact ISO in QEMU until KDE, logo/wallpaper, Test Centre/report privacy, workspace switching and installer guard are visually verified. Record its SHA-256 with results.
 4. Boot the verified image from external media on the Surface for non-destructive compatibility tests only. Identify CPU/RAM/storage and verify graphics, input, Wi-Fi, audio, camera, sleep/resume and Secure Boot state. No disk writes, firmware/security changes, or installation without a fresh explicit user go/no-go.

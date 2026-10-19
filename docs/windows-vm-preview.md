@@ -27,3 +27,7 @@ Use the new `--accel whpx` option only after the tiny WHPX probe passes. The pro
 Close the VM window normally to stop it. The VM's files remain under the requested VM directory. Preserve the ISO, `manifest.json`, `qemu.log`, and `efi-vars.fd` only if you need to keep testing; they are not product-release artifacts. Delete the **whole throwaway VM directory** only after the VM has exited and only after confirming the exact path. The sparse virtual disk contains no user files unless you explicitly save data within the guest.
 
 A successful launcher return merely means QEMU started; only an observed guest desktop and recorded output-hash check count as a boot test. Do not publish, flash, or install this preview from that result.
+
+## Linux hosts (including the Surface Laptop Studio)
+
+A Linux host with KVM does not need this Windows launcher or software emulation. Use `tools/launch-preview-vm-linux.py` instead. It requires an ISO hash (or `.sha256` file), a new empty VM directory, at least 5 GiB of available RAM and a usable `/dev/kvm`. It attaches only a private QCOW2 disk and user-mode networking, never a physical disk or shared folder. See [the Laptop Studio page](surface-laptop-studio-test-machine.md).

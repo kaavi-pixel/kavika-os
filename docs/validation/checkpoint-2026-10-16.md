@@ -1,5 +1,7 @@
 # Paused development checkpoint: 16 October 2026
 
+> Historical record. Superseded by [the 19 October validation](live-preview-0.1.0.md) and [handoff.md](../../handoff.md).
+
 The user requested a clean stopping point, an updated handoff and a GitHub update. Source/docs are checkpointed in the existing repository without changing visibility; no ISO is published.
 
 The diagnostic preview now includes a pinned Fedora KDE 44 image builder, Test Centre, filtered hardware report, two Linux workspaces and a Meta+F12 toggle. Nine source tests pass. The preceding image booted to KDE/Test Centre in a diskless UEFI VM, toggled both ways, generated a CLI report and retained enforcing SELinux after the live-overlay label correction.

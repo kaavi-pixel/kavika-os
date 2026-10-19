@@ -1,12 +1,14 @@
 # Kavi'ka OS: handoff
 
-Checkpoint updated 17 October 2026. This remains a diagnostic image, not an installation release. Do not flash/install or perform destructive disk actions without passing the gates below and a fresh explicit user go/no-go.
+Checkpoint updated 19 October 2026. This remains a diagnostic image, not an installation release. Do not flash/install or perform destructive disk actions without passing the gates below and a fresh explicit user go/no-go.
 
 ## Where we stopped
 
 The latest ISO was built from the pinned Fedora KDE 44 base in WSL Ubuntu. SHA-256: `10074299b974eb005d0a38144d74b0dc02e1fa128684eb0f81b9cc9829a177ac`; `checkisomd5` passed. File: `C:\\Users\\kavsb\\Downloads\\Kavika-OS-0.1.0-Surface-Pro-8-Live-Preview.iso` (3,370,254,336 bytes).
 
-On 19 October 2026 a disposable WHPX guest booted the current ISO (`10074299…`) to a working KDE desktop with the Test Centre, valid hardware report, enforcing SELinux and no failed units. **Meta+F12 workspace switching fails**: the image has one desktop because CRLF line endings in the overlay broke the livesys setup script. The fix is in the builder (all overlay text files normalized, `.gitattributes` added) but no new ISO has been built, so the fix is unvalidated. No physical disk, shared folder or Surface was used.
+On 19 October 2026 a disposable WHPX guest booted the earlier ISO (`10074299…`) to a working KDE desktop with the Test Centre, valid hardware report, enforcing SELinux and no failed units. **Meta+F12 workspace switching failed** because overlay files had CRLF line endings. That is fixed in source and in a rebuilt ISO (`57a851a70b1f6fdb17c0b1c1801bad52e4237c0888aaa88c5c15a5a2c2cfefd9`, 3,370,319,872 bytes, builder `b9141011…`), whose checksum, embedded media check and 30 Linux tests pass. **The rebuilt ISO has not been booted yet.** No physical disk, shared folder or Surface was used.
+
+The project now has two Surface machines. The **Surface Pro 8** is the final install target and has never been booted with Kavi'ka. The **Surface Laptop Studio** (Core i5-11300H, 16 GiB, Iris Xe) already runs Fedora 44 and has KVM-capable hardware, so it is the first test machine; see `docs/surface-laptop-studio-test-machine.md`. Its results are evidence only, not proof for the Pro 8.
 
 B05's wallpaper readiness retry is not visually validated on this image. KDE/Test Centre passes belong to a previous ISO candidate and must not transfer to the current hash.
 
@@ -38,7 +40,7 @@ The ISO contains no Windows guest, Comet, cross-OS file sharing, persistence, su
 
 ## Evidence and limits
 
-- The ISO's embedded checksum passes. A WHPX guest reaches the KDE desktop and the Test Centre works; Meta+F12 workspace switching fails (CRLF defect, fix not yet rebuilt). Surface hardware is untested.
+- The earlier ISO reached the KDE desktop and the Test Centre worked, but Meta+F12 workspace switching failed (CRLF defect). The rebuilt ISO has the fix and passes its checksum and media checks, but has not been booted. No Surface has been tested.
 - Previous candidate (different SHA-256: `bb581a008dbc7ef17843468f32bd1c1f33e64063c703d5c8ac0693f46a2d921a`) reached KDE/Test Centre and passed listed workspace, report CLI and SELinux checks. Not evidence for current image.
 - Tests: Windows checkout 14 passed, 1 skipped for unavailable GRUB parser; Linux tree 14 passed including parser. `git diff --check` passed.
 - Surface boot, native input, network, audio/camera, suspend/resume, Windows/Comet, file sharing, gestures, persistence, installation, update/recovery, release licensing and maintenance remain unverified or unimplemented.
@@ -46,11 +48,12 @@ The ISO contains no Windows guest, Comet, cross-OS file sharing, persistence, su
 
 ## Resume plan
 
-1. Obtain the pinned Fedora KDE 44 base ISO (the previous copy was not found locally; it must hash to `c8295961d4c41adbf785a31a17c21a971d3b7415fda72dcad0c11c49577bf03a`). Rebuild into a new output path from the verified canonical source in WSL, then run the checksum and manifest checks.
-2. Boot the new hash in a disposable WHPX guest and repeat the functional test in `docs/validation/live-preview-0.1.0.md`. The workspace toggle (Meta+F12) must work. Capture with the QEMU monitor `screendump`.
-3. The current ISO's recorded builder hash `d1578511e3bbfc0acdc70c1d50c3a577b74c614c585dd9025288b4b5d3046191` matches no available builder, so its provenance stays unresolved. Do not use it as a flash candidate.
-4. Only after the rebuilt image passes, run non-destructive Surface live-media tests (graphics, input, Wi-Fi, audio, camera, sleep, Secure Boot). No disk writes, partitioning, firmware changes or installation without a fresh explicit go/no-go.
-5. Still absent: full Windows 11 plus Comet, file sharing, gestures, supported installer, recovery and update. This is a diagnostic image and must not be flashed as the product.
+1. **On the Surface Laptop Studio:** clone the repo, run `bash tools/surface-fedora-preflight.sh` (read-only; installs and changes nothing) and review its output. It reports KVM, tools, Secure Boot, TPM, RAM, disk and the hardware JSON.
+2. Copy the rebuilt ISO and its `.sha256` file to that machine. Boot it in a disposable KVM guest with `python3 tools/launch-preview-vm-linux.py --iso <iso> --sha256-file <sidecar> --vm-dir <new dir>`. The launcher refuses a hash mismatch and attaches no physical disk or shared folder. Repeat the functional test in `docs/validation/live-preview-0.1.0.md`. **Meta+F12 must now switch workspaces.**
+3. If the Windows helper is used instead, it needs at least 5 GiB free RAM (it had 3.7 GiB when last checked). The QEMU GTK window showed black in earlier captures, while screenshots taken with the QEMU monitor `screendump` command showed the desktop, so use `screendump` to see the screen.
+4. Only after the VM test passes, boot the same ISO from external media on the Laptop Studio, still without installing, then on the Pro 8. Test graphics, input, Wi-Fi, audio, camera, sleep and Secure Boot. No disk writes, partitioning, installation or firmware/security changes without a fresh explicit go/no-go.
+5. Then feasibility-test full Windows 11 plus Comet in a KVM guest on the Laptop Studio (16 GiB host RAM), and record what does and does not transfer to the Pro 8.
+6. Still absent: Windows 11 and Comet, file sharing, gestures, a Surface-specific kernel, a supported installer, recovery and update. This is a diagnostic image and must not be flashed as the product.
 
 ## Repository/publishing
 

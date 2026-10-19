@@ -1,6 +1,6 @@
 # Kavi'ka OS: implementation plan
 
-Version 0.6 | 16 October 2026 | Integration roadmap; Surface Pro 8 diagnostic preview in validation.
+Version 0.7 | 19 October 2026 | Integration roadmap; Surface Pro 8 final target, Surface Laptop Studio as Fedora/KVM test machine, diagnostic preview in validation.
 
 Execution is paused at the user's request. Resume from [handoff.md](handoff.md); latest-image validation is outstanding, and no physical installation is ready.
 
@@ -41,11 +41,13 @@ The controller should use libvirt state events plus bounded retries, not blind s
 
 ## Hardware envelope
 
-The primary target is model 1983, Surface Pro 8 Wi-Fi ([Microsoft service guide](https://learn.microsoft.com/en-us/surface/service-guides/surface-pro8/surface-pro8-device-information-and-service-parts)). The Intel/x86_64 family is established, but exact CPU/RAM and actual hardware configuration need measurement ([Microsoft specifications](https://support.microsoft.com/en-us/surface/models/surface-pro-8-features-and-specs)). The user reports Windows 11 and a 128 GB factory marking, superseding the earlier 1 TB estimate; installed drive capacity, firmware access and Linux support remain untested.
+The final install target is model 1983, Surface Pro 8 Wi-Fi ([Microsoft service guide](https://learn.microsoft.com/en-us/surface/service-guides/surface-pro8/surface-pro8-device-information-and-service-parts)). The Intel/x86_64 family is established, but exact CPU/RAM and actual hardware configuration need measurement ([Microsoft specifications](https://support.microsoft.com/en-us/surface/models/surface-pro-8-features-and-specs)). The user reports Windows 11 and a 128 GB factory marking, superseding the earlier 1 TB estimate; installed drive capacity, firmware access and Linux support remain untested.
+
+The Surface Laptop Studio (Core i5-11300H, 16 GiB, Iris Xe, Fedora 44) is a second, Fedora-running test machine with KVM-capable hardware; see [its page](docs/surface-laptop-studio-test-machine.md). It is evidence only, not a stand-in for the Pro 8.
 
 The first preview uses stock Fedora with external USB keyboard/mouse, which the user has confirmed are available. Do not allocate a 128 GiB guest on an assumed 128 GB physical disk: collect actual storage/RAM, reserve Linux/update/free-space headroom, then make an explicit Windows storage decision. The 512 GB SSD is currently approved as installer media, not automatically committed to permanent guest storage.
 
-The earlier Ryzen 7 8840HS/Radeon 780M, 16 GB RAM, and storage screenshot belongs to the HP Envy helper. It is not evidence for sizing the Surface guest; collect target facts through [the no-login identification/live-test route](docs/surface-test-target.md).
+The earlier Ryzen 7 8840HS/Radeon 780M, 16 GB RAM, and storage screenshot belongs to the HP Envy helper. It is not evidence for sizing the Surface guest, and the Laptop Studio's 16 GiB is not the Pro 8's RAM either; collect target facts through [the no-login identification/live-test route](docs/surface-test-target.md).
 
 Historical benchmark proposal for the HP, not an approved Surface configuration:
 

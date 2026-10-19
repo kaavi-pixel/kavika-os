@@ -1,8 +1,8 @@
 # Kavi'ka OS: features v2
 
-Version 0.7 | 16 October 2026 | Product specification; Surface Pro 8 identified, diagnostic live preview built.
+Version 0.8 | 19 October 2026 | Product specification; Surface Pro 8 final target, Surface Laptop Studio added as Fedora test machine, diagnostic live preview built.
 
-Work is paused at the user's request. The newest wallpaper-startup change has not passed a fresh-image boot check; see [handoff.md](handoff.md) before resuming or treating an image as ready for the Surface.
+Work resumed on 19 October 2026. The previous diagnostic image reached a working KDE desktop in a disposable VM but its Meta+F12 workspace switch failed (line-ending defect, fixed in source and rebuilt, not yet re-tested). See [handoff.md](handoff.md) before treating any image as ready for a Surface.
 
 This expands the supplied brief into testable requirements without replacing its original goals. Technical choices and numerical targets below are proposals, not measured results or additional user commitments.
 
@@ -38,7 +38,9 @@ Full Windows functionality is the product requirement; universal VM compatibilit
 
 ### First physical target
 
-The primary test machine is Surface Pro 8 Wi-Fi, identified by the user's model 1983 marking ([Microsoft service guide](https://learn.microsoft.com/en-us/surface/service-guides/surface-pro8/surface-pro8-device-information-and-service-parts)). The user reports Windows 11 and a 128 GB factory marking, replacing the earlier 1 TB estimate; actual installed capacity remains unmeasured. The user authorises replacing its Windows installation and erasing an empty 512 GB external SSD for media; precise disk identification remains mandatory before writing either disk.
+The final install target is Surface Pro 8 Wi-Fi, identified by the user's model 1983 marking ([Microsoft service guide](https://learn.microsoft.com/en-us/surface/service-guides/surface-pro8/surface-pro8-device-information-and-service-parts)). The user reports Windows 11 and a 128 GB factory marking, replacing the earlier 1 TB estimate; actual installed capacity remains unmeasured. The user authorises replacing its Windows installation and erasing an empty 512 GB external SSD for media; precise disk identification remains mandatory before writing either disk.
+
+The first test machine is the Surface Laptop Studio, which already runs Fedora and has KVM-capable Intel hardware ([test-machine page](docs/surface-laptop-studio-test-machine.md)). Its results are evidence for the Pro 8, never proof.
 
 The Windows account password is unknown; signing in is not a prerequisite for the live-test route. The model family is Intel/x86_64, but exact CPU, RAM, installed GPU configuration and storage need live measurement ([Microsoft specifications](https://support.microsoft.com/en-us/surface/models/surface-pro-8-features-and-specs)). External USB keyboard and mouse are available; no resource or compatibility claims transfer from the HP.
 

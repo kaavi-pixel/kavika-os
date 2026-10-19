@@ -155,7 +155,7 @@ def main() -> int:
         subprocess.run(["implantisomd5", "--force", str(output)], check=True)
         sha = digest(output)
         manifest = {
-            "name": "Kavika OS 0.1.0 Surface Pro 8 live diagnostic preview",
+            "name": "Kavika OS 0.1.0 Surface live diagnostic preview (Pro 8 target, Laptop Studio test machine)",
             "base": BASE_NAME, "base_sha256": base_hash,
             "output_sha256": sha, "output_bytes": output.stat().st_size,
             "architecture": "x86_64", "installer_supported": False,

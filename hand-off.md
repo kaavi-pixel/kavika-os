@@ -1,3 +1,3 @@
 # Kavi'ka OS: hand-off
 
-Checkpoint updated 17 October 2026. The canonical handoff is [handoff.md](handoff.md). This alias is retained for existing links. The latest ISO reached Fedora 44 live-session login in QEMU on serial console, but the graphical window remained black. The software-emulated test was stopped; do not repeat that TCG run. See the canonical handoff and [validation record](docs/validation/live-preview-0.1.0.md) for the WHPX/KVM next gate and current limits. Not ready to flash or install.
+Checkpoint updated 19 October 2026. The canonical handoff is [handoff.md](handoff.md). This alias is retained for existing links. A rebuilt ISO with a workspace-switch fix exists but has not been booted; the project now has two Surface machines (Pro 8 final target, Laptop Studio Fedora test machine). See the canonical handoff and the [validation record](docs/validation/live-preview-0.1.0.md).

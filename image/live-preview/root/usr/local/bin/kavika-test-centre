@@ -5,7 +5,7 @@ export PATH=/usr/local/bin:/usr/bin:/bin
 while true; do
     choice=$(kdialog --title "Kavi'ka OS · Live preview" \
         --icon /usr/share/kavika/logo.png \
-        --menu "Surface Pro 8 test preview. Windows is not installed. Internal installation is disabled." \
+        --menu "Surface test preview (Pro 8 target, Laptop Studio test machine). Windows is not installed. Internal installation is disabled." \
         guide "Read the test guide" \
         hardware "View hardware report" \
         save "Save a hardware report" \

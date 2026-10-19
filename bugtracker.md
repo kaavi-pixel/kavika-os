@@ -86,6 +86,7 @@ These extend the prototype checklist; they do not replace or pass it.
 | S02 | All CIM queries share a generic failure handler | Static-review robustness concern; not a reproduced failure | Test failed/denied queries; consider partial results and sanitised per-check errors in later tool work. |
 | R06 | Custom image composition, disk selection, signing, or upgrades may fail despite a working prototype | Unverified OS-release concern covered by tasks #12–#15, not a sixth live risk issue | Require O01–O04 and T17–T23; no physical-disk exposure during builder/installer tests. |
 | D04 | Surface target was previously recorded as unidentified / approximately 1 TB | Corrected after user model and factory marking | Model 1983 / Pro 8 Wi-Fi; 128 GB factory marking, actual installed capacity unmeasured; no serial retained. |
+| D05 | A second machine, a Fedora-running Surface Laptop Studio, was supplied | Recorded as a test machine, not an install target. Its i5-11300H/16 GiB figures are not the Pro 8's | Keep results separate; the Laptop Studio's disk and firmware are outside the erase approval. |
 | R07 | Stock-kernel preview may lack native Surface input | Hardware validation pending under #14 | Use confirmed USB keyboard/mouse; native input/custom-kernel and Secure Boot paths require separate validation. |
 
 ## Live-preview defects and packaging corrections
@@ -97,6 +98,7 @@ These extend the prototype checklist; they do not replace or pass it.
 | B03 | GRUB reported syntax errors before showing the boot menu | Reproduced with `grub-script-check` on the unmodified upstream config: nested function declaration at line 6. Normalize to a top-level video function, preserve platform choices and require a parser pass; regression test added. Initial suspicion about the title apostrophe was not supported. |
 | B04 | First desktop opened Fedora's installer-oriented Welcome Centre | Previous candidate opened Test Centre without that Welcome Centre after disabling its preview launcher; final candidate regression remains. |
 | B05 | Wallpaper setup reported a missing D-Bus method during startup although it existed once Plasma finished loading | Object existence was not a sufficient readiness check. Retry the actual `plasma-apply-wallpaperimage --fill-mode preserveAspectFit` operation instead; bounded retry regression added. |
+| B06 | Meta+F12 did nothing in the booted image: only one desktop existed | **Root cause found:** overlay files had CRLF endings, so `livesys-session-extra` created paths with a literal CR and the two-desktop `kwinrc` was never applied. Builder now normalizes every overlay text file and `.gitattributes` forces LF; regression tests added. Rebuilt ISO `57a851a7…` is **not yet booted**, so B06 stays open until the toggle is seen working. |
 | P01 | Internal image manifest contained a Python test cache | Exclude `__pycache__`/bytecode during composition; check final manifest |
 
 These records refer to disposable VM/internal-build observations, not Surface failures. They do not change the untested status of Windows, Comet, installer safety or four-finger input.

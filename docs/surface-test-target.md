@@ -1,8 +1,17 @@
-# Kavi'ka OS: spare Surface test target
+# Kavi'ka OS: Surface test targets
 
-Updated 16 October 2026 | Surface Pro 8 identified; physical testing pending.
+Updated 19 October 2026 | Two Surface machines. The Surface Pro 8 is the final install target; the Surface Laptop Studio is the Fedora test machine. Physical testing is pending on both.
 
-The immediate deliverable is a private live diagnostic preview for the spare Surface, not an installation on the HP Envy. Windows replacement is authorised for the Surface, but the first preview deliberately does not install.
+**Machines at a glance**
+
+| Machine | Role | State |
+|---|---|---|
+| Surface Pro 8 Wi-Fi (model 1983) | Final install target | Never booted with Kavi'ka; CPU, RAM and disk unmeasured |
+| Surface Laptop Studio (Core i5-11300H, 16 GiB, Iris Xe) | Test machine, already runs Fedora 44 | Hardware identified; nothing run on it yet. See [its page](surface-laptop-studio-test-machine.md) |
+
+Results from the Laptop Studio are evidence only. It has a different CPU model, a different form factor and different input hardware.
+
+The immediate deliverable is a private live diagnostic preview, not an installation on the HP Envy. Windows replacement is authorised for the Pro 8; the first preview deliberately does not install on either Surface.
 
 ## Target and permissions
 
@@ -16,7 +25,8 @@ The immediate deliverable is a private live diagnostic preview for the spare Sur
 | Internal installation intent | Complete replacement of the Surface's Windows is explicitly authorised |
 | External medium | Empty 512 GB SSD; erasure for installation media explicitly authorised |
 | External input | USB keyboard and mouse plus necessary connection hardware available |
-| Helper computer | HP Envy only; its internal disk must remain untouched |
+| Helper computer | HP Envy builds the ISO and runs only slow emulated tests; its internal disk must remain untouched |
+| Test machine | Surface Laptop Studio running Fedora; its internal disk and firmware settings are **not** in the erase approval |
 | Windows workspace | Full Windows including Comet remains required; absent from the preview |
 | Firmware, Secure Boot, Linux/KVM | Physical test pending; no firmware-security changes authorised |
 
@@ -25,6 +35,8 @@ Do not ask again for general erase permission. Before any write, match the actua
 The user's device serial is deliberately excluded from the repository and diagnostic schema. Do not upload old Windows files, activation/recovery keys, firmware identifiers or unreviewed logs.
 
 ## First test route
+
+The Laptop Studio has KVM-capable hardware, so run the VM test there first (see [the Laptop Studio page](surface-laptop-studio-test-machine.md)). The steps below describe the Pro 8 live-media route, which comes only after the VM and Laptop Studio checks pass.
 
 1. Finish the disposable UEFI VM check documented in [preview evidence](validation/live-preview-0.1.0.md).
 2. Verify the delivered ISO checksum on the HP, then write the image only to the identified empty external SSD.

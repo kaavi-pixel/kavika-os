@@ -1,5 +1,10 @@
 #!/usr/bin/python3
-"""Read-only, intentionally limited hardware report for the live preview."""
+"""Read-only, intentionally limited hardware report for Kavi'ka diagnostics.
+
+Runs on the live preview and on any Linux host (for example a Fedora Surface
+test machine). It never reads serial numbers, UUIDs, MAC/IP addresses, EDID
+blobs, usernames, keys or user files.
+"""
 import argparse
 import json
 import os
@@ -7,10 +12,45 @@ import platform
 from pathlib import Path
 import subprocess
 
+VERSION = "0.2.0"
+SECURE_BOOT_VAR = "SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c"
+
+# Upstream expectations come from the linux-surface device matrix and are NOT
+# verified on the device being reported. Matching uses the exact DMI product name.
+KNOWN_TARGETS = {
+    "surface pro 8": {
+        "id": "surface-pro-8",
+        "name": "Surface Pro 8",
+        "role": "final install target (Wi-Fi model 1983)",
+        "upstream_notes": [
+            "Type Cover keyboard/touchpad, touchscreen and pen: listed as needing the linux-surface kernel.",
+            "Cameras: listed as not working upstream.",
+            "Wi-Fi, Bluetooth, speakers and suspend: listed as working upstream.",
+        ],
+    },
+    "surface laptop studio": {
+        "id": "surface-laptop-studio",
+        "name": "Surface Laptop Studio",
+        "role": "test machine (runs Fedora; has a KVM-capable Intel CPU)",
+        "upstream_notes": [
+            "Touchscreen, pen and slate/tablet mode: listed as needing the linux-surface kernel.",
+            "Touchpad: may need a libinput quirk (see the linux-surface wiki).",
+            "Wi-Fi, Bluetooth, speakers, suspend and cameras: listed as supported upstream.",
+        ],
+    },
+}
+
 
 def read_optional(path):
     try:
         return Path(path).read_text().strip()
+    except (OSError, UnicodeDecodeError):
+        return None
+
+
+def read_bytes_optional(path):
+    try:
+        return Path(path).read_bytes()
     except OSError:
         return None
 
@@ -33,6 +73,98 @@ def sanitize_disks(data):
     ]
 
 
+def match_target(product_name):
+    """Exact (case-insensitive) match so Surface Laptop Studio 2 is not taken for 1."""
+    key = (product_name or "").strip().lower()
+    known = KNOWN_TARGETS.get(key)
+    if known:
+        return {"matched": True, **known}
+    return {"matched": False, "id": None, "name": product_name or None,
+            "role": "not a recognised Kavi'ka target", "upstream_notes": []}
+
+
+def parse_secure_boot(raw):
+    """EFI variable files start with 4 attribute bytes; the value is the last byte."""
+    if raw is None or len(raw) < 5:
+        return None
+    return raw[-1] == 1
+
+
+def classify_input(text):
+    """Booleans only: never device names (a name can reveal a paired Bluetooth device)."""
+    found = {"keyboard": False, "touchpad": False, "touchscreen": False, "pen": False}
+    for block in (text or "").split("\n\n"):
+        name = ""
+        for line in block.splitlines():
+            if line.startswith('N: Name="') and line.endswith('"'):
+                name = line[len('N: Name="'):-1].lower()
+        if not name:
+            continue
+        words = name.split()
+        if "touchpad" in name:
+            found["touchpad"] = True
+        elif "pen" in words or "stylus" in name:
+            found["pen"] = True
+        elif "touchscreen" in name or "touch screen" in name or (words and words[-1] == "touch"):
+            found["touchscreen"] = True
+        elif "keyboard" in name:
+            found["keyboard"] = True
+    return {f"has_{key}": value for key, value in found.items()}
+
+
+def parse_audio_cards(text):
+    """Card short names only, for example sof-hda-dsp."""
+    cards = []
+    for line in (text or "").splitlines():
+        if "]:" in line and line.lstrip()[:1].isdigit():
+            cards.append(line.split("]:", 1)[1].split(" - ")[0].strip())
+    return cards
+
+
+def drm_panels(root="/sys/class/drm"):
+    """Connected display connectors and their first advertised mode; EDID is never read."""
+    panels = []
+    base = Path(root)
+    if not base.is_dir():
+        return panels
+    for status in sorted(base.glob("card*-*/status")):
+        if read_optional(status) == "connected":
+            modes = read_optional(status.parent / "modes") or ""
+            panels.append({"connector": status.parent.name.split("-", 1)[-1],
+                           "first_mode": modes.splitlines()[0] if modes else None})
+    return panels
+
+
+def wireless_interfaces(root="/sys/class/net"):
+    base = Path(root)
+    if not base.is_dir():
+        return []
+    return sorted(item.name for item in base.iterdir() if (item / "wireless").exists())
+
+
+def bluetooth_controller_count(root="/sys/class/bluetooth"):
+    base = Path(root)
+    return len([item for item in base.iterdir() if item.name.startswith("hci")]) if base.is_dir() else 0
+
+
+def battery_state(root="/sys/class/power_supply"):
+    base = Path(root)
+    if not base.is_dir():
+        return {"present": False}
+    for item in sorted(base.iterdir()):
+        if read_optional(item / "type") == "Battery":
+            capacity = read_optional(item / "capacity")
+            return {"present": True,
+                    "percent": int(capacity) if capacity and capacity.isdigit() else None,
+                    "status": read_optional(item / "status")}
+    return {"present": False}
+
+
+def surface_modules(text):
+    names = sorted({line.split()[0] for line in (text or "").splitlines() if line.strip()})
+    return [name for name in names if name.startswith(("surface", "ipts", "ithc", "intel_lpss"))]
+
+
 def report():
     cpu = read_optional("/proc/cpuinfo") or ""
     memory = read_optional("/proc/meminfo") or ""
@@ -51,10 +183,17 @@ def report():
     pci = run(["lspci"])
     graphics = [line for line in (pci or "").splitlines()
                 if any(word in line for word in ("VGA compatible", "3D controller", "Display controller"))]
+    product = read_optional("/sys/class/dmi/id/product_name")
+    efi = Path("/sys/firmware/efi").exists()
+    secure_boot = parse_secure_boot(read_bytes_optional(
+        f"/sys/firmware/efi/efivars/{SECURE_BOOT_VAR}")) if efi else None
     return {
-        "preview": "Kavika 0.1.0 live diagnostic preview",
-        "expected_target": "Surface Pro 8 Wi-Fi, model 1983; actual hardware below",
-        "system_model": read_optional("/sys/class/dmi/id/product_name"),
+        "preview": f"Kavika {VERSION} diagnostic report",
+        "target": match_target(product),
+        "system_vendor": read_optional("/sys/class/dmi/id/sys_vendor"),
+        "system_model": product,
+        "firmware_version": read_optional("/sys/class/dmi/id/bios_version"),
+        "firmware_date": read_optional("/sys/class/dmi/id/bios_date"),
         "architecture": platform.machine(),
         "kernel": platform.release(),
         "cpu_model": model,
@@ -63,13 +202,24 @@ def report():
         "cpu_virtualisation_flag": "vmx" in flags or "svm" in flags,
         "kvm_device_exists": Path("/dev/kvm").exists(),
         "kvm_accessible_to_current_user": os.access("/dev/kvm", os.R_OK | os.W_OK),
+        "uefi_boot": efi,
+        "secure_boot_enabled": secure_boot,
+        "tpm_present": Path("/sys/class/tpm/tpm0").exists(),
         "graphics_controllers": graphics,
+        "display_panels": drm_panels(),
         "disks": disks,
+        "wireless_interfaces": wireless_interfaces(),
+        "bluetooth_controllers": bluetooth_controller_count(),
+        "input": classify_input(read_optional("/proc/bus/input/devices")),
+        "audio_cards": parse_audio_cards(read_optional("/proc/asound/cards")),
+        "video_capture_devices": len(list(Path("/dev").glob("video[0-9]*"))),
+        "battery": battery_state(),
+        "surface_kernel_modules": surface_modules(read_optional("/proc/modules")),
         "session_type": os.environ.get("XDG_SESSION_TYPE"),
         "limitations": [
             "This is inventory, not a hardware or Windows-workspace acceptance pass.",
-            "No serial numbers, UUIDs, usernames, MACs, IP addresses, keys or user files are collected.",
-            "Factory casing says 128 GB; current installed disk size is reported separately.",
+            "No serial numbers, UUIDs, usernames, MACs, IP addresses, EDID, keys or user files are collected.",
+            "Upstream notes come from the linux-surface device matrix and are not verified on this device.",
             "Windows and Comet are not installed in this preview.",
         ],
     }

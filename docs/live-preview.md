@@ -1,8 +1,10 @@
-# Kavi'ka OS: Surface Pro 8 live-preview guide
+# Kavi'ka OS: Surface live-preview guide
 
-Version 0.1.0 | Private diagnostic preview | Guide updated 16 October 2026
+Version 0.1.0 | Private diagnostic preview | Guide updated 19 October 2026
 
-This is a draft guide for the first Linux hardware test, not the finished Linux/Windows OS. **Do not flash at this checkpoint:** the user has paused work, and the latest wallpaper-startup change still needs fresh-image validation. Follow the [handoff](../handoff.md) before resuming, then read the matching [validation record](validation/live-preview-0.1.0.md); an image being built is not proof that its desktop or your Surface works.
+**Two machines:** the Surface Laptop Studio (Fedora, KVM-capable) is the first test machine and the Surface Pro 8 is the final target. Test in a disposable VM on the Laptop Studio first ([steps](surface-laptop-studio-test-machine.md)), then boot from external media. Laptop Studio results are evidence for the Pro 8, never proof.
+
+This is a draft guide for the first Linux hardware test, not the finished Linux/Windows OS. **Do not flash at this checkpoint:** the latest rebuilt image has not been booted yet, and its predecessor failed the Meta+F12 workspace test. Follow the [handoff](../handoff.md) before resuming, then read the matching [validation record](validation/live-preview-0.1.0.md); an image being built is not proof that its desktop or your Surface works.
 
 ## What is in it
 
