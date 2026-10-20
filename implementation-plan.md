@@ -1,6 +1,6 @@
 # Kavi'ka OS: implementation plan
 
-Version 0.7 | 19 October 2026 | Integration roadmap; Surface Pro 8 final target, Surface Laptop Studio as Fedora/KVM test machine, diagnostic preview in validation.
+Version 0.8 | 20 October 2026 | Integration roadmap; Surface Pro 8 final target, Surface Laptop Studio Fedora/KVM test machine (preflight complete, KVM usable), diagnostic preview in validation.
 
 Execution is paused at the user's request. Resume from [handoff.md](handoff.md); latest-image validation is outstanding, and no physical installation is ready.
 

@@ -1,6 +1,6 @@
 # Kavi'ka OS: features v2
 
-Version 0.8 | 19 October 2026 | Product specification; Surface Pro 8 final target, Surface Laptop Studio added as Fedora test machine, diagnostic live preview built.
+Version 0.9 | 20 October 2026 | Product specification; Surface Pro 8 final target, Surface Laptop Studio Fedora test machine with the read-only preflight complete (KVM usable), diagnostic live preview built.
 
 Work resumed on 19 October 2026. The previous diagnostic image reached a working KDE desktop in a disposable VM but its Meta+F12 workspace switch failed (line-ending defect, fixed in source and rebuilt, not yet re-tested). See [handoff.md](handoff.md) before treating any image as ready for a Surface.
 

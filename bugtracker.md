@@ -1,6 +1,6 @@
 # Kavi'ka OS: bug tracker
 
-Reviewed snapshot | 16 October 2026 | Diagnostic live preview built; no full integration or installed-OS acceptance gate has passed.
+Reviewed snapshot | 20 October 2026 | Diagnostic live preview built; read-only preflight run on the Surface Laptop Studio test machine; no full integration or installed-OS acceptance gate has passed.
 
 The primary target is Surface Pro 8 Wi-Fi, model 1983, Intel/x86_64 family; sources and evidence are in [the target record](docs/surface-test-target.md). The user's 128 GB factory marking supersedes the earlier 1 TB estimate; actual capacity and RAM are unknown. External keyboard/mouse are available. Windows replacement and erasure of the empty 512 GB media are approved; exact disk identification and validation remain blockers, not general erase consent.
 
@@ -87,7 +87,13 @@ These extend the prototype checklist; they do not replace or pass it.
 | R06 | Custom image composition, disk selection, signing, or upgrades may fail despite a working prototype | Unverified OS-release concern covered by tasks #12–#15, not a sixth live risk issue | Require O01–O04 and T17–T23; no physical-disk exposure during builder/installer tests. |
 | D04 | Surface target was previously recorded as unidentified / approximately 1 TB | Corrected after user model and factory marking | Model 1983 / Pro 8 Wi-Fi; 128 GB factory marking, actual installed capacity unmeasured; no serial retained. |
 | D05 | A second machine, a Fedora-running Surface Laptop Studio, was supplied | Recorded as a test machine, not an install target. Its i5-11300H/16 GiB figures are not the Pro 8's | Keep results separate; the Laptop Studio's disk and firmware are outside the erase approval. |
-| R07 | Stock-kernel preview may lack native Surface input | Hardware validation pending under #14 | Use confirmed USB keyboard/mouse; native input/custom-kernel and Secure Boot paths require separate validation. |
+| R07 | Stock-kernel preview may lack native Surface input | Hardware validation pending under #14 | Use confirmed USB keyboard/mouse; native input/custom-kernel and Secure Boot paths require separate validation. **Preflight evidence 20 October 2026: no touchscreen or pen input device was detected on the stock kernel of the Laptop Studio; still a risk, not a confirmed defect, and the Pro 8's own Type Cover, touch and pen remain untested.** |
+| D06 | The Laptop Studio's storage was recorded as unmeasured | Measured by the preflight on 20 October 2026 | 256 GB NVMe (`HFM256GD3GX013N`), 255,060,320,256 bytes; root and home share a 235 GB filesystem with 203 GB free. Recorded in the Laptop Studio page and README. |
+| D07 | KVM readiness on the test machine was unknown | Measured 20 October 2026: **usable** | `vmx` present, `/dev/kvm` writable by the user, `kvm_intel` loaded, `qemu-system-x86_64`/`qemu-img`/`virsh`/`swtpm` and both OVMF files present. `virt-manager` missing and libvirt inactive, but the direct-QEMU launcher does not need them. Unblocks resume-plan step 2. |
+| D08 | The Laptop Studio's firmware security state was unrecorded | Observed 20 October 2026 | Secure Boot **disabled** and the platform in **Setup Mode** (no enrolled platform keys). Not a failure and nothing was changed; this does not carry over to the Pro 8's T21 check. |
+| D09 | Cameras, audio, Bluetooth and battery are enumerated but unverified | Inventory only | 4 video-capture devices, one HDA-Intel card, 1 Bluetooth controller, battery present at 72%. Enumeration is not functional evidence; no camera/audio/sleep test has run. |
+| D10 | A 1 TB USB disk (`sda`, "One Touch w/PW") is attached to the Laptop Studio | Enumerated only; nothing read or written | Not the approved 512 GB media SSD. Identify every physical disk explicitly before any future write or media step. |
+| D11 | The repo's test counts were not reproduced on the Laptop Studio | `pytest` is not installed there | Do not cite the earlier test results as verified on this machine; installing test tooling is a separate approved step. |
 
 ## Live-preview defects and packaging corrections
 
@@ -103,9 +109,9 @@ These extend the prototype checklist; they do not replace or pass it.
 
 These records refer to disposable VM/internal-build observations, not Surface failures. They do not change the untested status of Windows, Comet, installer safety or four-finger input.
 
-Work is paused at the user's request. Resume from [handoff.md](handoff.md); do not mark the newest image ready or close milestones based on the previous candidate's results.
+Work is paused at the user's request. Resume from [handoff.md](handoff.md); do not mark the newest image ready or close milestones based on the previous candidate's results. Resume-plan step 1 (the read-only preflight on the Laptop Studio) is complete as of 20 October 2026; the next action is the disposable KVM guest boot of the rebuilt ISO, which no result here has performed.
 
-See [the archive review](docs/review-upload.md) for review scope and verification limits. The preflight tool was preserved unchanged; no runtime fix or test is claimed.
+See [the archive review](docs/review-upload.md) for review scope and verification limits. The preflight tool was preserved unchanged; no runtime fix or test is claimed. The D06–D11 observations come from the read-only run filed at [docs/validation/preflight-surface-laptop-studio-2026-10-20.md](docs/validation/preflight-surface-laptop-studio-2026-10-20.md).
 
 ## Minimum defect record
 

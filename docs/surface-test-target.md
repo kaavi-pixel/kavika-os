@@ -1,13 +1,13 @@
 # Kavi'ka OS: Surface test targets
 
-Updated 19 October 2026 | Two Surface machines. The Surface Pro 8 is the final install target; the Surface Laptop Studio is the Fedora test machine. Physical testing is pending on both.
+Updated 20 October 2026 | Two Surface machines. The Surface Pro 8 is the final install target; the Surface Laptop Studio is the Fedora test machine. No Kavi'ka image has booted on either; the read-only preflight has run on the Laptop Studio.
 
 **Machines at a glance**
 
 | Machine | Role | State |
 |---|---|---|
 | Surface Pro 8 Wi-Fi (model 1983) | Final install target | Never booted with Kavi'ka; CPU, RAM and disk unmeasured |
-| Surface Laptop Studio (Core i5-11300H, 16 GiB, Iris Xe) | Test machine, already runs Fedora 44 | Hardware identified; nothing run on it yet. See [its page](surface-laptop-studio-test-machine.md) |
+| Surface Laptop Studio (Core i5-11300H, 16 GiB, 256 GB NVMe, Iris Xe) | Test machine, already runs Fedora 44 | Hardware identified and the read-only preflight has run (KVM usable, 20 October 2026); no Kavi'ka image booted on it yet. See [its page](surface-laptop-studio-test-machine.md) |
 
 Results from the Laptop Studio are evidence only. It has a different CPU model, a different form factor and different input hardware.
 

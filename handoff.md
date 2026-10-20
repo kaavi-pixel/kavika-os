@@ -1,6 +1,6 @@
 # Kavi'ka OS: handoff
 
-Checkpoint updated 19 October 2026. This remains a diagnostic image, not an installation release. Do not flash/install or perform destructive disk actions without passing the gates below and a fresh explicit user go/no-go.
+Checkpoint updated 20 October 2026. This remains a diagnostic image, not an installation release. Do not flash/install or perform destructive disk actions without passing the gates below and a fresh explicit user go/no-go.
 
 ## Where we stopped
 
@@ -8,7 +8,9 @@ The latest ISO was built from the pinned Fedora KDE 44 base in WSL Ubuntu. SHA-2
 
 On 19 October 2026 a disposable WHPX guest booted the earlier ISO (`10074299…`) to a working KDE desktop with the Test Centre, valid hardware report, enforcing SELinux and no failed units. **Meta+F12 workspace switching failed** because overlay files had CRLF line endings. That is fixed in source and in a rebuilt ISO (`57a851a70b1f6fdb17c0b1c1801bad52e4237c0888aaa88c5c15a5a2c2cfefd9`, 3,370,319,872 bytes, builder `b9141011…`), whose checksum, embedded media check and 30 Linux tests pass. **The rebuilt ISO has not been booted yet.** No physical disk, shared folder or Surface was used.
 
-The project now has two Surface machines. The **Surface Pro 8** is the final install target and has never been booted with Kavi'ka. The **Surface Laptop Studio** (Core i5-11300H, 16 GiB, Iris Xe) already runs Fedora 44 and has KVM-capable hardware, so it is the first test machine; see `docs/surface-laptop-studio-test-machine.md`. Its results are evidence only, not proof for the Pro 8.
+The project now has two Surface machines. The **Surface Pro 8** is the final install target and has never been booted with Kavi'ka. The **Surface Laptop Studio** (Core i5-11300H, 16 GiB, 256 GB NVMe, Iris Xe) already runs Fedora 44 and has KVM-capable hardware, so it is the first test machine; see `docs/surface-laptop-studio-test-machine.md`. Its results are evidence only, not proof for the Pro 8.
+
+On 20 October 2026 the read-only preflight (`tools/surface-fedora-preflight.sh`) was run **on the Surface Laptop Studio**. It installed nothing and changed nothing. Result: **KVM is usable** (`vmx` present, `/dev/kvm` writable by the user, `kvm_intel` loaded, `qemu-system-x86_64`/`qemu-img`/`virsh`/`swtpm` and both OVMF files present), 7.0 GiB RAM available of 15.4 GiB, 203 GB free on the 235 GB root, TPM present, Secure Boot disabled **and the platform in Setup Mode**. `virt-manager` is missing and libvirt is not running (not needed by the direct-QEMU launcher). No touchscreen or pen input device was detected on the stock kernel, and a 1 TB USB disk (`sda`, "One Touch w/PW") is attached — enumerated only, never written. Full table in the Laptop Studio page. **Resume-plan step 1 is now complete; step 2 (booting the rebuilt ISO in a disposable KVM guest) is unblocked.**
 
 B05's wallpaper readiness retry is not visually validated on this image. KDE/Test Centre passes belong to a previous ISO candidate and must not transfer to the current hash.
 
@@ -48,7 +50,7 @@ The ISO contains no Windows guest, Comet, cross-OS file sharing, persistence, su
 
 ## Resume plan
 
-1. **On the Surface Laptop Studio:** clone the repo, run `bash tools/surface-fedora-preflight.sh` (read-only; installs and changes nothing) and review its output. It reports KVM, tools, Secure Boot, TPM, RAM, disk and the hardware JSON.
+1. **On the Surface Laptop Studio:** clone the repo, run `bash tools/surface-fedora-preflight.sh` (read-only; installs and changes nothing) and review its output. It reports KVM, tools, Secure Boot, TPM, RAM, disk and the hardware JSON. **Done 20 October 2026 — KVM usable, preflight page updated. No blockers.**
 2. Copy the rebuilt ISO and its `.sha256` file to that machine. Boot it in a disposable KVM guest with `python3 tools/launch-preview-vm-linux.py --iso <iso> --sha256-file <sidecar> --vm-dir <new dir>`. The launcher refuses a hash mismatch and attaches no physical disk or shared folder. Repeat the functional test in `docs/validation/live-preview-0.1.0.md`. **Meta+F12 must now switch workspaces.**
 3. If the Windows helper is used instead, it needs at least 5 GiB free RAM (it had 3.7 GiB when last checked). The QEMU GTK window showed black in earlier captures, while screenshots taken with the QEMU monitor `screendump` command showed the desktop, so use `screendump` to see the screen.
 4. Only after the VM test passes, boot the same ISO from external media on the Laptop Studio, still without installing, then on the Pro 8. Test graphics, input, Wi-Fi, audio, camera, sleep and Secure Boot. No disk writes, partitioning, installation or firmware/security changes without a fresh explicit go/no-go.

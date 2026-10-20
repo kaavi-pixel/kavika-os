@@ -1,6 +1,6 @@
 # Kavi'ka OS: OS implementation plan
 
-Checkpoint updated 19 October 2026. WSL Ubuntu produced the pinned Fedora-derived diagnostic ISO. A WHPX-accelerated disposable VM booted the previous build to a working KDE desktop; the Test Centre, hardware report, installer guard, SELinux and network checks passed, but the Meta+F12 workspace switch failed because overlay files had CRLF line endings. The source fix is committed and a fixed ISO is rebuilt; it is not yet re-tested. A second machine, a Fedora-running Surface Laptop Studio, is available for KVM and virtual-machine testing; the Surface Pro 8 remains the final target. Nothing has run on a Surface yet.
+Checkpoint updated 19 October 2026. WSL Ubuntu produced the pinned Fedora-derived diagnostic ISO. A WHPX-accelerated disposable VM booted the previous build to a working KDE desktop; the Test Centre, hardware report, installer guard, SELinux and network checks passed, but the Meta+F12 workspace switch failed because overlay files had CRLF line endings. The source fix is committed and a fixed ISO is rebuilt; it is not yet re-tested. A second machine, a Fedora-running Surface Laptop Studio, is available for KVM and virtual-machine testing; its read-only preflight passed on 20 October 2026 and confirmed KVM is usable. The Surface Pro 8 remains the final target. No Kavi'ka image has booted on a Surface yet.
 
 Version 0.5 | Updated 19 October 2026 for the Surface Pro 8 target, the Surface Laptop Studio test machine and the current diagnostic-preview gate.
 

@@ -6,7 +6,7 @@ A Linux-first desktop experience with a real Windows workspace one four-finger s
 
 The Windows side must be full, general-purpose Windows, including Comet and normal user-chosen app installation, not a restricted collection of supported apps. A test matrix measures compatibility; it must not become an app allowlist, and a VM limitation must be reported rather than silently redefined as out of scope.
 
-**Status: development checkpoint, not an installation release.** A Fedora-based diagnostic ISO and its source are implemented. The previous build reached a working KDE desktop in a disposable VM, and the Test Centre, hardware report, installer guard, SELinux and networking checks passed there. Its Meta+F12 workspace switch failed because of a line-ending defect that is now fixed in source; the fixed image is rebuilt but not yet re-tested. No ISO is approved for flashing. Windows/Comet, cross-OS integration, a Surface-specific kernel and supported installation are not included. Nothing has been run on a Surface yet.
+**Status: development checkpoint, not an installation release.** A Fedora-based diagnostic ISO and its source are implemented. The previous build reached a working KDE desktop in a disposable VM, and the Test Centre, hardware report, installer guard, SELinux and networking checks passed there. Its Meta+F12 workspace switch failed because of a line-ending defect that is now fixed in source; the fixed image is rebuilt but not yet re-tested. No ISO is approved for flashing. Windows/Comet, cross-OS integration, a Surface-specific kernel and supported installation are not included. No Kavi'ka image has been booted on Surface hardware yet; a read-only inventory preflight has now been run on the Laptop Studio test machine (see [the Laptop Studio page](docs/surface-laptop-studio-test-machine.md)), which installed and changed nothing.
 
 See [the preview guide](docs/live-preview.md), [build instructions](docs/build.md), and [validation record](docs/validation/live-preview-0.1.0.md) before using an image. A desktop named “Windows (not installed)” is a Linux workspace, not a Windows implementation.
 
@@ -70,7 +70,7 @@ The user-selected project logo is stored at [`assets/branding/kavi-ka-os-logo.pn
 | Machine | Role |
 |---|---|
 | **Surface Pro 8 Wi-Fi (model 1983)** | Final install target. Intel x86_64; exact CPU and RAM still need measuring ([Microsoft specifications](https://support.microsoft.com/en-us/surface/models/surface-pro-8-features-and-specs)). |
-| **Surface Laptop Studio** (Core i5-11300H, 16 GiB, Iris Xe) | Test machine that already runs Fedora 44. It has a KVM-capable Intel CPU, so it is where the Linux preview and Windows-in-a-VM experiments are tried first. |
+| **Surface Laptop Studio** (Core i5-11300H, 16 GiB, 256 GB NVMe, Iris Xe) | Test machine that already runs Fedora 44. Its KVM was confirmed usable by the read-only preflight on 20 October 2026, so it is where the Linux preview and Windows-in-a-VM experiments are tried first. Disk capacity is now measured; see [the Laptop Studio page](docs/surface-laptop-studio-test-machine.md). |
 
 Both are Intel Tiger Lake machines, so CPU virtualisation, the Iris Xe graphics driver and the stock kernel behave similarly. The Laptop Studio is **not** a proxy for the Pro 8's Type Cover, touch, pen, tablet mode, cameras or storage budget. Treat everything learned on it as evidence, never proof.
 
