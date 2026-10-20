@@ -68,7 +68,7 @@ What changed in the image: every overlay text file now has LF endings (the fix f
 
 ## Next actions
 
-1. Boot the rebuilt ISO (`57a851a7…`) in a disposable VM and repeat the functional test above. Meta+F12 must switch between two workspaces before the image advances. Prefer the Surface Laptop Studio with KVM (`tools/launch-preview-vm-linux.py`); the Windows helper needs at least 5 GiB free RAM.
+1. Boot the rebuilt ISO (`57a851a7…`) in a disposable VM and repeat the functional test above. Meta+F12 must switch between two workspaces before the image advances. Prefer the Surface Laptop Studio with KVM (`tools/launch-preview-vm-linux.py`); the Windows helper needs at least 5 GiB free RAM. **Partially done on a different build:** the independently rebuilt `bd8407d6…` was booted in a KVM guest on the Laptop Studio and passed the workspace-switch, SELinux, failed-unit and isolation checks ([boot record](vm-boot-2026-10-20-laptop-studio.md)). `57a851a7…` itself remains unbooted; do not transfer those results to it.
 2. Reconcile WSL and Windows worktrees and use one canonical source commit. Run tests and shell/GRUB checks on the exact tree used to rebuild.
 3. Boot the rebuilt exact ISO in QEMU until KDE, logo/wallpaper, Test Centre/report privacy, workspace switching and installer guard are visually verified. Record its SHA-256 with results.
 4. Boot the verified image from external media on the Surface for non-destructive compatibility tests only. Identify CPU/RAM/storage and verify graphics, input, Wi-Fi, audio, camera, sleep/resume and Secure Boot state. No disk writes, firmware/security changes, or installation without a fresh explicit user go/no-go.

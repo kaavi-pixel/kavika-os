@@ -20,7 +20,11 @@ The ISO was rebuilt **on the Laptop Studio itself** from the pinned Fedora KDE 4
 
 It is the **same size** as the WSL-built `57a851a7…` candidate but a **different hash** — same builder source (`b9141011…`), different toolchain and timestamps, so this is not a reproducibility result and neither hash is "the" canonical image.
 
-The B06 root cause is confirmed fixed at build level: no text file in this ISO's `/boot/kavika-preview.cpio` overlay contains a CR byte, and its `etc/skel/.config/kwinrc` has `Number=2` plus `Linux` and `Windows (not installed)` with LF endings. The earlier ISO (`10074299…`) contains `\r\n` in the same file, which validates the check. **The image still has not been booted**, so B06 stays open until Meta+F12 is seen switching workspaces in a guest.
+The B06 root cause is confirmed fixed at build level: no text file in this ISO's `/boot/kavika-preview.cpio` overlay contains a CR byte, and its `etc/skel/.config/kwinrc` has `Number=2` plus `Linux` and `Windows (not installed)` with LF endings. The earlier ISO (`10074299…`) contains `\r\n` in the same file, which validates the check.
+
+That image was then **booted in a disposable KVM guest on this machine and the switch works**. UEFI boot reached the KDE desktop with the Test Centre open; **Meta+F12 switched workspaces in both directions** (361k pixels change per press, return trip matching the original desktop to within 105 px); `getenforce` reported `Enforcing`; `systemctl is-system-running` reported `running`; `systemctl --list-units --state=failed` listed **0 units**; the hardware report ran in the guest; and `lsblk` showed only the private 16 GiB virtio disk and the QEMU DVD-ROM, confirming no host disk was exposed. **B06 is closed for `bd8407d6…`.** Full record: [vm-boot-2026-10-20-laptop-studio.md](docs/validation/vm-boot-2026-10-20-laptop-studio.md).
+
+Note for anyone repeating the check: the QEMU monitor key name is **`meta_l-f12`**; `meta-f12` is rejected and the screen does not change, which is easy to misread as a failed shortcut.
 
 ## Current host/test constraint
 
@@ -59,7 +63,7 @@ The ISO contains no Windows guest, Comet, cross-OS file sharing, persistence, su
 ## Resume plan
 
 1. **On the Surface Laptop Studio:** clone the repo, run `bash tools/surface-fedora-preflight.sh` (read-only; installs and changes nothing) and review its output. It reports KVM, tools, Secure Boot, TPM, RAM, disk and the hardware JSON. **Done 20 October 2026 — KVM usable, preflight page updated. No blockers.**
-2. Copy the rebuilt ISO and its `.sha256` file to that machine. Boot it in a disposable KVM guest with `python3 tools/launch-preview-vm-linux.py --iso <iso> --sha256-file <sidecar> --vm-dir <new dir>`. The launcher refuses a hash mismatch and attaches no physical disk or shared folder. Repeat the functional test in `docs/validation/live-preview-0.1.0.md`. **Meta+F12 must now switch workspaces.**
+2. Copy the rebuilt ISO and its `.sha256` file to that machine. Boot it in a disposable KVM guest with `python3 tools/launch-preview-vm-linux.py --iso <iso> --sha256-file <sidecar> --vm-dir <new dir>`. The launcher refuses a hash mismatch and attaches no physical disk or shared folder. Repeat the functional test in `docs/validation/live-preview-0.1.0.md`. **Meta+F12 must now switch workspaces.** **Done 20 October 2026 for `bd8407d6…`: switch works both directions, SELinux enforcing, no failed units, no host disks visible.**
 3. If the Windows helper is used instead, it needs at least 5 GiB free RAM (it had 3.7 GiB when last checked). The QEMU GTK window showed black in earlier captures, while screenshots taken with the QEMU monitor `screendump` command showed the desktop, so use `screendump` to see the screen.
 4. Only after the VM test passes, boot the same ISO from external media on the Laptop Studio, still without installing, then on the Pro 8. Test graphics, input, Wi-Fi, audio, camera, sleep and Secure Boot. No disk writes, partitioning, installation or firmware/security changes without a fresh explicit go/no-go.
 5. Then feasibility-test full Windows 11 plus Comet in a KVM guest on the Laptop Studio (16 GiB host RAM), and record what does and does not transfer to the Pro 8.
