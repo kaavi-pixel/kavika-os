@@ -199,6 +199,8 @@ def main(argv=None) -> int:
             serial_log=vm_dir / "serial.log", guest_mib=args.guest_mib, cpus=args.cpus,
             display=args.display, virtio_iso=args.virtio_iso, hostfwd=args.hostfwd,
             with_net=not args.no_net)
+        if args.monitor:
+            planned += ["-monitor", f"unix:{vm_dir / 'mon.sock'},server,nowait"]
         print("would run: " + " ".join(planned))
         print("--dry-run: nothing was created")
         return 0
