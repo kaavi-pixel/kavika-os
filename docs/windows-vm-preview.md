@@ -31,3 +31,21 @@ A successful launcher return merely means QEMU started; only an observed guest d
 ## Linux hosts (including the Surface Laptop Studio)
 
 A Linux host with KVM does not need this Windows launcher or software emulation. Use `tools/launch-preview-vm-linux.py` instead. It requires an ISO hash (or `.sha256` file), a new empty VM directory, at least 5 GiB of available RAM and a usable `/dev/kvm`. It attaches only a private QCOW2 disk and user-mode networking, never a physical disk or shared folder. See [the Laptop Studio page](surface-laptop-studio-test-machine.md).
+
+### A full Windows 11 guest on a Linux/KVM host
+
+`tools/launch-windows-vm-linux.py` is the feasibility harness for the product's Windows side: it boots a general-purpose Windows 11 guest so the real question — does full Windows run acceptably here alongside Linux — can be measured. It fetches nothing: you supply your own Windows 11 ISO, and no licence key, recovery key or activation data is stored by the project.
+
+What it presents, chosen so Windows 11 Setup boots without extra drivers:
+
+| Component | Choice | Why |
+|---|---|---|
+| Firmware | OVMF UEFI with a private variable store | Windows 11 requires UEFI |
+| TPM | `swtpm`, TPM 2.0, state inside the VM directory | Windows 11 requires TPM 2.0 |
+| System disk | NVMe (`stornvme` is in-box) | avoids needing virtio-win just to install |
+| Network | `e1000e` on user-mode NAT, no forwarding | in-box driver, host not exposed |
+| Display | standard VGA | virtio-gpu would need guest drivers first |
+
+`--virtio-iso` attaches a virtio-win CD once you want virtio devices. Isolation is the same as the preview launcher: new private QCOW2, private TPM state, user-mode NAT, and no physical disk or shared folder. Run `--dry-run` first; it performs every host check, prints the exact QEMU command and creates nothing.
+
+Windows-specific caveats: licensing and activation are yours to handle, the guest's performance on this host has not been measured yet, and a VM limitation must be reported rather than quietly redefined as out of scope. This harness does not restrict what you install inside Windows.

@@ -1,17 +1,36 @@
-# Kavi'ka OS: Surface test targets
+# Kavi'ka OS: target machines
 
-Updated 20 October 2026 | Two Surface machines. The Surface Pro 8 is the final install target; the Surface Laptop Studio is the Fedora test machine. No Kavi'ka image has booted on either; the read-only preflight has run on the Laptop Studio.
+Updated 20 October 2026 | The HP Envy x360 with 1 TB storage is now the intended **final install target**. The Surface Laptop Studio is the **test machine**. The Surface Pro 8's status is awaiting confirmation.
+
+## Target change, 20 October 2026
+
+On 20 October 2026 the user stated: *"this should be the test, the real thing that should be the final result is the hp envy with 1tb storage"* — that is, the Laptop Studio is the test bed and the finished Kavi'ka OS should end up on the **HP Envy x360 (1 TB)**.
+
+What this changes:
+
+| Item | Before | Now |
+|---|---|---|
+| Final install target | Surface Pro 8 Wi-Fi (model 1983) | **HP Envy x360, 1 TB (user-reported)** |
+| Test machine | Surface Laptop Studio | Surface Laptop Studio (unchanged, now actively in use) |
+| Surface Pro 8 | Final install target | **Awaiting confirmation: dropped, or a later goal?** |
+| Surface-specific kernel work | On the critical path (Type Cover, touch, pen) | **Off the target's critical path** — an Envy is a normal laptop with ordinary input |
+| Guest sizing pressure | Severe: Pro 8 recorded as 128 GB | Relaxed: 1 TB of storage and 16 GiB of RAM to work with |
+
+**What this does NOT authorise.** The previously recorded approvals were for the Surface Pro 8's internal disk and for erasing an empty 512 GB external SSD. They do **not** transfer to the HP Envy. The Envy currently runs Windows and is the project's build/emulation helper; **no write, repartition or erasure of its internal 1 TB disk is approved, and none has occurred.** Identify the exact physical disk and obtain a fresh explicit go/no-go immediately before any write, as the rules below require.
+
+Also note the platform change this implies: the Envy is an **AMD Ryzen 7 8840HS with Radeon 780M graphics**, not Intel Tiger Lake. Kernel, graphics and KVM specifics measured on the Tiger Lake Surfaces do not carry over, and virtualisation on the Envy is AMD-V (`svm`), not `vmx`. Its CPU, RAM and storage numbers below are carried forward from earlier records and should be re-measured rather than trusted.
 
 **Machines at a glance**
 
 | Machine | Role | State |
 |---|---|---|
-| Surface Pro 8 Wi-Fi (model 1983) | Final install target | Never booted with Kavi'ka; CPU, RAM and disk unmeasured |
-| Surface Laptop Studio (Core i5-11300H, 16 GiB, 256 GB NVMe, Iris Xe) | Test machine, already runs Fedora 44 | Hardware identified and the read-only preflight has run (KVM usable, 20 October 2026); no Kavi'ka image booted on it yet. See [its page](surface-laptop-studio-test-machine.md) |
+| **HP Envy x360 (Ryzen 7 8840HS, 16 GB, 1 TB)** | **Intended final install target**, pending confirmation of scope and approvals | Windows host today; project build/emulation helper; specs carried from earlier records and not re-measured. Its internal disk is **not** in any erase approval |
+| Surface Laptop Studio (Core i5-11300H, 16 GiB, 256 GB NVMe, Iris Xe) | Test machine, runs Fedora 44 | Preflight done (KVM usable); KVM guest boot passed; **physical USB boot passed 20 October 2026** — Meta+F12 repeated reliably, pointer, speakers, microphone, camera, Wi-Fi, battery and thermals fine; **touchscreen does not work on the stock kernel**; no pen available to test. See [its page](surface-laptop-studio-test-machine.md) |
+| Surface Pro 8 Wi-Fi (model 1983) | Previously the final install target; **status awaiting confirmation** | Never booted with Kavi'ka; CPU, RAM and disk unmeasured |
 
-Results from the Laptop Studio are evidence only. It has a different CPU model, a different form factor and different input hardware.
+Results from the Laptop Studio are evidence only. It has a different CPU family from the Envy, a different form factor and different input hardware.
 
-The immediate deliverable is a private live diagnostic preview, not an installation on the HP Envy. Windows replacement is authorised for the Pro 8; the first preview deliberately does not install on either Surface.
+The immediate deliverable is still a private live diagnostic preview, not an installation on any machine. The first preview deliberately does not install anywhere.
 
 ## Target and permissions
 
@@ -22,11 +41,11 @@ The immediate deliverable is a private live diagnostic preview, not an installat
 | Factory storage marking | 128 GB, user-reported; supersedes earlier 1 TB estimate |
 | Actual internal SSD | Capacity/model/path still unmeasured; factory marking is not proof of an unchanged drive |
 | Current OS | Windows 11, user-reported; account password unavailable |
-| Internal installation intent | Complete replacement of the Surface's Windows is explicitly authorised |
-| External medium | Empty 512 GB SSD; erasure for installation media explicitly authorised |
+| Internal installation intent | **Recalculating after the target change:** complete replacement of the *Surface Pro 8's* Windows was authorised earlier, but the intended final target is now the HP Envy. No replacement is approved on any machine's internal disk. Confirm scope before acting |
+| External medium | Empty 512 GB SSD; erasure for installation media was authorised for the Pro 8 route. The 4 GB USB stick already written with the preview was an approved media step |
 | External input | USB keyboard and mouse plus necessary connection hardware available |
-| Helper computer | HP Envy builds the ISO and runs only slow emulated tests; its internal disk must remain untouched |
-| Test machine | Surface Laptop Studio running Fedora; its internal disk and firmware settings are **not** in the erase approval |
+| Helper computer | The HP Envy builds the ISO, ran early emulated tests and is now the intended final install target. Its internal 1 TB disk currently holds Windows and **must not be written** without a fresh explicit go/no-go |
+| Test machine | Surface Laptop Studio running Fedora; its internal disk and firmware settings are **not** in any erase approval |
 | Windows workspace | Full Windows including Comet remains required; absent from the preview |
 | Firmware, Secure Boot, Linux/KVM | Physical test pending; no firmware-security changes authorised |
 

@@ -65,28 +65,29 @@ Wine is optional for individual applications; it is not the Windows workspace. W
 
 The user-selected project logo is stored at [`assets/branding/kavi-ka-os-logo.png`](assets/branding/kavi-ka-os-logo.png). The supplied image is preserved unchanged; the README only sets its display width.
 
-## Targets: Surface Pro 8 and Surface Laptop Studio
+## Targets: HP Envy (final), Surface Laptop Studio (test), Surface Pro 8 (pending)
 
 | Machine | Role |
 |---|---|
-| **Surface Pro 8 Wi-Fi (model 1983)** | Final install target. Intel x86_64; exact CPU and RAM still need measuring ([Microsoft specifications](https://support.microsoft.com/en-us/surface/models/surface-pro-8-features-and-specs)). |
-| **Surface Laptop Studio** (Core i5-11300H, 16 GiB, 256 GB NVMe, Iris Xe) | Test machine that already runs Fedora 44. Its KVM was confirmed usable by the read-only preflight on 20 October 2026, so it is where the Linux preview and Windows-in-a-VM experiments are tried first. Disk capacity is now measured; see [the Laptop Studio page](docs/surface-laptop-studio-test-machine.md). |
+| **HP Envy x360 (Ryzen 7 8840HS, 16 GB, 1 TB)** — intended final install target as of 20 October 2026, pending confirmation of scope and approvals. Runs Windows today and is the project's build helper; its internal disk is not in any erase approval. | **Final target** |
+| **Surface Laptop Studio** (Core i5-11300H, 16 GiB, 256 GB NVMe, Iris Xe) | Test machine that already runs Fedora 44. Preflight passed, KVM guest boot passed, and a **physical USB boot passed on 20 October 2026** with Meta+F12 working repeatedly; see [the Laptop Studio page](docs/surface-laptop-studio-test-machine.md). |
+| **Surface Pro 8 Wi-Fi (model 1983)** — previously the final install target; status awaiting confirmation. | Pending |
 
-Both are Intel Tiger Lake machines, so CPU virtualisation, the Iris Xe graphics driver and the stock kernel behave similarly. The Laptop Studio is **not** a proxy for the Pro 8's Type Cover, touch, pen, tablet mode, cameras or storage budget. Treat everything learned on it as evidence, never proof.
+The **Laptop Studio and Surface Pro 8 are both Intel Tiger Lake**, so KVM, the Iris Xe driver and the stock kernel behave similarly on them; the Laptop Studio is still **not** a proxy for the Pro 8's Type Cover, touch, pen, tablet mode, cameras or storage budget. The **HP Envy is AMD (Ryzen 7 8840HS, Radeon 780M, AMD-V)**, so nothing platform-specific measured on the Surfaces transfers to the final target. Treat results on any machine as evidence, never proof for another.
 
-The printed model **1983** identifies the Pro 8 as a **Wi-Fi model** ([Microsoft service guide](https://learn.microsoft.com/en-us/surface/service-guides/surface-pro8/surface-pro8-device-information-and-service-parts)). The owner reports a **128 GB factory marking** on it; actual installed capacity is still unmeasured, and a 128 GiB Windows guest disk is not a safe default. The owner permits replacing Windows on the Pro 8 and erasing the empty 512 GB external SSD used for media. That SSD carries the image; it is not a capacity limit on a future installation. USB keyboard, mouse and connection hardware are available.
+On the Laptop Studio the physical boot confirmed pointer input, speakers, microphone, camera, Wi-Fi, battery reporting and thermals, and the workspace switch worked every time. The **touchscreen does not work on the stock kernel**, matching the preflight finding that no touch/pen input device is exposed, and no pen was available to test.
 
-The linux-surface compatibility matrix lists touchscreen and pen on both machines, and the Pro 8's Type Cover keyboard and touchpad, as needing its custom kernel ([linux-surface device matrix](https://github.com/linux-surface/linux-surface/wiki/Supported-Devices-and-Features)). The preview uses Fedora's stock kernel, so native Surface input is not promised. Cameras, sleep and Secure Boot remain unvalidated on both machines. No firmware-security changes are authorised.
+The printed model **1983** identifies the Pro 8 as a **Wi-Fi model** ([Microsoft service guide](https://learn.microsoft.com/en-us/surface/service-guides/surface-pro8/surface-pro8-device-information-and-service-parts)). The owner reports a **128 GB factory marking** on it; actual installed capacity is still unmeasured, and a 128 GiB Windows guest disk is not a safe default.
 
-The earlier HP Envy x360 (Ryzen 7 8840HS, 16 GB) is the build and emulation helper, not a Surface. Do not carry its numbers into either Surface build. The Laptop Studio holds the owner's working Fedora installation: never write an image to its internal drive or change its firmware settings without a fresh, explicit instruction.
+The linux-surface compatibility matrix lists touchscreen and pen on both Surfaces, and the Pro 8's Type Cover keyboard and touchpad, as needing its custom kernel ([linux-surface device matrix](https://github.com/linux-surface/linux-surface/wiki/Supported-Devices-and-Features)). The preview uses Fedora's stock kernel, hence the touchscreen result above. Sleep and Secure Boot remain unvalidated on every machine, and no firmware-security changes are authorised.
 
-See [the Surface test targets](docs/surface-test-target.md) and [the Laptop Studio page](docs/surface-laptop-studio-test-machine.md).
+See [the target machines record](docs/surface-test-target.md) and [the Laptop Studio page](docs/surface-laptop-studio-test-machine.md).
 
 ## Scope and safety
 
 - **In scope:** repository development toward a reversible prototype and, after validation, an installable Fedora-based OS. Build, installation, and release work have separate gates in the OS implementation plan.
-- **Approved target scope:** replace Windows on the Surface Pro 8 and erase the empty 512 GB external SSD for media. Identify the exact physical disks before writes; no erasure has occurred. This approval does **not** cover the Laptop Studio's disk.
-- **Outside that approval:** HP Envy and Laptop Studio internal-disk changes, other drives, firmware-security changes, Windows licence purchases, and a public ISO release. Guest provisioning remains a separate opt-in step.
+- **Target change, 20 October 2026:** the user stated the finished OS should end up on the **HP Envy x360 (1 TB)**, with the Laptop Studio as the test machine. The earlier approval covered the Surface Pro 8's internal disk and the empty 512 GB external SSD; **it does not transfer to the Envy.** No internal disk on any machine has been written.
+- **Outside the recorded approval:** any internal-disk change to the HP Envy or the Laptop Studio, other drives, firmware-security changes, Windows licence purchases, and a public ISO release. Guest provisioning remains a separate opt-in step.
 - **Not included:** Windows installation media, activation keys, VM disks, recovery keys, device identifiers, or the original hardware screenshot.
 - **Licensing:** no project-wide open-source licence has been selected. Third-party components retain their own licences; a Windows licence decision remains a setup gate.
 

@@ -2,6 +2,14 @@
 
 Checkpoint updated 20 October 2026. This remains a diagnostic image, not an installation release. Do not flash/install or perform destructive disk actions without passing the gates below and a fresh explicit user go/no-go.
 
+## Target change (20 October 2026)
+
+The user stated: the Laptop Studio is the **test** machine, and the finished Kavi'ka OS should end up on the **HP Envy x360 with 1 TB storage**. That makes the Envy the intended final install target and leaves the **Surface Pro 8's status awaiting confirmation**.
+
+- **No erase approval covers the Envy.** The earlier approvals were for the Pro 8's internal disk and an empty 512 GB external SSD. The Envy runs Windows today and is the project's build helper; its 1 TB internal disk must not be written without a fresh explicit go/no-go, and nothing has been written.
+- **The Envy is AMD** (Ryzen 7 8840HS, Radeon 780M, AMD-V), unlike the Intel Tiger Lake Surfaces. Platform-specific results from the Surfaces do not transfer, and the Envy's CPU/RAM/storage numbers are carried from earlier records rather than re-measured.
+- **Surface-specific work moves off the critical path.** With a normal laptop as the target, the linux-surface kernel and Type Cover/touch/pen gaps stop blocking the product, though they still affect the Surface test bed.
+
 ## Where we stopped
 
 The latest ISO was built from the pinned Fedora KDE 44 base in WSL Ubuntu. SHA-256: `10074299b974eb005d0a38144d74b0dc02e1fa128684eb0f81b9cc9829a177ac`; `checkisomd5` passed. File: `C:\\Users\\kavsb\\Downloads\\Kavika-OS-0.1.0-Surface-Pro-8-Live-Preview.iso` (3,370,254,336 bytes).

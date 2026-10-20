@@ -26,8 +26,14 @@ Reported directly after using the live session:
 | Microphone | **Works** |
 | Camera | **Works** |
 | Wi-Fi | **Works** |
+| Battery reporting | **Works** |
+| Thermal behaviour | **Works** (no problem reported) |
+| **Touchscreen** | **Does not work** |
+| Pen | **Not tested — the user has no pen to test with** |
 
-No failures were reported. The repeated switching is the most significant item: it is the fourth independent confirmation of the B06 fix (build-level inspection, two KVM boots, and now physical hardware), and the first on real firmware rather than OVMF.
+No other failures were reported. The repeated switching is the most significant item: it is the fourth independent confirmation of the B06 fix (build-level inspection, two KVM boots, and now physical hardware), and the first on real firmware rather than OVMF.
+
+The touchscreen failure is consistent with, and now corroborates, the read-only preflight, which found **no touchscreen or pen input device exposed by the stock kernel** on this machine. That is the linux-surface kernel requirement showing up as a real functional gap rather than a detection oddity: the stock kernel does not bring the panel up as an input device at all. A linux-surface kernel is therefore needed before touch or pen can be expected, and pen remains untested because no pen is available.
 
 ## Corroborating machine evidence
 
