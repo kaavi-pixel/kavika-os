@@ -34,9 +34,11 @@ The build manifests agree as well: the same 18 payload paths with the same per-f
 The cause is identifiable. In each 128-byte GPT partition entry, the first 16 bytes are the **partition type GUID** and the next 16 are the **unique partition GUID**. In both images the type GUID is identical (`a2a0d0eb-e5b9-3344-87c0-68b6b72699c7`, Linux filesystem data); the unique GUID differs:
 
 ```
-build A  bytes 16-31 of the entry:  3b 0a 31 29 1f 80 1c 4f ad 2f bc cf 41 3d f9 89
-build B  bytes 16-31 of the entry:  ee 97 f0 0d ee 04 0d 46 8b 4c ec a0 cf cc 9b 6d
+bd8407d6… (validated)  bytes 16-31 of the entry:  ee 97 f0 0d ee 04 0d 46 8b 4c ec a0 cf cc 9b 6d
+bff1b107… (rebuild)    bytes 16-31 of the entry:  3b 0a 31 29 1f 80 1c 4f ad 2f bc cf 41 3d f9 89
 ```
+
+`xorriso -report_system_area` on `bd8407d6…` independently reports the same value as its GPT disk GUID (`ee97f00dee040d468b4deca0cfcc9b6d`), which is where this figure was re-checked. An earlier draft of this record had the two GUIDs attributed to the wrong builds; the hashes are given above so the attribution cannot be read ambiguously.
 
 `xorriso` generates a fresh random partition GUID per build (`-boot_image any partition_offset=16`), the backup GPT mirrors it, and a few volume-descriptor identifier fields are also written per build. None of it is content.
 

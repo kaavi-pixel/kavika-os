@@ -28,7 +28,7 @@ set -u
 
 die() { printf 'refusing: %s\n' "$1" >&2; exit 1; }
 
-iso="" sha_file="" expected="" device="" confirm="" dry_run=0
+iso="" sha_file="" expected="" device="" confirm="" dry_run=0 verify_only=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --iso) iso=$2; shift 2 ;;
@@ -37,6 +37,7 @@ while [ $# -gt 0 ]; do
     --device) device=$2; shift 2 ;;
     --confirm-wipe) confirm=$2; shift 2 ;;
     --dry-run) dry_run=1; shift ;;
+    --verify-only) verify_only=1; shift ;;
     *) die "unknown argument: $1" ;;
   esac
 done
@@ -69,12 +70,17 @@ rm_flag=$(lsblk -ndo RM "$device" 2>/dev/null | tr -d ' ')
 tran=$(lsblk -ndo TRAN "$device" 2>/dev/null | tr -d ' ')
 [ "$tran" = "usb" ] || die "$device transport is '$tran', not 'usb'"
 
-# Nothing mounted.
+# Nothing mounted: fatal before a write, only a warning for the read-only paths.
 mounted=$(lsblk -no MOUNTPOINT "$device" 2>/dev/null | grep -v '^$' || true)
 if [ -n "$mounted" ]; then
-  die "$device still has mounted partitions:
+  if [ "$dry_run" = "1" ] || [ "$verify_only" = "1" ]; then
+    echo "note: $device has mounted partitions (harmless for this read-only run):"
+    echo "$mounted" | sed 's/^/  /'
+  else
+    die "$device still has mounted partitions:
 $mounted
 Unmount them first, for example: udisksctl unmount -b ${device}1"
+  fi
 fi
 
 # Size check.
@@ -109,7 +115,29 @@ if [ "$dry_run" = "1" ]; then
   exit 0
 fi
 
+# Read-back only: compare the image-sized prefix of the device with the ISO.
+# Useful after writing the media by other means (for example Fedora Media Writer).
+if [ "$verify_only" = "1" ]; then
+  [ "$(id -u)" = "0" ] || die "reading a raw device needs root: rerun with sudo --verify-only"
+  echo "reading the first $iso_size bytes back off $device..."
+  readback=$(dd if="$device" bs=8M iflag=direct count=$(( iso_size / 8388608 + 1 )) 2>/dev/null \
+             | head -c "$iso_size" | sha256sum | cut -d' ' -f1)
+  if [ "$readback" = "$actual" ]; then
+    echo "read-back SHA-256 MATCH: $readback"
+    echo "the device carries exactly this ISO."
+    exit 0
+  fi
+  echo "read-back SHA-256 MISMATCH: got $readback" >&2
+  echo "expected                    $actual" >&2
+  exit 1
+fi
+
 [ "$(id -u)" = "0" ] || die "writing needs root: rerun with sudo"
+if [ -n "$mounted" ]; then
+  die "$device still has mounted partitions:
+$mounted
+Unmount them first, for example: udisksctl unmount -b ${device}1"
+fi
 
 echo "writing..."
 dd if="$iso" of="$device" bs=8M conv=fsync oflag=direct status=progress || die "dd failed"
