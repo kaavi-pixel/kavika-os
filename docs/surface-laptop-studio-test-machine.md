@@ -129,8 +129,8 @@ These are third-party claims. The Kavi'ka report records what is detected on the
 | Hardware identified | Done (user-supplied report; disk now measured by preflight) |
 | Preflight run on the machine | **Done, 20 October 2026** (read-only; nothing changed) |
 | KVM usable | **Yes** — `/dev/kvm` usable, tools and OVMF present |
-| ISO boots in a KVM guest | Not yet |
-| ISO boots from external media | Not yet |
+| ISO boots in a KVM guest | **Yes, 20 October 2026** — KDE desktop, Test Centre, Meta+F12 both ways, SELinux enforcing, 0 failed units ([record](validation/vm-boot-2026-10-20-laptop-studio.md)) |
+| ISO boots from external media | **Yes, 20 October 2026** — from USB on this machine; Meta+F12 worked repeatedly, plus pointer, speakers, mic, camera, Wi-Fi ([record](validation/hardware-boot-2026-10-20-laptop-studio.md)) |
 | Windows 11 guest | Not started |
 
-Nothing in the preflight run booted Kavi'ka or a guest, and it did not validate graphics, Wi-Fi, audio, sleep or Secure Boot behaviour. Those remain open.
+The preflight itself booted nothing. It has since been followed by a KVM guest boot and a physical USB boot, which validated graphics, Wi-Fi, audio, microphone and camera at runtime; **sleep/resume, native touch and pen, Bluetooth, Secure Boot behaviour and the Pro 8 remain open**.

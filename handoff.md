@@ -26,6 +26,12 @@ That image was then **booted in a disposable KVM guest on this machine and the s
 
 Note for anyone repeating the check: the QEMU monitor key name is **`meta_l-f12`**; `meta-f12` is rejected and the screen does not change, which is easy to misread as a failed shortcut.
 
+### First physical Surface boot (20 October 2026)
+
+The same image was written to a 4 GB USB stick (payload hashes verified on the stick before boot) and booted **on the Surface Laptop Studio from USB**. Reported results: pointer input works, **Meta+F12 switched workspaces repeatedly and worked every time**, and speakers, microphone, camera and Wi-Fi all work. Nothing was installed; afterwards the internal disk was unchanged (`nvme0n1p1` EFI, `p2` `/boot`, `p3` btrfs `fedora`) and no new firmware boot entry was created. Full record: [hardware-boot-2026-10-20-laptop-studio.md](docs/validation/hardware-boot-2026-10-20-laptop-studio.md).
+
+This is the fourth independent confirmation of the B06 fix and the first on real firmware. Still untested on hardware: suspend/resume, native touch and pen (the preflight found no touchscreen or pen device on the stock kernel), touchpad-only input, Bluetooth, display scaling, and any Secure Boot chain — this machine has Secure Boot disabled with the platform in Setup Mode, so that path was not exercised. **The Surface Pro 8 has still never been booted, and its firmware state is unknown.**
+
 ## Current host/test constraint
 
 - Latest WHPX ISO test: same pinned ISO hash; blank black display and empty serial/stderr logs at inspection. A QEMU process remains present; close it before another VM test.
@@ -65,7 +71,7 @@ The ISO contains no Windows guest, Comet, cross-OS file sharing, persistence, su
 1. **On the Surface Laptop Studio:** clone the repo, run `bash tools/surface-fedora-preflight.sh` (read-only; installs and changes nothing) and review its output. It reports KVM, tools, Secure Boot, TPM, RAM, disk and the hardware JSON. **Done 20 October 2026 — KVM usable, preflight page updated. No blockers.**
 2. Copy the rebuilt ISO and its `.sha256` file to that machine. Boot it in a disposable KVM guest with `python3 tools/launch-preview-vm-linux.py --iso <iso> --sha256-file <sidecar> --vm-dir <new dir>`. The launcher refuses a hash mismatch and attaches no physical disk or shared folder. Repeat the functional test in `docs/validation/live-preview-0.1.0.md`. **Meta+F12 must now switch workspaces.** **Done 20 October 2026 for `bd8407d6…`: switch works both directions, SELinux enforcing, no failed units, no host disks visible.**
 3. If the Windows helper is used instead, it needs at least 5 GiB free RAM (it had 3.7 GiB when last checked). The QEMU GTK window showed black in earlier captures, while screenshots taken with the QEMU monitor `screendump` command showed the desktop, so use `screendump` to see the screen.
-4. Only after the VM test passes, boot the same ISO from external media on the Laptop Studio, still without installing, then on the Pro 8. Test graphics, input, Wi-Fi, audio, camera, sleep and Secure Boot. No disk writes, partitioning, installation or firmware/security changes without a fresh explicit go/no-go.
+4. Only after the VM test passes, boot the same ISO from external media on the Laptop Studio, still without installing, then on the Pro 8. Test graphics, input, Wi-Fi, audio, camera, sleep and Secure Boot. No disk writes, partitioning, installation or firmware/security changes without a fresh explicit go/no-go. **Laptop Studio part done 20 October 2026: USB boot worked, Meta+F12 repeated reliably, pointer, speakers, microphone, camera and Wi-Fi all fine. Sleep/resume and touch/pen were not tested. Pro 8 still to do.**
 5. Then feasibility-test full Windows 11 plus Comet in a KVM guest on the Laptop Studio (16 GiB host RAM), and record what does and does not transfer to the Pro 8.
 6. Still absent: Windows 11 and Comet, file sharing, gestures, a Surface-specific kernel, a supported installer, recovery and update. This is a diagnostic image and must not be flashed as the product.
 
