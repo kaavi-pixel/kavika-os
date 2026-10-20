@@ -23,7 +23,7 @@ Microsoft lists the i5-11300H (H35) configuration with 16 or 32 GB of RAM ([Micr
 
 ## Preflight result, 20 October 2026
 
-`bash tools/surface-fedora-preflight.sh` was run on this machine on 20 October 2026 (UTC `2026-10-20T00:36Z`, inventory header `2026-10-19T08:10Z`). It is read-only: it installed nothing, wrote no files and changed no setting. Everything below is machine-reported inventory, not an acceptance pass.
+`bash tools/surface-fedora-preflight.sh` was run on this machine twice on 20 October 2026 (UTC `2026-10-20T00:38Z` and `2026-10-20T11:23Z`). It is read-only: it installed nothing, wrote no files and changed no setting. Everything below is machine-reported inventory, not an acceptance pass. The inventory/tool checks are identical in both runs; the resource and device rows are taken from the **11:23Z** run, whose captured output is filed as [preflight evidence, 20 October 2026, 11:23Z](validation/preflight-surface-laptop-studio-2026-10-20-1123z.md). The 00:38Z run is at [preflight evidence, 20 October 2026, 00:38Z](validation/preflight-surface-laptop-studio-2026-10-20.md).
 
 | Check | Result |
 |---|---|
@@ -33,24 +33,25 @@ Microsoft lists the i5-11300H (H35) configuration with 16 or 32 GB of RAM ([Micr
 | Tools | `qemu-system-x86_64`, `qemu-img`, `virsh`, `swtpm` installed; **`virt-manager` missing** |
 | OVMF firmware | `OVMF_CODE.fd` and `OVMF_VARS.fd` both present |
 | libvirt | `libvirtd`/`virtqemud` **inactive** (`libvirtd` disabled, `virtqemud` enabled-but-not-running) |
-| RAM | 15.4 GiB total, 7.0 GiB available |
-| Disk | root and home are the same 235 GB filesystem on `nvme0n1`, 203 GB free |
+| RAM | 15.4 GiB total, **10.4 GiB available** (11:23Z run; was 7.8 GiB at 00:38Z) |
+| Disk | root and home are the same 235 GB filesystem on `nvme0n1`, **184 GB free** (11:23Z run; was 203 GB at 00:38Z) |
 | Secure Boot | disabled, and the platform is in **Setup Mode** (no enrolled platform keys) |
 | TPM | present |
 | Session | Wayland, kernel `6.19.10-300.fc44` (stock, same as the ISO) |
 | Bluetooth / audio | 1 controller; HDA-Intel card |
 | Video capture | 4 devices (cameras enumerated; not functionally tested) |
-| Battery | present, 72%, discharging |
+| Battery | present, **8%, charging** (11:23Z run; was 45% charging at 00:38Z) |
+| Displays | **`eDP-1` 2400x1600 internal plus `DP-1` 3840x2160 external** at 11:23Z; internal only at 00:38Z |
 | Surface kernel modules | `surface_aggregator`, `_registry`, `_tabletsw`, `surface_battery`, `surface_charger`, `surface_gpe`, `surface_hid`, `surface_hid_core`, `surface_platform_profile`, `surfacepro3_button` |
 
-**Conclusion: KVM is usable on this machine.** The resume-plan step 2 disposable-guest test is therefore unblocked here, unlike on the earlier Windows host, which needed software emulation. The captured output is filed as evidence: [preflight evidence, 20 October 2026](validation/preflight-surface-laptop-studio-2026-10-20.md).
+**Conclusion: KVM is usable on this machine.** The resume-plan step 2 disposable-guest test is therefore unblocked here, unlike on the earlier Windows host, which needed software emulation.
 
 ### Observations that need follow-up
 
 1. **No touchscreen or pen input device was detected.** The report returns `has_touchscreen: false`, `has_pen: false`, and no touch/digitizer node appears in `/proc/bus/input/devices`; the Surface HID nodes present are `045E:09AE` and `045E:09B0` (keyboard) and `045E:09AF` (touchpad), plus `Microsoft Surface POS Tablet Mode Switch`. This is consistent with the upstream claim that the panel needs the linux-surface kernel, but it is an observation on one machine, not a proven cause. Until it is confirmed, do not assume the internal panel responds to touch on the stock-kernel preview.
 2. **Secure Boot is disabled and the platform is in Setup Mode**, so it has no enrolled platform keys. This is a firmware state, not a failure; nothing was changed. The eventual Pro 8 Secure Boot check (T21) starts from a different state and this result does not carry over.
 3. **`virt-manager` is missing and libvirt is not running.** Neither is needed by `tools/launch-preview-vm-linux.py`, which starts QEMU directly, but any `virsh`/virt-manager workflow would need `sudo dnf install` plus enabling a service first — a separate, approved step.
-4. **A 1 TB USB disk is attached** (`sda`, `One Touch w/PW`, 1,000,204,885,504 bytes, USB, non-removable flag but USB transport). It was only enumerated; nothing was read from or written to it. Identify it explicitly before any future media step, since the approved erase scope covers a 512 GB external SSD and this is not that device.
+4. **A USB disk is attached** (`sda`). At the 00:38Z run it was a 1 TB `One Touch w/PW` (1,000,204,885,504 bytes, USB transport, `rm:false`); at the 11:23Z run it was a **≈3.75 GiB `USB Disk` (4,026,531,840 bytes, `rm:true`)** — a different, much smaller stick. It was only enumerated in both runs; nothing was read from or written to it. Identify the device explicitly before any future media step, since the approved erase scope covers a 512 GB external SSD and neither of these is that device.
 5. **The repo test suite does run here.** `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests` reports **Ran 30 tests, OK (skipped=1)** on the system Python 3.14.8, matching the handoff's "30 Linux tests pass". It is a `unittest` suite, so no `pytest` install is needed; the one skip is the known GRUB-parser-availability skip.
 6. **The build prerequisites are not all present.** `cpio`, `implantisomd5` and `checkisomd5` are installed, but **`xorriso` and `grub-script-check` (grub2-tools) are missing** and `pycdlib` is not importable. `tools/build-live-preview.py` refuses to run without them, so building the rebuilt ISO on this machine needs an approved `sudo dnf install xorriso grub2-tools` plus a `pycdlib` provider. See [build prerequisites](build.md).
 
