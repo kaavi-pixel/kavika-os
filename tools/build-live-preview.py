@@ -20,6 +20,20 @@ import time
 BASE_SHA256 = "c8295961d4c41adbf785a31a17c21a971d3b7415fda72dcad0c11c49577bf03a"
 BASE_NAME = "Fedora-KDE-Desktop-Live-44-1.7.x86_64.iso"
 
+# Fedora packages the GRUB check as `grub2-script-check` (from grub2-tools) while
+# upstream and other distributions use `grub-script-check`. Accept either name so
+# a stock Fedora host does not need a shim.
+GRUB_CHECK_CANDIDATES = ("grub-script-check", "grub2-script-check")
+
+
+def grub_script_check():
+    """Path to the GRUB configuration checker, or None when neither name exists."""
+    for candidate in GRUB_CHECK_CANDIDATES:
+        found = shutil.which(candidate)
+        if found:
+            return found
+    return None
+
 
 def normalize_shell_payload(data: bytes) -> bytes:
     """Normalize Windows CRLF/CR to Unix LF in overlay shell scripts."""
@@ -109,9 +123,13 @@ def main() -> int:
         parser.error("--output must be a new regular file, never a device or existing file")
     if output.suffix.lower() != ".iso" or not output.parent.is_dir():
         parser.error("--output must be a new .iso in an existing directory")
-    for tool in ("xorriso", "cpio", "grub-script-check", "implantisomd5"):
+    for tool in ("xorriso", "cpio", "implantisomd5"):
         if shutil.which(tool) is None:
             parser.error(f"Missing builder tool: {tool}")
+    grub_check = grub_script_check()
+    if grub_check is None:
+        parser.error("Missing builder tool: grub-script-check "
+                     "(on Fedora this is grub2-script-check, from grub2-tools)")
     base_hash = digest(base)
     if base_hash != BASE_SHA256:
         parser.error("Fedora input ISO SHA-256 mismatch; no output was created")
@@ -145,7 +163,7 @@ def main() -> int:
         extract_grub(base, upstream_grub)
         grub = work / "grub.cfg"
         grub.write_text(grub_preview(upstream_grub.read_text(encoding="utf-8")), encoding="utf-8")
-        subprocess.run(["grub-script-check", str(grub)], check=True)
+        subprocess.run([grub_check, str(grub)], check=True)
 
         subprocess.run(["xorriso", "-indev", str(base), "-outdev", str(output),
                         "-map", str(grub), "/boot/grub2/grub.cfg",

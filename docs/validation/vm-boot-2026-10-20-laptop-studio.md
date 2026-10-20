@@ -28,6 +28,8 @@ Launched from `tools/launch-preview-vm-linux.py`'s own command builder (imported
 
 The GTK window having shown black in earlier runs was not re-tested: `-display none` plus monitor `screendump` produced correct frames throughout, which is the workflow this record recommends.
 
+**Repeat run and tooling.** The whole sequence was repeated on a fresh guest using `tools/capture-vm-evidence.py` (added in this change), which wraps the launcher and adds the monitor socket. It reproduced the measurements exactly: 361,232 pixels changed on the first Meta+F12 press and the return trip matched the original frame to within 108 pixels. Two independent boots of the same ISO therefore agreed, so the switch result is repeatable, not a one-off.
+
 ## Results
 
 | Check | Result | Evidence |

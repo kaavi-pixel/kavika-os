@@ -19,11 +19,9 @@ Obtain the Fedora ISO from the official [Fedora KDE download page](https://fedor
 
 The validated recipe targets an isolated Linux builder with Python 3.11+, `pycdlib` 1.22+, xorriso, GNU cpio, `grub-script-check`, `implantisomd5` (isomd5sum), and Bash. Keep at least 10 GB of free scratch space. Never pass a block device as an image output, mount or chroot into the host's drives, or run Fedora installer/image tools on an everyday host.
 
-On Fedora the GRUB checker is packaged as `grub2-script-check` (in `grub2-tools`) while the builder looks for the name `grub-script-check`; provide the name the builder expects, for example:
+The builder accepts the GRUB checker under either name. Fedora packages it as `grub2-script-check` (from `grub2-tools`), while other systems use `grub-script-check`; no shim is needed on a stock Fedora host.
 
-```sh
-ln -sf /usr/bin/grub2-script-check ~/.local/bin/grub-script-check
-```
+Two builds from the same pinned base on the same host are **not byte-identical** — `xorriso` writes a fresh random GPT partition GUID per build. Measure sameness with the manifest's `base_sha256` and per-file payload hashes, never with the ISO SHA-256 alone; see [the reproducibility test](validation/build-reproducibility-2026-10-20.md).
 
 From a clean repository checkout:
 

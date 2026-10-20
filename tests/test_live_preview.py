@@ -52,7 +52,7 @@ class PreviewTests(unittest.TestCase):
             "linux root=live:CDLABEL=Fedora-KDE-Live-44\n}\n")
         self.assertEqual(result.splitlines()[0].count("'"), 2)
 
-    @unittest.skipUnless(shutil.which("grub-script-check"), "GRUB parser unavailable")
+    @unittest.skipUnless(builder.grub_script_check(), "GRUB parser unavailable")
     def test_upstream_nested_video_function_is_normalized(self):
         source = (
             'if [ "$grub_platform" == "efi" ]; then\n'
@@ -60,7 +60,7 @@ class PreviewTests(unittest.TestCase):
             'else\n\tfunction load_video {\n\t\tinsmod all_video\n\t}\nfi\n'
             'load_video\nlinux root=live:CDLABEL=Fedora-KDE-Live-44\n')
         result = builder.grub_preview(source)
-        parsed = subprocess.run(["grub-script-check"], input=result, text=True, capture_output=True)
+        parsed = subprocess.run([builder.grub_script_check()], input=result, text=True, capture_output=True)
         self.assertEqual(parsed.returncode, 0, parsed.stderr)
 
     def test_preview_is_explicit_about_missing_windows(self):

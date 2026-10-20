@@ -74,6 +74,27 @@ Meta+F12 switches both ways:
 Other errors:
 ```
 
+## Testing an image in a disposable VM first
+
+Before any physical media, boot the ISO on a KVM-capable Linux host — the Surface Laptop Studio fills that role. `tools/launch-preview-vm-linux.py` refuses an image whose SHA-256 does not match the supplied value or sidecar, and attaches only a new private QCOW2 disk and user-mode networking: no physical disk and no shared folder.
+
+For evidence rather than assumption, `tools/capture-vm-evidence.py` wraps that launcher and adds a QEMU monitor socket, so the desktop can be captured and keystrokes injected:
+
+```sh
+python3 tools/capture-vm-evidence.py boot --iso <iso> --sha256-file <sidecar> --vm-dir ~/kavika-vm-test
+python3 tools/capture-vm-evidence.py shot --vm-dir ~/kavika-vm-test before.ppm
+python3 tools/capture-vm-evidence.py key  --vm-dir ~/kavika-vm-test meta_l-f12
+python3 tools/capture-vm-evidence.py shot --vm-dir ~/kavika-vm-test after.ppm
+python3 tools/capture-vm-evidence.py quit --vm-dir ~/kavika-vm-test
+```
+
+Notes that cost time to rediscover:
+
+- Boot is headless by default because the GTK window has been observed to show black while the guest drew correctly. `screendump` is the reliable view.
+- The monitor key name is **`meta_l-f12`**; `meta-f12` is rejected and the frame does not change, which looks identical to a broken shortcut.
+- Compare frames numerically (for example `compare -metric AE before.ppm after.ppm null:`). A workspace switch changes roughly a third of the frame; on the tested build, switch was ~361,200 pixels and the return trip matched the original to within ~110 pixels (the clock).
+- A running QEMU process is not a boot pass. Check the screenshots, `serial.log` and the guest's own answers (`getenforce`, `systemctl is-system-running`, `systemctl --list-units --state=failed`) before recording anything.
+
 ## What follows
 
 Actual memory/storage determine whether this Surface can comfortably run Linux plus full Windows and Comet. Do not reuse the old HP allocation or assume 1 TB; a 128 GiB Windows disk is not a safe default for a device marked 128 GB.
