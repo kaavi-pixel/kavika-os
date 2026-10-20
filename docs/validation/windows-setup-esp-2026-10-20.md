@@ -71,8 +71,24 @@ Screen samples at 60 s, 150 s and 240 s are byte-identical and show the Windows 
 ("Select language settings", Language/Time-and-currency both "English (United Kingdom)", Back/Next). The VM
 remained running (monitor reported `VM status: running`) — it no longer resets.
 
+## Unattended answer file (D16)
+
+Observed 20 October 2026: with `autounattend.xml` on the ESP's own root, and again on a second USB stick
+attached beside the ESP, Setup still stopped at "Select language settings" instead of advancing unattended —
+the answer file was never read.
+
+Cause: QEMU's `usb-storage` device presents its media as a **fixed** disk by default. The `removable`
+property defaults to `off` (`qemu-system-x86_64 -device usb-storage,help` → `removable=<bool> - on/off
+(default: off)`), so the RMB bit is clear and both sticks report as fixed hard disks. Windows Setup's
+implicit unattend search order covers removable media but not a fixed disk at those positions, so neither
+copy was found.
+
+Fix under test: attach the answer-file stick with `-device usb-storage,drive=afstick,removable=on` so it is
+presented as removable media. Result pending; the relaunched guest run is in progress and is not yet evidence.
+
 ## Limits
 
 * Setup has **reached its first page only**. No product key, no disk selection, no installation has run.
 * It is **not** established that WinPE can read `install.wim` (8,158,846,937 B) from the CD.
 * No Windows licence or activation is handled. No physical disk was touched.
+* Whether Setup finds and acts on the unattended answer file on **removable** media (D16) is not yet confirmed.
