@@ -14,6 +14,14 @@ On 20 October 2026 the read-only preflight (`tools/surface-fedora-preflight.sh`)
 
 B05's wallpaper readiness retry is not visually validated on this image. KDE/Test Centre passes belong to a previous ISO candidate and must not transfer to the current hash.
 
+### Independent rebuild on the Laptop Studio (20 October 2026)
+
+The ISO was rebuilt **on the Laptop Studio itself** from the pinned Fedora KDE 44 base, which was verified by SHA-256 against the pin (`c8295961…`). Output SHA-256 **`bd8407d6393a12f8a5829ef15a86371b854f08834d9fd7df4a85ddbdc8820e0d`**, 3,370,319,872 bytes, `checkisomd5` PASS, sidecar and manifest written. Full record: [build-2026-10-20-laptop-studio.md](docs/validation/build-2026-10-20-laptop-studio.md).
+
+It is the **same size** as the WSL-built `57a851a7…` candidate but a **different hash** — same builder source (`b9141011…`), different toolchain and timestamps, so this is not a reproducibility result and neither hash is "the" canonical image.
+
+The B06 root cause is confirmed fixed at build level: no text file in this ISO's `/boot/kavika-preview.cpio` overlay contains a CR byte, and its `etc/skel/.config/kwinrc` has `Number=2` plus `Linux` and `Windows (not installed)` with LF endings. The earlier ISO (`10074299…`) contains `\r\n` in the same file, which validates the check. **The image still has not been booted**, so B06 stays open until Meta+F12 is seen switching workspaces in a guest.
+
 ## Current host/test constraint
 
 - Latest WHPX ISO test: same pinned ISO hash; blank black display and empty serial/stderr logs at inspection. A QEMU process remains present; close it before another VM test.

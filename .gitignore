@@ -1,3 +1,6 @@
+# Build output is not committed (see docs/build.md).
+build/
+
 # Guest media and machine state must never be committed.
 *.iso
 *.qcow2
