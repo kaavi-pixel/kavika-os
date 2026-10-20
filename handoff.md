@@ -4,11 +4,19 @@ Checkpoint updated 20 October 2026. This remains a diagnostic image, not an inst
 
 ## Target change (20 October 2026)
 
-The user stated: the Laptop Studio is the **test** machine, and the finished Kavi'ka OS should end up on the **HP Envy x360 with 1 TB storage**. That makes the Envy the intended final install target and leaves the **Surface Pro 8's status awaiting confirmation**.
+Confirmed by the user in answer to direct questions:
 
-- **No erase approval covers the Envy.** The earlier approvals were for the Pro 8's internal disk and an empty 512 GB external SSD. The Envy runs Windows today and is the project's build helper; its 1 TB internal disk must not be written without a fresh explicit go/no-go, and nothing has been written.
-- **The Envy is AMD** (Ryzen 7 8840HS, Radeon 780M, AMD-V), unlike the Intel Tiger Lake Surfaces. Platform-specific results from the Surfaces do not transfer, and the Envy's CPU/RAM/storage numbers are carried from earlier records rather than re-measured.
-- **Surface-specific work moves off the critical path.** With a normal laptop as the target, the linux-surface kernel and Type Cover/touch/pen gaps stop blocking the product, though they still affect the Surface test bed.
+- **The HP Envy x360 (1 TB) is the only install target.** The finished OS replaces Windows there.
+- **The Surface Laptop Studio is the test machine**, and is where the product must first "work perfectly".
+- **The Surface Pro 8 is dropped.** Its earlier approvals are withdrawn, not deferred.
+- **The route:** prove it on the Laptop Studio, then replace Windows on the Envy. Nothing is written to the Envy until that point and until a fresh explicit go-ahead.
+- **The Envy's specs stay as recorded** (Ryzen 7 8840HS, 16 GB, 1 TB) — deliberately not re-measured yet.
+
+Consequences:
+
+- **No erase approval covers the Envy.** Its 1 TB internal disk holds Windows and the project builds there. Nothing has been written.
+- **The Envy is AMD** (Ryzen 7 8840HS, Radeon 780M, AMD-V), unlike the Intel Tiger Lake Surfaces. Platform-specific findings do not transfer.
+- **Surface-specific work leaves the critical path**: the linux-surface kernel and Type Cover/touch/pen gaps no longer block the product, though they still limit what the Laptop Studio can test.
 
 ## Where we stopped
 
@@ -79,8 +87,8 @@ The ISO contains no Windows guest, Comet, cross-OS file sharing, persistence, su
 1. **On the Surface Laptop Studio:** clone the repo, run `bash tools/surface-fedora-preflight.sh` (read-only; installs and changes nothing) and review its output. It reports KVM, tools, Secure Boot, TPM, RAM, disk and the hardware JSON. **Done 20 October 2026 — KVM usable, preflight page updated. No blockers.**
 2. Copy the rebuilt ISO and its `.sha256` file to that machine. Boot it in a disposable KVM guest with `python3 tools/launch-preview-vm-linux.py --iso <iso> --sha256-file <sidecar> --vm-dir <new dir>`. The launcher refuses a hash mismatch and attaches no physical disk or shared folder. Repeat the functional test in `docs/validation/live-preview-0.1.0.md`. **Meta+F12 must now switch workspaces.** **Done 20 October 2026 for `bd8407d6…`: switch works both directions, SELinux enforcing, no failed units, no host disks visible.**
 3. If the Windows helper is used instead, it needs at least 5 GiB free RAM (it had 3.7 GiB when last checked). The QEMU GTK window showed black in earlier captures, while screenshots taken with the QEMU monitor `screendump` command showed the desktop, so use `screendump` to see the screen.
-4. Only after the VM test passes, boot the same ISO from external media on the Laptop Studio, still without installing, then on the Pro 8. Test graphics, input, Wi-Fi, audio, camera, sleep and Secure Boot. No disk writes, partitioning, installation or firmware/security changes without a fresh explicit go/no-go. **Laptop Studio part done 20 October 2026: USB boot worked, Meta+F12 repeated reliably, pointer, speakers, microphone, camera and Wi-Fi all fine. Sleep/resume and touch/pen were not tested. Pro 8 still to do.**
-5. Then feasibility-test full Windows 11 plus Comet in a KVM guest on the Laptop Studio (16 GiB host RAM), and record what does and does not transfer to the Pro 8.
+4. Test the same ISO on the Surface Laptop Studio from external media, still without installing. **Done 20 October 2026:** USB boot worked, Meta+F12 repeated reliably, pointer, speakers, microphone, camera, Wi-Fi, battery and thermals all fine; touchscreen does not work on the stock kernel and no pen was available. The Pro 8 route is dropped, so the next machine is the HP Envy once the Laptop Studio "works perfectly" — and replacing the Envy's Windows needs a fresh explicit go/no-go, with its exact disk identified first.
+5. Then feasibility-test full Windows 11 plus Comet in a KVM guest on the Laptop Studio (16 GiB host RAM), and record what does and does not transfer to the HP Envy, which is AMD and not Intel like the test machine.
 6. Still absent: Windows 11 and Comet, file sharing, gestures, a Surface-specific kernel, a supported installer, recovery and update. This is a diagnostic image and must not be flashed as the product.
 
 ## Repository/publishing

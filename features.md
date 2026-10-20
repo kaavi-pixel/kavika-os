@@ -44,7 +44,7 @@ The first test machine is the Surface Laptop Studio, which already runs Fedora a
 
 The Windows account password is unknown; signing in is not a prerequisite for the live-test route. The model family is Intel/x86_64, but exact CPU, RAM, installed GPU configuration and storage need live measurement ([Microsoft specifications](https://support.microsoft.com/en-us/surface/models/surface-pro-8-features-and-specs)). External USB keyboard and mouse are available; no resource or compatibility claims transfer from the HP.
 
-The external medium does not limit the size of the installation on the Surface's internal drive. See [the Surface test target](docs/surface-test-target.md) for scope and the staged test route.
+The external medium does not limit the size of the installation on the Surface's internal drive. See [the Surface test target](docs/target-machines.md) for scope and the staged test route.
 
 ### What the first preview implements
 

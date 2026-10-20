@@ -23,7 +23,7 @@ Preserve the approved logo and original brief unchanged.
 
 ## Architecture
 
-- Base: Fedora KDE 44 `44-1.7.x86_64` is pinned for the diagnostic preview; Surface Pro 8 Wi-Fi (final target) and Surface Laptop Studio (Fedora test machine) are Intel/x86_64 Tiger Lake machines. Hardware approval remains pending; see the sourced [target record](docs/surface-test-target.md).
+- Base: Fedora KDE 44 `44-1.7.x86_64` is pinned for the diagnostic preview; Surface Pro 8 Wi-Fi (final target) and Surface Laptop Studio (Fedora test machine) are Intel/x86_64 Tiger Lake machines. Hardware approval remains pending; see the sourced [target record](docs/target-machines.md).
 - Windows: QEMU/KVM and libvirt, with SPICE as the first viewer candidate.
 - Integration: an unprivileged session controller, desktop rules, explicit escape,
   and a private authenticated shared folder. Windows starts on demand.

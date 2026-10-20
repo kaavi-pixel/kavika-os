@@ -19,7 +19,7 @@ See [the preview guide](docs/live-preview.md), [build instructions](docs/build.m
 - [Get a diagnostic ISO](docs/getting-the-iso.md): prepare an isolated Ubuntu-on-WSL builder, verify Fedora input and build the explicitly non-installable preview.
 - [Build instructions](docs/build.md): pinned source, builder prerequisites, and validation limits.
 
-- [Surface test targets](docs/surface-test-target.md): the Pro 8 final target, approved erase scope, media route, and remaining hardware checks.
+- [Target machines](docs/target-machines.md): the HP Envy install target, the Laptop Studio test machine, the dropped Surface Pro 8, permissions and the test route.
 - [Surface Laptop Studio test machine](docs/surface-laptop-studio-test-machine.md): the Fedora machine used for KVM and VM testing, how it differs from the Pro 8, and the safe test steps.
 - [Archive review](docs/review-upload.md): changes reviewed, documentation corrections, and verification limits.
 - [Bug tracker](bugtracker.md): confirmed-defect policy, untested risks, and verification checklist.
@@ -69,19 +69,19 @@ The user-selected project logo is stored at [`assets/branding/kavi-ka-os-logo.pn
 
 | Machine | Role |
 |---|---|
-| **HP Envy x360 (Ryzen 7 8840HS, 16 GB, 1 TB)** — intended final install target as of 20 October 2026, pending confirmation of scope and approvals. Runs Windows today and is the project's build helper; its internal disk is not in any erase approval. | **Final target** |
+| **HP Envy x360 (Ryzen 7 8840HS, 16 GB, 1 TB)** — **the only install target** (20 October 2026). Windows replacement there is the end state, gated on the Laptop Studio passing and a fresh explicit go-ahead. Runs Windows today and is the project's build helper; its internal disk is not in any erase approval. | **Install target** |
 | **Surface Laptop Studio** (Core i5-11300H, 16 GiB, 256 GB NVMe, Iris Xe) | Test machine that already runs Fedora 44. Preflight passed, KVM guest boot passed, and a **physical USB boot passed on 20 October 2026** with Meta+F12 working repeatedly; see [the Laptop Studio page](docs/surface-laptop-studio-test-machine.md). |
-| **Surface Pro 8 Wi-Fi (model 1983)** — previously the final install target; status awaiting confirmation. | Pending |
+| **Surface Pro 8 Wi-Fi (model 1983)** — **dropped** as a target on 20 October 2026; its earlier approvals are withdrawn rather than transferred. | Not a target |
 
 The **Laptop Studio and Surface Pro 8 are both Intel Tiger Lake**, so KVM, the Iris Xe driver and the stock kernel behave similarly on them; the Laptop Studio is still **not** a proxy for the Pro 8's Type Cover, touch, pen, tablet mode, cameras or storage budget. The **HP Envy is AMD (Ryzen 7 8840HS, Radeon 780M, AMD-V)**, so nothing platform-specific measured on the Surfaces transfers to the final target. Treat results on any machine as evidence, never proof for another.
 
 On the Laptop Studio the physical boot confirmed pointer input, speakers, microphone, camera, Wi-Fi, battery reporting and thermals, and the workspace switch worked every time. The **touchscreen does not work on the stock kernel**, matching the preflight finding that no touch/pen input device is exposed, and no pen was available to test.
 
-The printed model **1983** identifies the Pro 8 as a **Wi-Fi model** ([Microsoft service guide](https://learn.microsoft.com/en-us/surface/service-guides/surface-pro8/surface-pro8-device-information-and-service-parts)). The owner reports a **128 GB factory marking** on it; actual installed capacity is still unmeasured, and a 128 GiB Windows guest disk is not a safe default.
+The **Surface Pro 8 is dropped as a target**, so its earlier plans are withdrawn rather than pending. Its record is retained for reference: model 1983 Wi-Fi, owner-reported **128 GB** factory marking, Windows 11, and CPU/RAM/SSD never measured.
 
 The linux-surface compatibility matrix lists touchscreen and pen on both Surfaces, and the Pro 8's Type Cover keyboard and touchpad, as needing its custom kernel ([linux-surface device matrix](https://github.com/linux-surface/linux-surface/wiki/Supported-Devices-and-Features)). The preview uses Fedora's stock kernel, hence the touchscreen result above. Sleep and Secure Boot remain unvalidated on every machine, and no firmware-security changes are authorised.
 
-See [the target machines record](docs/surface-test-target.md) and [the Laptop Studio page](docs/surface-laptop-studio-test-machine.md).
+See [the target machines record](docs/target-machines.md) and [the Laptop Studio page](docs/surface-laptop-studio-test-machine.md).
 
 ## Scope and safety
 

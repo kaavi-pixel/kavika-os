@@ -47,7 +47,7 @@ The Surface Laptop Studio (Core i5-11300H, 16 GiB, Iris Xe, Fedora 44) is a seco
 
 The first preview uses stock Fedora with external USB keyboard/mouse, which the user has confirmed are available. Do not allocate a 128 GiB guest on an assumed 128 GB physical disk: collect actual storage/RAM, reserve Linux/update/free-space headroom, then make an explicit Windows storage decision. The 512 GB SSD is currently approved as installer media, not automatically committed to permanent guest storage.
 
-The earlier Ryzen 7 8840HS/Radeon 780M, 16 GB RAM, and storage screenshot belongs to the HP Envy helper. It is not evidence for sizing the Surface guest, and the Laptop Studio's 16 GiB is not the Pro 8's RAM either; collect target facts through [the no-login identification/live-test route](docs/surface-test-target.md).
+The earlier Ryzen 7 8840HS/Radeon 780M, 16 GB RAM, and storage screenshot belongs to the HP Envy helper. It is not evidence for sizing the Surface guest, and the Laptop Studio's 16 GiB is not the Pro 8's RAM either; collect target facts through [the no-login identification/live-test route](docs/target-machines.md).
 
 Historical benchmark proposal for the HP, not an approved Surface configuration:
 

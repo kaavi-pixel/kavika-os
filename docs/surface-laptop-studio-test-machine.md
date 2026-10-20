@@ -1,8 +1,8 @@
 # Kavi'ka OS: Surface Laptop Studio test machine
 
-Updated 20 October 2026 | Hardware identified from a Fedora "System Details" report; the read-only preflight has now been run on the machine and its results are recorded below. Nothing from Kavi'ka has been booted on it yet.
+Updated 20 October 2026 | Hardware identified from a Fedora "System Details" report; the read-only preflight, a KVM guest boot and a **physical USB boot of the preview have all since run on this machine** and the results are recorded below.
 
-The Surface Laptop Studio is the project's **second machine**. It already runs Fedora, so it is where the Linux side and the virtual-machine work are tested first. The **Surface Pro 8 stays the final install target.** Results from the Laptop Studio are evidence about the Pro 8, never proof.
+The Surface Laptop Studio is the project's **second machine**. It already runs Fedora, so it is where the Linux side and the virtual-machine work are tested first. It is the **test machine**: on 20 October 2026 the user confirmed the product must first "work perfectly" here, and that the **HP Envy x360 (1 TB)** is the only install target. The **Surface Pro 8 has been dropped** as a target — see [the target machines record](target-machines.md). Results from the Laptop Studio are evidence about the image, never proof about the Envy or any other machine.
 
 ## What we know
 
