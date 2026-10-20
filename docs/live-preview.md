@@ -95,6 +95,19 @@ Notes that cost time to rediscover:
 - Compare frames numerically (for example `compare -metric AE before.ppm after.ppm null:`). A workspace switch changes roughly a third of the frame; on the tested build, switch was ~361,200 pixels and the return trip matched the original to within ~110 pixels (the clock).
 - A running QEMU process is not a boot pass. Check the screenshots, `serial.log` and the guest's own answers (`getenforce`, `systemctl is-system-running`, `systemctl --list-units --state=failed`) before recording anything.
 
+## Writing the image to a USB stick (Linux host)
+
+Writing a live image is a raw, destructive write, so the agent will not perform it: raw block-device writes are blocked outright. Use the guarded writer, which refuses anything that is not a removable USB whole disk, that carries the running system, that is mounted, or that is too small — and which verifies the image hash before the write and the device contents after it:
+
+```sh
+sudo bash tools/write-preview-to-usb.sh \
+    --iso build/Kavika-OS-0.1.0-Surface-Pro-8-Live-Preview.iso \
+    --sha256-file build/Kavika-OS-0.1.0-Surface-Pro-8-Live-Preview.iso.sha256 \
+    --device /dev/sdX --confirm-wipe /dev/sdX
+```
+
+`--dry-run` runs every check and prints the plan without writing; do that first and confirm the device size, model, label and transport are the stick you mean. The image is a hybrid layout, so the volume label stays the preserved upstream one (`Fedora-KDE-Live-44`) rather than anything saying "Kavika". The stick boots the same image that was validated in the VM; it is a preview, not an installer.
+
 ## What follows
 
 Actual memory/storage determine whether this Surface can comfortably run Linux plus full Windows and Comet. Do not reuse the old HP allocation or assume 1 TB; a 128 GiB Windows disk is not a safe default for a device marked 128 GB.
