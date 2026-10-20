@@ -93,7 +93,7 @@ These extend the prototype checklist; they do not replace or pass it.
 | D08 | The Laptop Studio's firmware security state was unrecorded | Observed 20 October 2026 | Secure Boot **disabled** and the platform in **Setup Mode** (no enrolled platform keys). Not a failure and nothing was changed; this does not carry over to the Pro 8's T21 check. |
 | D09 | Cameras, audio, Bluetooth and battery are enumerated but unverified | Inventory only | 4 video-capture devices, one HDA-Intel card, 1 Bluetooth controller, battery present at 72%. Enumeration is not functional evidence; no camera/audio/sleep test has run. |
 | D10 | A 1 TB USB disk (`sda`, "One Touch w/PW") is attached to the Laptop Studio | Enumerated only; nothing read or written | Not the approved 512 GB media SSD. Identify every physical disk explicitly before any future write or media step. |
-| D11 | The repo's test counts were not reproduced on the Laptop Studio | `pytest` is not installed there | Do not cite the earlier test results as verified on this machine; installing test tooling is a separate approved step. |
+| D11 | The repo's test counts were not reproduced on the Laptop Studio | **Resolved 20 October 2026:** `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests` reports **Ran 30 tests, OK (skipped=1)** with the system Python 3.14.8 — matching the "30 Linux tests pass" claim in the handoff. The suite is `unittest`-based, so the earlier `pytest` note was a wrong assumption about the runner, not a missing dependency | No tooling install was needed. A skipped test is the known GRUB-parser-availability skip, not a failure. |
 
 ## Live-preview defects and packaging corrections
 

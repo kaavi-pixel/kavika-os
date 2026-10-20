@@ -51,7 +51,8 @@ Microsoft lists the i5-11300H (H35) configuration with 16 or 32 GB of RAM ([Micr
 2. **Secure Boot is disabled and the platform is in Setup Mode**, so it has no enrolled platform keys. This is a firmware state, not a failure; nothing was changed. The eventual Pro 8 Secure Boot check (T21) starts from a different state and this result does not carry over.
 3. **`virt-manager` is missing and libvirt is not running.** Neither is needed by `tools/launch-preview-vm-linux.py`, which starts QEMU directly, but any `virsh`/virt-manager workflow would need `sudo dnf install` plus enabling a service first — a separate, approved step.
 4. **A 1 TB USB disk is attached** (`sda`, `One Touch w/PW`, 1,000,204,885,504 bytes, USB, non-removable flag but USB transport). It was only enumerated; nothing was read from or written to it. Identify it explicitly before any future media step, since the approved erase scope covers a 512 GB external SSD and this is not that device.
-5. **The test suite was not run here** because `pytest` is not installed on this machine; do not treat the repo's earlier test counts as reproduced on the Laptop Studio.
+5. **The repo test suite does run here.** `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests` reports **Ran 30 tests, OK (skipped=1)** on the system Python 3.14.8, matching the handoff's "30 Linux tests pass". It is a `unittest` suite, so no `pytest` install is needed; the one skip is the known GRUB-parser-availability skip.
+6. **The build prerequisites are not all present.** `cpio`, `implantisomd5` and `checkisomd5` are installed, but **`xorriso` and `grub-script-check` (grub2-tools) are missing** and `pycdlib` is not importable. `tools/build-live-preview.py` refuses to run without them, so building the rebuilt ISO on this machine needs an approved `sudo dnf install xorriso grub2-tools` plus a `pycdlib` provider. See [build prerequisites](build.md).
 
 
 ## How it differs from the Pro 8
