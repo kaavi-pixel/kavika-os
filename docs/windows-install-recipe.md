@@ -87,6 +87,17 @@ in a command and the *whole answer file* fails validation, killing the install m
 with a misleading "The computer restarted unexpectedly" error. Quotes are accepted. Keep
 these commands short and character-clean, or run a script instead.
 
+**5. Never reuse a captured ESP image as boot media.** An ESP image saved from a previous
+run is a snapshot of a *live* partition, and Setup rewrites `\EFI\Microsoft\Boot\bcd` when
+it services boot files: the file grows from the ISO's **16,384 bytes** to **45,056 bytes**,
+with a default entry pointing at the Windows installation that run created. Boot that ESP
+on a fresh guest and `bootmgfw.efi` fails — `0xc000000e` ("A required device isn't connected
+or can't be accessed") followed by a power-off, or a ~6 s reset loop — and Setup never
+starts (the target QCOW2 never grows). Rebuild the boot ESP from the **ISO** every time:
+`/efi/microsoft/boot/bcd` (16,384 B, md5 `910c8e7b4a141a1b1970db5c82b511b1`) and
+`/boot/bcd` (16,384 B, md5 `c45333f49527e99a6a9d28d75b605516`). The ESP's `\boot\Bcd` and
+`\boot\boot.sdi` stay pristine even in a captured image, so only the UEFI BCD is the trap.
+
 ## The command
 
 ```bash
