@@ -16,6 +16,7 @@ See [the preview guide](docs/live-preview.md), [build instructions](docs/build.m
 - [Implementation plan](implementation-plan.md): architecture, dependencies, milestones, and release gates.
 - [OS implementation plan](os-implementation-plan.md): roadmap from the validated integration prototype to a live ISO, installer, and maintained OS release.
 - [Windows preview VM guide](docs/windows-vm-preview.md): disposable Linux smoke-test guest, not the full Windows product workspace.
+- [Windows install recipe](docs/windows-install-recipe.md): the verified way to install Windows 11 in a KVM guest here, and why each non-obvious step exists.
 - [Get a diagnostic ISO](docs/getting-the-iso.md): prepare an isolated Ubuntu-on-WSL builder, verify Fedora input and build the explicitly non-installable preview.
 - [Build instructions](docs/build.md): pinned source, builder prerequisites, and validation limits.
 

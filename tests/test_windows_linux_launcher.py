@@ -52,6 +52,27 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertNotIn("virtio-win.iso", " ".join(self.command()))
         self.assertIn("virtio-win.iso", " ".join(self.command(virtio_iso=Path("virtio-win.iso"))))
 
+    def test_boot_medium_is_optional_and_attached_correctly(self):
+        # Absent by default: a plain -cdrom boot is the fallback.
+        plain = " ".join(self.command())
+        self.assertNotIn("usbesp", plain)
+        self.assertNotIn("afstick", plain)
+
+        with_medium = " ".join(
+            self.command(esp_image=Path("esp.img"), answer_image=Path("af.img")))
+        # The boot ESP must stay WRITABLE: Setup services boot files to the volume it
+        # booted from, and a read-only one aborts with 0x80070013.
+        self.assertIn("id=usbesp,format=raw,file=esp.img", with_medium)
+        self.assertNotIn("readonly=on,file=esp.img", with_medium)
+        # The answer stick must be REMOVABLE, or Setup's implicit search skips it.
+        self.assertIn("usb-storage,drive=afstick,removable=on", with_medium)
+
+    def test_install_mode_allows_guest_reboots(self):
+        # Default preserves the crash-hunting behaviour: a guest reset exits QEMU.
+        self.assertIn("-no-reboot", " ".join(self.command()))
+        # An install must be allowed to reboot; -no-reboot would kill Setup mid-flow.
+        self.assertNotIn("-no-reboot", " ".join(self.command(allow_reboot=True)))
+
     def test_guest_memory_default_meets_the_windows_11_minimum(self):
         self.assertGreaterEqual(LAUNCHER.DEFAULT_GUEST_MIB, 4096)
         self.assertGreaterEqual(LAUNCHER.DEFAULT_DISK_GIB, 64)

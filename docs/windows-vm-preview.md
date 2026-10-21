@@ -49,3 +49,5 @@ What it presents, chosen so Windows 11 Setup boots without extra drivers:
 `--virtio-iso` attaches a virtio-win CD once you want virtio devices. Isolation is the same as the preview launcher: new private QCOW2, private TPM state, user-mode NAT, and no physical disk or shared folder. Run `--dry-run` first; it performs every host check, prints the exact QEMU command and creates nothing.
 
 Windows-specific caveats: licensing and activation are yours to handle, the guest's performance on this host has not been measured yet, and a VM limitation must be reported rather than quietly redefined as out of scope. This harness does not restrict what you install inside Windows.
+
+**The launcher alone is not enough to boot Setup.** The Windows ISO's El Torito payload hangs under OVMF, so Setup has to be booted from an ESP image attached as USB storage, with a separate removable answer stick and `--allow-reboot`. The full, verified procedure (the ESP layout, the answer-file bypass, and the write-protect trap) is in [the Windows install recipe](windows-install-recipe.md).

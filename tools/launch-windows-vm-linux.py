@@ -92,7 +92,8 @@ def require(name: str) -> str:
 
 def build_command(*, qemu, iso, disk, efi_code, efi_vars, tpm_sock, serial_log,
                   guest_mib, cpus, display, virtio_iso=None, hostfwd=None,
-                  with_net=True):
+                  with_net=True, esp_image=None, answer_image=None,
+                  allow_reboot=False):
     command = [
         qemu, "-name", "Kavika-Windows11-Feasibility",
         "-machine", "q35,accel=kvm", "-cpu", "host", "-smp", str(cpus),
@@ -109,8 +110,13 @@ def build_command(*, qemu, iso, disk, efi_code, efi_vars, tpm_sock, serial_log,
         "-device", "tpm-tis,tpmdev=tpm0",
         "-device", "VGA", "-device", "qemu-xhci", "-device", "usb-tablet",
         "-cdrom", str(iso), "-boot", "order=d",
-        "-serial", f"file:{serial_log}", "-no-reboot",
+        "-serial", f"file:{serial_log}",
     ]
+    # -no-reboot turns a guest reset into a QEMU exit, which is useful when hunting
+    # for crashes but fatal to a Windows install: Setup reboots several times, and
+    # the second phase only happens after a reboot.
+    if not allow_reboot:
+        command += ["-no-reboot"]
     if with_net:
         # e1000e has an in-box Windows driver; virtio-net would need virtio-win.
         nic = "user,model=e1000e"
@@ -119,6 +125,19 @@ def build_command(*, qemu, iso, disk, efi_code, efi_vars, tpm_sock, serial_log,
         command += ["-nic", nic]
     if virtio_iso:
         command += ["-drive", f"file={virtio_iso},media=cdrom,readonly=on"]
+    # Install boot medium. The Windows ISO's own El Torito EFI payload (cdboot.efi)
+    # hangs under OVMF, so Setup is booted from an ESP image attached as USB mass
+    # storage instead (see docs/windows-install-recipe.md). That ESP MUST stay
+    # writable: Setup services the boot files to the volume it booted from, and a
+    # read-only volume aborts the install with 0x80070013 (ERROR_WRITE_PROTECT).
+    if esp_image:
+        command += ["-drive", f"if=none,id=usbesp,format=raw,file={esp_image}",
+                    "-device", "usb-storage,drive=usbesp"]
+    # The answer file must sit on REMOVABLE media: usb-storage defaults to a fixed
+    # disk, and Windows Setup's implicit unattend search does not scan fixed disks.
+    if answer_image:
+        command += ["-drive", f"if=none,id=afstick,format=raw,file={answer_image}",
+                    "-device", "usb-storage,drive=afstick,removable=on"]
     command += ["-display", display]
     return command
 
@@ -138,6 +157,15 @@ def main(argv=None) -> int:
     parser.add_argument("--display", default="gtk", choices=("gtk", "sdl", "none"))
     parser.add_argument("--virtio-iso", type=Path, default=None,
                         help="optional virtio-win CD to attach for virtio devices")
+    parser.add_argument("--esp-image", type=Path, default=None,
+                        help="boot ESP image to attach as writable USB mass storage "
+                             "(required to boot Setup; see docs/windows-install-recipe.md)")
+    parser.add_argument("--answer-image", type=Path, default=None,
+                        help="stick carrying autounattend.xml, attached as REMOVABLE "
+                             "USB mass storage")
+    parser.add_argument("--allow-reboot", action="store_true",
+                        help="let the guest reboot instead of exiting QEMU; REQUIRED "
+                             "for the Windows install, which reboots several times")
     parser.add_argument("--hostfwd", default=None,
                         help="optional host->guest forward, e.g. tcp::3389-:3389; off by default")
     parser.add_argument("--no-net", action="store_true", help="no NIC at all")
@@ -162,6 +190,10 @@ def main(argv=None) -> int:
         print(f"ISO hash verified: {actual}")
     if args.virtio_iso and not args.virtio_iso.resolve().is_file():
         parser.error(f"virtio ISO not found: {args.virtio_iso}")
+    if args.esp_image and not args.esp_image.resolve().is_file():
+        parser.error(f"ESP image not found: {args.esp_image}")
+    if args.answer_image and not args.answer_image.resolve().is_file():
+        parser.error(f"answer image not found: {args.answer_image}")
 
     vm_dir = args.vm_dir.resolve()
     if vm_dir.exists() and any(vm_dir.iterdir()):
@@ -193,12 +225,15 @@ def main(argv=None) -> int:
         print(f"  disk        {args.disk_gib} GiB new QCOW2")
         print(f"  network     {'none' if args.no_net else 'user-mode NAT' + (f', hostfwd {args.hostfwd}' if args.hostfwd else ', no forwarding')}")
         print("  physical disks: none    shared host folders: none")
+        print(f"  boot ESP    {args.esp_image or '(none: Setup will not boot)'}")
+        print(f"  answer file {args.answer_image or '(none: unattended install will not apply)'}")
         planned = build_command(
             qemu=qemu, iso=iso, disk=vm_dir / "windows11.qcow2", efi_code=efi_code,
             efi_vars=vm_dir / "efi-vars.fd", tpm_sock=vm_dir / "tpm/swtpm.sock",
             serial_log=vm_dir / "serial.log", guest_mib=args.guest_mib, cpus=args.cpus,
             display=args.display, virtio_iso=args.virtio_iso, hostfwd=args.hostfwd,
-            with_net=not args.no_net)
+            with_net=not args.no_net, esp_image=args.esp_image,
+            answer_image=args.answer_image, allow_reboot=args.allow_reboot)
         if args.monitor:
             planned += ["-monitor", f"unix:{vm_dir / 'mon.sock'},server,nowait"]
         print("would run: " + " ".join(planned))
@@ -225,7 +260,8 @@ def main(argv=None) -> int:
                             efi_vars=efi_vars, tpm_sock=tpm_sock, serial_log=serial_log,
                             guest_mib=args.guest_mib, cpus=args.cpus, display=args.display,
                             virtio_iso=args.virtio_iso, hostfwd=args.hostfwd,
-                            with_net=not args.no_net)
+                            with_net=not args.no_net, esp_image=args.esp_image,
+                            answer_image=args.answer_image)
     if args.monitor:
         command += ["-monitor", f"unix:{vm_dir / 'mon.sock'},server,nowait"]
     (vm_dir / "launch.txt").write_text(
