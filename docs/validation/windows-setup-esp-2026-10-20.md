@@ -83,8 +83,35 @@ property defaults to `off` (`qemu-system-x86_64 -device usb-storage,help` → `r
 implicit unattend search order covers removable media but not a fixed disk at those positions, so neither
 copy was found.
 
-Fix under test: attach the answer-file stick with `-device usb-storage,drive=afstick,removable=on` so it is
-presented as removable media. Result pending; the relaunched guest run is in progress and is not yet evidence.
+Fix: attach the answer-file stick with `-device usb-storage,drive=afstick,removable=on` so it is presented as
+removable media. **Confirmed 21 October 2026:** with `removable=on` the answer file was read — the
+`RunSynchronous` commands it carries took effect.
+
+## Hardware-requirement bypass (D17)
+
+Windows 11 Setup (build 26300, 25H2) then stopped at "This PC doesn't currently meet Windows 11 system
+requirements" — "The PC must support TPM 2.0" and "The PC must support Secure Boot". `swtpm --tpm2` does
+provide a TPM 2.0, but the guest runs the non-Secure-Boot OVMF build (`OVMF_CODE.fd`), so Secure Boot is off.
+
+The `windowsPE` `Microsoft-Windows-Setup` component now carries a `RunSynchronous` block that sets the
+`LabConfig` values `BypassTPMCheck`, `BypassSecureBootCheck`, `BypassRAMCheck`, `BypassCPUCheck`,
+`BypassStorageCheck` and `BypassDiskCheck` — the Rufus 4.6+ / 24H2-25H2 method, applied before the
+compatibility check. With it, Setup passed the check and began **installing Windows 11**.
+
+## Boot-file write protection (D18)
+
+The install then failed at the downlevel Finalize phase with "Windows 11 installation has failed": the NVMe
+ESP was left empty and the Windows folder was never populated. Setup's `setuperr.log` in
+`$Windows.~BT/Sources/Panther` shows `BfspCopyFile(... bootmgfw.efi -> ... HarddiskVolume1/EFI/Boot/bootx64.efi)
+failed! Last Error = 0x13` (sixty attempts), then `CUpdateBootCode::DoExecute: Error is fatal` and final error
+`0x80070013`. `0x13` is `ERROR_WRITE_PROTECT`: Setup serviced the boot files to the boot ESP attached with
+`readonly=on` (`HarddiskVolume1`) rather than to the NVMe ESP it had created.
+
+Fix: attach the boot ESP **writable** (drop `readonly=on`). **Confirmed 21 October 2026** (guest
+`Kavika-Win11-Install4`, monitor 4450): Setup serviced the boot files and created a `Windows Boot Manager`
+firmware entry (`Boot000B`, serial log: `starting Boot000B "Windows Boot Manager" ... bootmgfw.efi`), and the
+install completed — Windows 11 reached the OOBE and then the **desktop** (Start menu, taskbar, `Kavika`
+profile). Captured frame: `installed-desktop.png`.
 
 ## Limits
 
@@ -92,3 +119,5 @@ presented as removable media. Result pending; the relaunched guest run is in pro
 * It is **not** established that WinPE can read `install.wim` (8,158,846,937 B) from the CD.
 * No Windows licence or activation is handled. No physical disk was touched.
 * Whether Setup finds and acts on the unattended answer file on **removable** media (D16) is not yet confirmed.
+* The install now completes and boots with a **writable** boot ESP (D18 confirmed); the remaining caveat is where the boot files land.
+* Windows 11 **does** install and reach the desktop in the disposable guest, but the boot files sit on the USB ESP (an artefact of the ESP-on-USB workaround), not on the target disk's own ESP, so this is not yet a clean single-disk install.
