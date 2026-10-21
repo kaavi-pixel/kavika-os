@@ -81,6 +81,12 @@ answer file carries a `RunSynchronous` block in its `windowsPE` pass that sets t
 `BypassCPUCheck`, `BypassStorageCheck` and `BypassDiskCheck`. This is the Rufus 4.6+
 method and it runs before the compatibility check.
 
+**4. The `Path` field of a `RunSynchronousCommand` is restricted.** It is validated against
+a `CommandLine` type that rejects `|`, `&`, `^`, `%` and other characters. Put one of those
+in a command and the *whole answer file* fails validation, killing the install much later
+with a misleading "The computer restarted unexpectedly" error. Quotes are accepted. Keep
+these commands short and character-clean, or run a script instead.
+
 ## The command
 
 ```bash
@@ -114,8 +120,19 @@ The install takes roughly 15 to 25 minutes on this host.
 The boot files land on the **USB ESP**, not on the target disk's own ESP, because Setup
 services boot files to the volume it booted from. Windows boots and runs, but the guest
 currently depends on that attached ESP. In a normal libvirt install the ESP lives on the
-target disk and this does not arise; closing that gap means either adding `bcdboot` to the
-flow or giving the Windows ISO a real partition table so it can be booted directly.
+target disk and this does not arise.
+
+**An automated fix was tried and reverted.** Adding a `specialize`-pass
+`RunSynchronousCommand` that ran a PowerShell one-liner to populate the target ESP broke the
+install outright. The `Path` field is validated against a restricted `CommandLine` type that
+rejects, among others, `|`, `&`, `^` and `%`; the one-liner was full of pipes, so the whole
+answer file failed validation with `0x80220005` and Setup died in specialize with "The
+computer restarted unexpectedly or encountered an unexpected error".
+
+So: **do not put pipes, ampersands, carets or percent signs in a `RunSynchronousCommand`
+`Path`.** Quotes are fine (`reg add "...\LabConfig" /v ... /f` works). To close the caveat,
+use a mechanism whose path avoids those characters, for example a script left on the target
+disk and invoked plainly, or `SetupComplete.cmd`.
 
 ## Reading the logs when it fails
 
