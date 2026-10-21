@@ -84,6 +84,11 @@
           <Path>reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OOBE /v BypassNRO /t REG_DWORD /d 1 /f</Path>
           <Description>Skip the Microsoft-account requirement</Description>
         </RunSynchronousCommand>
+        <RunSynchronousCommand wcm:action="add">
+          <Order>2</Order>
+          <Description>Populate the target disk ESP so the install owns its own boot files</Description>
+          <Path>powershell -NoProfile -ExecutionPolicy Bypass -Command "&amp; { $ErrorActionPreference='SilentlyContinue'; $esp = Get-Partition | Where-Object { $_.GptType -eq '{c12a7328-f81f-11d2-ba4b-00a0c93ec93b}' -and (Get-Disk -Number $_.DiskNumber).BusType -ne 'USB' }; if ($esp) { Add-PartitionAccessPath -DiskNumber $esp.DiskNumber -PartitionNumber $esp.PartitionNumber -AssignDriveLetter; Start-Sleep -Seconds 3; $l = (Get-Partition -DiskNumber $esp.DiskNumber -PartitionNumber $esp.PartitionNumber).DriveLetter; bcdboot C:\Windows /s ($l.ToString() + ':') /f UEFI } }\"</Path>
+        </RunSynchronousCommand>
       </RunSynchronous>
     </component>
   </settings>

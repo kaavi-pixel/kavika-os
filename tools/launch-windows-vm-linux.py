@@ -261,7 +261,7 @@ def main(argv=None) -> int:
                             guest_mib=args.guest_mib, cpus=args.cpus, display=args.display,
                             virtio_iso=args.virtio_iso, hostfwd=args.hostfwd,
                             with_net=not args.no_net, esp_image=args.esp_image,
-                            answer_image=args.answer_image)
+                            answer_image=args.answer_image, allow_reboot=args.allow_reboot)
     if args.monitor:
         command += ["-monitor", f"unix:{vm_dir / 'mon.sock'},server,nowait"]
     (vm_dir / "launch.txt").write_text(
