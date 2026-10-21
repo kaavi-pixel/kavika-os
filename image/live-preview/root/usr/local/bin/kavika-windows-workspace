@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+# Kavi'ka Windows workspace.
+#
+# Brings the Windows workspace to the front: switch to the Windows virtual desktop and, if
+# the guest is not already running, start it as a full-screen desktop.
+#
+# WHY THERE IS NO SWIPE CODE HERE
+# -------------------------------
+# KWin's scripting API has no touchpad-swipe registration (it offers registerShortcut and
+# registerScreenEdge only), and Plasma's built-in touchpad gestures are not
+# user-configurable. What Plasma does ship is a three-finger horizontal swipe that switches
+# virtual desktops. The Kavi'ka desktop layout is two desktops in a single row, so that
+# built-in swipe already lands on the Windows desktop. Reaching Windows by swipe therefore
+# needs no custom gesture handling, only a window that lives on the Windows desktop.
+#
+# Meta+F12 remains the keyboard fallback, registered by the kavika-preview KWin script.
+#
+# WHAT THIS DOES NOT DO
+# ---------------------
+# It does not install, download, activate or licence Windows, and it does not touch any
+# physical disk. With no guest provisioned it says so and exits non-zero rather than
+# starting something unexpected.
+
+set -u
+
+VM_DIR="${KAVIKA_WINDOWS_VM_DIR:-$HOME/.local/share/kavika/windows}"
+WINDOWS_DESKTOP="${KAVIKA_WINDOWS_DESKTOP:-2}"
+LAUNCHER="${KAVIKA_WINDOWS_LAUNCHER:-/usr/local/lib/kavika/launch-windows-vm-linux.py}"
+BOOT_ESP="${KAVIKA_WINDOWS_BOOT_ESP:-$VM_DIR/boot-esp.img}"
+MEM_MIB="${KAVIKA_WINDOWS_MEM_MIB:-5120}"
+PYTHON="${KAVIKA_PYTHON:-python3}"
+
+say() { printf 'kavika-windows-workspace: %s\n' "$*" >&2; }
+
+usage() {
+    cat <<'EOF'
+Usage: kavika-windows-workspace [--help|--show]
+
+Brings the Windows workspace to the front by switching to the Windows virtual desktop and
+starting the guest full-screen if it is not already running.
+
+Environment overrides:
+  KAVIKA_WINDOWS_VM_DIR    guest directory        (default ~/.local/share/kavika/windows)
+  KAVIKA_WINDOWS_DESKTOP   desktop number, 1-based (default 2)
+  KAVIKA_WINDOWS_LAUNCHER  launcher path          (default /usr/local/lib/kavika/...)
+  KAVIKA_WINDOWS_BOOT_ESP  boot ESP image         (default <vm dir>/boot-esp.img)
+  KAVIKA_WINDOWS_MEM_MIB   guest RAM in MiB       (default 5120)
+EOF
+}
+
+# Documented mechanism: org.kde.KWin /KWin org.kde.KWin.setCurrentDesktop <n>, 1-based.
+switch_to_windows_desktop() {
+    local q
+    for q in qdbus6 qdbus; do
+        if command -v "$q" >/dev/null 2>&1; then
+            if "$q" org.kde.KWin /KWin org.kde.KWin.setCurrentDesktop \
+                    "$WINDOWS_DESKTOP" >/dev/null 2>&1; then
+                return 0
+            fi
+        fi
+    done
+    say "could not switch to desktop $WINDOWS_DESKTOP (no qdbus6/qdbus, or KWin did not answer); continuing"
+    return 1
+}
+
+# True when the pid recorded by the launcher is still a live QEMU process.
+guest_is_running() {
+    local pid_file="$VM_DIR/qemu.pid" pid
+    [ -r "$pid_file" ] || return 1
+    pid=$(cat "$pid_file" 2>/dev/null) || return 1
+    case "$pid" in ''|*[!0-9]*) return 1 ;; esac
+    [ -d "/proc/$pid" ] || return 1
+    tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -q 'qemu-system'
+}
+
+case "${1:-}" in
+    -h|--help) usage; exit 0 ;;
+    ""|--show) ;;
+    *) say "unknown argument: $1"; usage; exit 2 ;;
+esac
+
+switch_to_windows_desktop
+
+if guest_is_running; then
+    say "Windows guest already running (pid $(cat "$VM_DIR/qemu.pid")); showing the workspace"
+    exit 0
+fi
+
+if [ ! -f "$VM_DIR/windows11.qcow2" ]; then
+    say "no Windows guest provisioned in $VM_DIR"
+    say "this image does not ship Windows. Provision it first; see docs/windows-install-recipe.md"
+    exit 3
+fi
+if [ ! -f "$LAUNCHER" ]; then
+    say "launcher not found at $LAUNCHER (set KAVIKA_WINDOWS_LAUNCHER)"
+    exit 4
+fi
+if [ ! -f "$BOOT_ESP" ]; then
+    say "boot ESP not found at $BOOT_ESP (set KAVIKA_WINDOWS_BOOT_ESP)"
+    say "the guest cannot start without it: see the limitation in docs/windows-install-recipe.md"
+    exit 5
+fi
+
+say "starting the Windows guest full-screen on desktop $WINDOWS_DESKTOP"
+exec "$PYTHON" "$LAUNCHER" \
+    --vm-dir "$VM_DIR" \
+    --reuse \
+    --display gtk --full-screen \
+    --esp-image "$BOOT_ESP" \
+    --guest-mib "$MEM_MIB" \
+    --allow-reboot

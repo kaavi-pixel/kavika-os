@@ -3,27 +3,33 @@ KAVI'KA OS 0.1.0 · SURFACE LIVE PREVIEW
 This is a private, disposable Linux boot-and-hardware preview based on Fedora KDE 44.
 It is not a finished operating-system release. Do not use it as a daily system.
 
-TWO TEST MACHINES
+TWO MACHINES
   - Surface Laptop Studio (Intel Core i5-11300H, 16 GiB): the TEST machine. It
     already runs Fedora, has KVM-capable hardware, and is where this preview and
-    later Windows-in-a-VM experiments are tried first.
-  - Surface Pro 8 (Wi-Fi, model 1983): the FINAL install target. Nothing here
-    has been tested on it yet.
-The hardware report names which machine it is running on. Anything proven on the
-Laptop Studio is evidence only, not proof for the Pro 8: the two have different
-chips, panels and input hardware.
+    the Windows-in-a-VM work is tried first.
+  - HP Envy x360 (AMD Ryzen 7 8840HS, 16 GB, 1 TB): the ONLY install target. It
+    runs Windows today and is this project's build helper. This preview has been
+    booted on it live from USB; nothing was installed and its disk is in no erase
+    approval. The Surface Pro 8 was dropped as a target on 20 October 2026.
+The hardware report names which machine it is running on. Anything proven on one
+machine is evidence for that machine only: they differ in chips, panels and input
+hardware, and the Envy is AMD rather than Intel.
 
 WHAT YOU CAN TEST
   - Booting KDE on either Surface.
   - Your original logo as a proportion-preserving wallpaper.
-  - Two Linux virtual desktops and the Meta+F12 workspace toggle.
+  - Two virtual desktops, the Meta+F12 workspace toggle, and the built-in
+    three-finger horizontal swipe between them.
+  - The Windows workspace launcher (kavika-windows-workspace) once a Windows guest
+    has been provisioned. This image ships no Windows.
   - Display, USB keyboard/mouse, network, sound, battery and sleep manually.
   - A read-only hardware report: model, firmware, KVM, Secure Boot, TPM, display,
     Wi-Fi, Bluetooth, audio, camera nodes and whether native input is detected,
     without serials, UUIDs, MAC/IP addresses, keys or user files.
 
 WHAT IS NOT INCLUDED
-  - A running Windows VM, Windows installer, Windows licence, or Comet.
+  - A running Windows VM, Windows installer, or Windows licence. ("Comet" in the
+    brief means Firefox, an ordinary application, not a separate component.)
   - Cross-OS file sharing, VM resource management, or instant Windows switching.
   - A validated internal-disk installer or persistent custom OS installation.
   - A Surface-specific kernel: this preview keeps Fedora's upstream kernel.
@@ -44,7 +50,8 @@ FIRST SESSION
   2. Open Kavi'ka Test Centre (it opens automatically; a desktop shortcut is provided).
   3. View the hardware report. Check the matched target, CPU, RAM, internal disk
      capacity, KVM and Secure Boot status.
-  4. Press Meta+F12 several times to test the two preview desktops.
+  4. Press Meta+F12 several times to test the two preview desktops, then try a
+     three-finger horizontal swipe across the touchpad.
   5. Test Wi-Fi, speakers and keyboard using ordinary KDE controls.
   6. Save the hardware report, review it, and share only that report if desired.
   7. Shut down through KDE and remove the boot medium before restarting.

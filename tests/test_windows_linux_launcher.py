@@ -73,6 +73,38 @@ class WindowsLauncherTests(unittest.TestCase):
         # An install must be allowed to reboot; -no-reboot would kill Setup mid-flow.
         self.assertNotIn("-no-reboot", " ".join(self.command(allow_reboot=True)))
 
+    def test_provisioned_guest_does_not_attach_install_media(self):
+        # --reuse: the guest boots its own disk, so no -cdrom and no forced boot order.
+        joined = " ".join(self.command(iso=None))
+        self.assertNotIn("-cdrom", joined)
+        self.assertNotIn("-boot", joined)
+        # Provisioning still does both.
+        provisioning = " ".join(self.command())
+        self.assertIn("-cdrom", provisioning)
+        self.assertIn("-boot order=d", provisioning)
+
+    def test_full_screen_display_reaches_the_command_line(self):
+        # Spelling taken from this QEMU's own help text:
+        #   -display gtk[,full-screen=on|off][,gl=on|off][,grab-on-hover=on|off]
+        self.assertIn("-display gtk,full-screen=on",
+                      " ".join(self.command(display="gtk,full-screen=on")))
+
+    def test_reuse_refuses_an_unprovisioned_directory(self):
+        import subprocess
+        import sys
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_iso = Path(tmp) / "fake.iso"
+            fake_iso.write_bytes(b"")
+            proc = subprocess.run(
+                [sys.executable, str(ROOT / "tools/launch-windows-vm-linux.py"),
+                 "--iso", str(fake_iso), "--vm-dir", str(Path(tmp) / "guest"),
+                 "--reuse", "--dry-run"],
+                capture_output=True, text=True)
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("--reuse needs an existing guest directory",
+                      proc.stdout + proc.stderr)
+
     def test_guest_memory_default_meets_the_windows_11_minimum(self):
         self.assertGreaterEqual(LAUNCHER.DEFAULT_GUEST_MIB, 4096)
         self.assertGreaterEqual(LAUNCHER.DEFAULT_DISK_GIB, 64)

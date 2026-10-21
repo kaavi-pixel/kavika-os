@@ -109,9 +109,12 @@ def build_command(*, qemu, iso, disk, efi_code, efi_vars, tpm_sock, serial_log,
         "-tpmdev", "emulator,id=tpm0,chardev=chrtpm",
         "-device", "tpm-tis,tpmdev=tpm0",
         "-device", "VGA", "-device", "qemu-xhci", "-device", "usb-tablet",
-        "-cdrom", str(iso), "-boot", "order=d",
         "-serial", f"file:{serial_log}",
     ]
+    # Provisioning attaches the install media and forces the boot order at it. An
+    # already-provisioned guest does neither: it boots its own disk.
+    if iso is not None:
+        command += ["-cdrom", str(iso), "-boot", "order=d"]
     # -no-reboot turns a guest reset into a QEMU exit, which is useful when hunting
     # for crashes but fatal to a Windows install: Setup reboots several times, and
     # the second phase only happens after a reboot.
@@ -145,8 +148,9 @@ def build_command(*, qemu, iso, disk, efi_code, efi_vars, tpm_sock, serial_log,
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--iso", type=Path, required=True,
-                        help="your own Windows 11 ISO; nothing is downloaded")
+    parser.add_argument("--iso", type=Path, default=None,
+                        help="your own Windows 11 ISO; nothing is downloaded. Required "
+                             "unless --reuse, which starts an existing guest")
     parser.add_argument("--vm-dir", type=Path, required=True,
                         help="new or empty directory for this guest")
     parser.add_argument("--expected-sha256", default=None,
@@ -155,6 +159,13 @@ def main(argv=None) -> int:
     parser.add_argument("--disk-gib", type=int, default=DEFAULT_DISK_GIB)
     parser.add_argument("--cpus", type=int, default=4)
     parser.add_argument("--display", default="gtk", choices=("gtk", "sdl", "none"))
+    parser.add_argument("--full-screen", action="store_true",
+                        help="run the gtk display full-screen; this is the Windows "
+                             "workspace mode, where the guest is a full-screen desktop")
+    parser.add_argument("--reuse", action="store_true",
+                        help="start an ALREADY-PROVISIONED guest in --vm-dir instead of "
+                             "creating one. Nothing is created, wiped or downloaded; the "
+                             "directory must already hold windows11.qcow2, efi-vars.fd and tpm/")
     parser.add_argument("--virtio-iso", type=Path, default=None,
                         help="optional virtio-win CD to attach for virtio devices")
     parser.add_argument("--esp-image", type=Path, default=None,
@@ -178,16 +189,20 @@ def main(argv=None) -> int:
     if sys.platform != "linux":
         parser.error("this launcher is for Linux hosts with KVM")
 
-    iso = args.iso.resolve(strict=False)
-    if not iso.is_file():
-        parser.error(f"Windows ISO not found: {iso}")
-    if iso.suffix.lower() != ".iso":
-        parser.error("--iso must be an .iso file")
-    if args.expected_sha256:
-        actual = digest(iso)
-        if actual != args.expected_sha256.lower():
-            parser.error(f"ISO SHA-256 mismatch: expected {args.expected_sha256}, got {actual}")
-        print(f"ISO hash verified: {actual}")
+    iso = None
+    if args.iso is not None:
+        iso = args.iso.resolve(strict=False)
+        if not iso.is_file():
+            parser.error(f"Windows ISO not found: {iso}")
+        if iso.suffix.lower() != ".iso":
+            parser.error("--iso must be an .iso file")
+        if args.expected_sha256:
+            actual = digest(iso)
+            if actual != args.expected_sha256.lower():
+                parser.error(f"ISO SHA-256 mismatch: expected {args.expected_sha256}, got {actual}")
+            print(f"ISO hash verified: {actual}")
+    elif not args.reuse:
+        parser.error("--iso is required unless --reuse")
     if args.virtio_iso and not args.virtio_iso.resolve().is_file():
         parser.error(f"virtio ISO not found: {args.virtio_iso}")
     if args.esp_image and not args.esp_image.resolve().is_file():
@@ -196,8 +211,23 @@ def main(argv=None) -> int:
         parser.error(f"answer image not found: {args.answer_image}")
 
     vm_dir = args.vm_dir.resolve()
-    if vm_dir.exists() and any(vm_dir.iterdir()):
+    if args.reuse:
+        # Start an already-provisioned guest. Nothing is created, wiped or downloaded.
+        if not vm_dir.is_dir():
+            parser.error(f"--reuse needs an existing guest directory: {vm_dir}")
+        for needed in ("windows11.qcow2", "efi-vars.fd", "tpm"):
+            if not (vm_dir / needed).exists():
+                parser.error(f"--reuse: {vm_dir / needed} is missing")
+    elif vm_dir.exists() and any(vm_dir.iterdir()):
         parser.error(f"VM directory must be new or empty: {vm_dir}")
+
+    display = args.display
+    if args.full_screen:
+        if args.display != "gtk":
+            parser.error("--full-screen needs --display gtk")
+        # Verified against this QEMU's own help text:
+        #   -display gtk[,full-screen=on|off][,gl=on|off][,grab-on-hover=on|off]
+        display = "gtk,full-screen=on"
 
     qemu = require("qemu-system-x86_64")
     qemu_img = require("qemu-img")
@@ -231,7 +261,7 @@ def main(argv=None) -> int:
             qemu=qemu, iso=iso, disk=vm_dir / "windows11.qcow2", efi_code=efi_code,
             efi_vars=vm_dir / "efi-vars.fd", tpm_sock=vm_dir / "tpm/swtpm.sock",
             serial_log=vm_dir / "serial.log", guest_mib=args.guest_mib, cpus=args.cpus,
-            display=args.display, virtio_iso=args.virtio_iso, hostfwd=args.hostfwd,
+            display=display, virtio_iso=args.virtio_iso, hostfwd=args.hostfwd,
             with_net=not args.no_net, esp_image=args.esp_image,
             answer_image=args.answer_image, allow_reboot=args.allow_reboot)
         if args.monitor:
@@ -245,20 +275,29 @@ def main(argv=None) -> int:
     efi_vars = vm_dir / "efi-vars.fd"
     serial_log = vm_dir / "serial.log"
     tpm_dir = vm_dir / "tpm"
-    tpm_dir.mkdir()
     tpm_sock = tpm_dir / "swtpm.sock"
 
-    subprocess.run([qemu_img, "create", "-f", "qcow2", str(disk), f"{args.disk_gib}G"],
-                   check=True, capture_output=True)
-    shutil.copyfile(efi_vars_template, efi_vars)
-    subprocess.run([swtpm, "socket", "--tpmstate", f"dir={tpm_dir}",
-                    "--ctrl", f"type=unixio,path={tpm_sock}", "--tpm2",
-                    "--log", f"file={tpm_dir}/swtpm.log", "--daemon"],
-                   check=True)
+    if args.reuse:
+        # The disk and the variable store already exist; only ensure a TPM is listening.
+        if tpm_sock.exists():
+            print(f"reusing the swtpm already listening on {tpm_sock}")
+        else:
+            subprocess.run([swtpm, "socket", "--tpmstate", f"dir={tpm_dir}",
+                            "--ctrl", f"type=unixio,path={tpm_sock}", "--tpm2",
+                            "--log", f"file={tpm_dir}/swtpm.log", "--daemon"], check=True)
+    else:
+        tpm_dir.mkdir()
+        subprocess.run([qemu_img, "create", "-f", "qcow2", str(disk), f"{args.disk_gib}G"],
+                       check=True, capture_output=True)
+        shutil.copyfile(efi_vars_template, efi_vars)
+        subprocess.run([swtpm, "socket", "--tpmstate", f"dir={tpm_dir}",
+                        "--ctrl", f"type=unixio,path={tpm_sock}", "--tpm2",
+                        "--log", f"file={tpm_dir}/swtpm.log", "--daemon"],
+                       check=True)
 
     command = build_command(qemu=qemu, iso=iso, disk=disk, efi_code=efi_code,
                             efi_vars=efi_vars, tpm_sock=tpm_sock, serial_log=serial_log,
-                            guest_mib=args.guest_mib, cpus=args.cpus, display=args.display,
+                            guest_mib=args.guest_mib, cpus=args.cpus, display=display,
                             virtio_iso=args.virtio_iso, hostfwd=args.hostfwd,
                             with_net=not args.no_net, esp_image=args.esp_image,
                             answer_image=args.answer_image, allow_reboot=args.allow_reboot)
