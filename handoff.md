@@ -2,6 +2,8 @@
 
 Checkpoint updated 20 October 2026. This remains a diagnostic image, not an installation release. Do not flash/install or perform destructive disk actions without passing the gates below and a fresh explicit user go/no-go.
 
+**Progress to a full working OS: about 20%.** Per-stage breakdown is tracked in [os-implementation-plan.md](os-implementation-plan.md#stage-progress-22-october-2026).
+
 ## Target change (20 October 2026)
 
 Confirmed by the user in answer to direct questions:
@@ -81,6 +83,35 @@ The ISO contains no Windows guest, Comet, cross-OS file sharing, persistence, su
 - Tests: Windows checkout 14 passed, 1 skipped for unavailable GRUB parser; Linux tree 14 passed including parser. `git diff --check` passed.
 - Surface boot, native input, network, audio/camera, suspend/resume, Windows/Comet, file sharing, gestures, persistence, installation, update/recovery, release licensing and maintenance remain unverified or unimplemented.
 - No project-wide open-source licence is selected. No ISO release is authorized.
+
+## Gaps vs a normal installed Fedora and vs Windows
+
+Recorded 22 October 2026 so "what is missing" is an explicit checklist, not an implication.
+Each gap names what closes it.
+
+### Versus a normal installed Fedora
+
+| Gap | Why it exists | What closes it |
+|---|---|---|
+| **Not installable** — no installer; the live image deliberately disables Anaconda's entry points (the installation guard) | the preview is diagnostic by design; installer safety (explicit target selection, non-selected disks untouched) is unimplemented | the OS4 installer milestone: a guarded install flow validated on disposable disks (T19/T20) |
+| **No persistence** — the session runs from RAM; files, settings and any guest vanish at shutdown | live-image architecture; the 3.8 GB stick also cannot hold an overlay plus a 16 GB Windows guest | installation to real storage (OS4); optionally a persistent live overlay on a larger stick |
+| **No user accounts / first boot** — a single live user; no account creation or personal settings | live session | the installer's first-boot setup (T20) |
+| **No system updates** — no persistent root to `dnf update` | live session | an installed system plus a validated update/upgrade procedure (O04/T22) |
+| **No recovery/rollback** — no rescue path defined | nothing is installed, so there is nothing to roll back to | OS4: recovery/rollback that preserves user and guest data (T22) |
+| **Secure Boot chain unvalidated** — upstream signed components are preserved, but the full chain is untested on every machine | measurement work not done | live and installed Secure Boot validation on the target (T21) |
+| **Identity** — the volume label stays `Fedora-KDE-Live-44`, which is load-bearing for live boot | `root=live:CDLABEL=…` depends on the label; changing it breaks the live boot | **partially closed 22 Oct**: `/usr/lib/os-release` now presents Kavi'ka OS while keeping `VERSION_ID=44` so `$releasever` still resolves; the label stays until the installed-OS milestone makes it irrelevant |
+
+### Versus Windows (the product's promised Windows workspace)
+
+| Gap | Why it exists | What closes it |
+|---|---|---|
+| **No Windows guest in the image** — no Windows, no licence, no guest disk, and until now not even the launcher | provisioning is an opt-in, licensed step by policy; the builder cannot add the virtualization packages | **partially closed 22 Oct**: the launcher and an in-image provisioning guide now ship; actual provisioning still needs an installed system carrying qemu/swtpm/OVMF/mtools |
+| **No cross-OS shared folder** | not implemented | the authenticated, guest-network-restricted share (F07–F09) |
+| **No swipe** — three-finger switching is Plasma's built-in default on a single-row layout, but it has never been exercised on a KDE host with a touchpad | the dev machine runs GNOME, and a VM has no touchpad | live/installed boot on a touchpad machine, then the F02/F03 tests |
+| **No VM lifecycle controls** — suspend/resume with the guest, snapshots, guest updates | not implemented | the controller milestone (R04, T12, T15) |
+| **No clipboard sharing** | deliberately off until consent | opt-in clipboard after T10 |
+
+Everything in these tables is already tracked in features.md and the implementation plans; this section is the single checklist view of "what is missing vs a real OS".
 
 ## Resume plan
 

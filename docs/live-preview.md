@@ -9,9 +9,11 @@ Version 0.1.0 | Private diagnostic preview | Guide updated 21 October 2026
 ## What is in it
 
 - **Base:** pinned Fedora KDE 44 x86_64 with its stock kernel and desktop.
+- **Identity:** the booted system presents itself as **Kavi'ka OS** in `os-release` (`ID=kavika`, `ID_LIKE=fedora`, `VERSION_ID=44` kept so `$releasever` still resolves). The volume label stays `Fedora-KDE-Live-44` because the live boot depends on it.
 - **Branding:** the original Kavi'ka logo, unchanged, used as a fitted wallpaper.
 - **Test Centre:** guide, filtered hardware inventory, report saving and workspace demonstration.
 - **Navigation prototype:** two Linux desktops, “Linux” and “Windows (not installed),” with `Meta+F12` intended to toggle them. Meta is the Windows-logo key on most PC keyboards.
+- **Windows workspace plumbing:** `kavika-windows-workspace` and the guest launcher (`/usr/local/lib/kavika/launch-windows-vm-linux.py`) now ship in the image, plus an in-image provisioning guide at `/usr/share/kavika/WINDOWS.txt`. The guest itself needs an installed system with the virtualization stack; this live preview carries no Windows.
 - **Installation guard:** normal live installer entry points are hidden/disabled. Underlying upstream installer packages remain; do not bypass the guard or run Anaconda manually.
 
 No Windows guest, browser, cross-OS shared folder, VM lifecycle, persistence or installed-system update path is included. The second desktop is not Windows, and the live image does not meet the full product requirements.

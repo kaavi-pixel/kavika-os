@@ -69,6 +69,26 @@ The later OS requirements O01–O04 are defined in `features.md`; T17–T23 in `
 | OS5: hardware pilot | [#14](https://github.com/kaavi-pixel/kavika-os/issues/14) | Blocked by OS4 and specific test-disk approval |
 | OS6: maintained release | [#15](https://github.com/kaavi-pixel/kavika-os/issues/15) | Blocked by OS5 and release decisions |
 
+## Stage progress (22 October 2026)
+
+A living estimate of distance to a full working OS. Percentage is completion of the stage's own acceptance gate, not calendar effort; the headline figure is the weighted whole.
+
+| Stage | Progress | Done | Remaining |
+|---|---|---|---|
+| OS0: feasibility | **90%** | Preflight, KVM/tooling/Secure Boot/TPM/RAM/disk checks, sanitised evidence | Final target-record tidy-up |
+| OS1: working integration | **40%** | Windows 11 + Firefox (Comet) guest installs, reaches desktop and is self-contained; Meta+F12 workspace switch works in a KVM guest and from USB on the Laptop Studio and the Envy | Wire guest+switch into a booted image; session controller; authenticated shared folder |
+| OS2: packaged prototype | **5%** | Nothing packaged yet | RPMs for controller/assets/defaults; reproducible setup, removal, backup/restore |
+| OS3: development live ISO | **25%** | Diagnostic preview ISO builds and boots to KDE with Test Centre, SELinux enforcing, no failed units | Product live image carrying the Windows workspace, sharing and installer; RPM pipeline |
+| OS4: installed OS | **5%** | Installer guard only | Upstream installer validation, first boot, user creation, networking, recovery, Windows setup assistant |
+| OS5: target laptop pilot | **15%** | Live USB boot on Laptop Studio and HP Envy; Meta+F12, Bluetooth, pointer, audio, camera, Wi-Fi verified | Install to hardware, full acceptance suite, Secure Boot on the target |
+| OS6: release/maintenance | **0%** | Nothing | Licence selection, Fedora branding/trademark review, signing, update/recovery, release notes |
+
+**Headline: about 20% to a full working OS.** The de-risking stages (does the KDE image boot, does the swipe work, does full Windows install) are answered; the product stages (packaging, installer, release, updates) are the bulk of the remaining work.
+
+Rough shape of the remaining 80%: integration wiring and file sharing (~15%), packaging (~15%), installer and first boot (~20%), release/licensing/signing/updates (~15%), hardware install and acceptance on the Envy (~15%).
+
+Update this table whenever a stage gate moves, and keep the percentage tied to the stage's acceptance gate rather than to effort spent.
+
 ## Implementation order
 
 1. Target identification: **HP Envy x360 (1 TB), AMD Ryzen 7 8840HS** (the Surface Pro 8 is dropped). Validate the

@@ -21,7 +21,10 @@ WHAT YOU CAN TEST
   - Two virtual desktops, the Meta+F12 workspace toggle, and the built-in
     three-finger horizontal swipe between them.
   - The Windows workspace launcher (kavika-windows-workspace) once a Windows guest
-    has been provisioned. This image ships no Windows.
+    has been provisioned. This image ships no Windows and no virtualization stack;
+    see WINDOWS.txt for the provisioning path on an installed system.
+  - The system identifying itself as Kavi'ka OS (os-release) while staying a
+    Fedora KDE 44 live image underneath.
   - Display, USB keyboard/mouse, network, sound, battery and sleep manually.
   - A read-only hardware report: model, firmware, KVM, Secure Boot, TPM, display,
     Wi-Fi, Bluetooth, audio, camera nodes and whether native input is detected,

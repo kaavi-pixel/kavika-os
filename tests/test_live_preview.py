@@ -163,5 +163,36 @@ class PreviewTests(unittest.TestCase):
         self.assertIn("if plasma-apply-wallpaperimage --fill-mode preserveAspectFit", session)
         self.assertIn("seq 1 45", session)
 
+    def test_os_release_presents_kavika_identity(self):
+        osr = (ROOT / "image/live-preview/root/usr/lib/os-release").read_text()
+        self.assertIn('NAME="Kavi\'ka OS"', osr)
+        self.assertIn("ID=kavika", osr)
+        self.assertIn("ID_LIKE=fedora", osr)
+        # $releasever must keep resolving, so VERSION_ID stays the Fedora release.
+        self.assertIn("VERSION_ID=44", osr)
+
+    def test_windows_provisioning_guide_ships_and_is_honest(self):
+        guide = (ROOT / "image/live-preview/root/usr/share/kavika/WINDOWS.txt").read_text()
+        self.assertIn("WHAT THIS IMAGE DOES NOT CONTAIN", guide)
+        self.assertIn("windows-install-recipe.md", guide)
+        self.assertIn("NEVER reuse", guide)  # the D23 trap
+        self.assertIn("removable", guide)     # the D16 trap
+
+    def test_builder_ships_the_windows_launcher(self):
+        builder_src = (ROOT / "tools/build-live-preview.py").read_text()
+        self.assertIn('payload / "usr/local/lib/kavika/launch-windows-vm-linux.py"', builder_src)
+        self.assertIn("tools/launch-windows-vm-linux.py", builder_src)
+
+    def test_workspace_script_explains_missing_virtualization_stack(self):
+        script = (ROOT / "image/live-preview/root/usr/local/bin/kavika-windows-workspace").read_text()
+        self.assertIn("qemu-system-x86_64", script)
+        self.assertIn("WINDOWS.txt", script)
+
+    def test_test_centre_wording_is_current(self):
+        tc = (ROOT / "image/live-preview/root/usr/local/bin/kavika-test-centre").read_text()
+        self.assertNotIn("Pro 8 target", tc)
+        self.assertIn("HP Envy install target", tc)
+        self.assertIn("Firefox", tc)
+
 if __name__ == "__main__":
     unittest.main()

@@ -95,6 +95,11 @@ if [ ! -f "$LAUNCHER" ]; then
     say "launcher not found at $LAUNCHER (set KAVIKA_WINDOWS_LAUNCHER)"
     exit 4
 fi
+if ! command -v qemu-system-x86_64 >/dev/null 2>&1; then
+    say "qemu-system-x86_64 is not installed on this system"
+    say "this live preview ships no virtualization stack; provision Windows on an installed Kavi'ka system (see /usr/share/kavika/WINDOWS.txt)"
+    exit 6
+fi
 # The boot ESP is OPTIONAL. Since the D21 fix the installed guest owns its boot files on
 # its own disk, so a provisioned guest starts with no external media attached. Attach an
 # ESP only when one is present, for a guest provisioned before that fix.

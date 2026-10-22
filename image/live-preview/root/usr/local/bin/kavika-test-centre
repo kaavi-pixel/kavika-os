@@ -5,7 +5,7 @@ export PATH=/usr/local/bin:/usr/bin:/bin
 while true; do
     choice=$(kdialog --title "Kavi'ka OS · Live preview" \
         --icon /usr/share/kavika/logo.png \
-        --menu "Surface test preview (Pro 8 target, Laptop Studio test machine). Windows is not installed. Internal installation is disabled." \
+        --menu "Kavi'ka live preview (HP Envy install target, Laptop Studio test machine). Windows is not included; the workspace plumbing ships. Internal installation is disabled." \
         guide "Read the test guide" \
         hardware "View hardware report" \
         save "Save a hardware report" \
@@ -41,8 +41,8 @@ while true; do
                 || kdialog --sorry "Use Meta+F12 or the virtual desktop controls in System Settings."
             ;;
         windows)
-            kdialog --title "Windows is not installed" --msgbox \
-                "This preview has two Linux workspaces to test navigation. The second is labelled Windows (not installed); it is NOT Windows or an emulator. A real Windows guest, Comet, file sharing and VM lifecycle controls are still to be implemented and tested. No Windows software or licence is included."
+            kdialog --title "Windows workspace status" --msgbox \
+                "Desktop 2 is labelled 'Windows (not installed)': it is a LINUX workspace, not Windows.\n\nWhere Windows actually stands:\n- Proven separately in a KVM feasibility guest on the test machine: a full Windows 11 installs to the desktop, boots self-contained (its own disk, no boot stick), and the browser (Firefox) opens in it.\n- This image now ships the plumbing: kavika-windows-workspace and the guest launcher.\n- This live preview carries NO Windows, NO licence, and NO virtualization stack (qemu/swtpm), so the guest cannot run from this session.\n\nSee /usr/share/kavika/WINDOWS.txt for the provisioning path on an installed system."
             ;;
         settings) systemsettings ;;
         close) exit 0 ;;

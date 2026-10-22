@@ -144,9 +144,17 @@ def main() -> int:
                         ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo"))
         logo = repo / "assets/branding/kavi-ka-os-logo.png"
         shutil.copy2(logo, payload / "usr/share/kavika/logo.png")
+        # Ship the Windows guest launcher inside the image so the Windows workspace
+        # has its plumbing; the source of truth stays tools/launch-windows-vm-linux.py.
+        launcher_dst = payload / "usr/local/lib/kavika/launch-windows-vm-linux.py"
+        launcher_dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(repo / "tools/launch-windows-vm-linux.py", launcher_dst)
         normalize_payload_tree(payload)
         for relative in ("usr/local/bin/kavika-hardware", "usr/local/bin/kavika-test-centre",
-                         "usr/local/bin/kavika-live-session", "usr/bin/liveinst", "usr/bin/plasma-welcome"):
+                         "usr/local/bin/kavika-live-session",
+                         "usr/local/bin/kavika-windows-workspace",
+                         "usr/local/lib/kavika/launch-windows-vm-linux.py",
+                         "usr/bin/liveinst", "usr/bin/plasma-welcome"):
             (payload / relative).chmod(0o755)
         for item in stage.rglob("*"):
             if not item.is_symlink():
