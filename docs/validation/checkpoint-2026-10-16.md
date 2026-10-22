@@ -1,6 +1,6 @@
 # Paused development checkpoint: 16 October 2026
 
-> Historical record. Superseded by [the 19 October validation](live-preview-0.1.0.md) and [handoff.md](../../handoff.md).
+> Historical record. Superseded by [the 19 October validation](live-preview-0.1.0.md) and [handoff.md](../../handoff.md). **The target it names is out of date:** the Surface Pro 8 is dropped and the HP Envy x360 is the install target, and the erase permissions this page records for the Pro 8 are **withdrawn, not transferred**. See [target-machines.md](../target-machines.md) and [envy-transfer.md](../envy-transfer.md).
 
 The user requested a clean stopping point, an updated handoff and a GitHub update. Source/docs are checkpointed in the existing repository without changing visibility; no ISO is published.
 

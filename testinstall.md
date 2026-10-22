@@ -159,3 +159,9 @@ Replacing Windows on the Envy is the project's end state, and it is deliberately
 requires the Windows workspace and swipe integration, a real installer, the OS release
 gates, and a **fresh explicit go-ahead at the moment of the write** with the exact disk
 identified first. Nothing in this document authorises it.
+
+As of 21 October 2026 the Windows side has moved on: a KVM **feasibility guest** installs
+full Windows 11 to the desktop, is self-contained (no external boot media needed), and runs
+the user's browser (Firefox). That work is **not** in this preview image, which still ships
+no Windows. The current gate, what carries from the Intel test bed to the AMD Envy, and the
+high-level procedure are in [docs/envy-transfer.md](docs/envy-transfer.md).

@@ -1,6 +1,6 @@
 # Kavi'ka OS: implementation plan
 
-Version 0.8 | 20 October 2026 | Integration roadmap; Surface Pro 8 final target, Surface Laptop Studio Fedora/KVM test machine (preflight complete, KVM usable), diagnostic preview in validation.
+Version 0.8 | 20 October 2026, target line updated 21 October 2026 | Integration roadmap; **HP Envy x360 install target**, Surface Laptop Studio Fedora/KVM test machine (preflight complete, KVM usable), diagnostic preview validated, and a Windows 11 feasibility guest that installs to the desktop and is self-contained.
 
 Execution is paused at the user's request. Resume from [handoff.md](handoff.md); latest-image validation is outstanding, and no physical installation is ready.
 
@@ -41,15 +41,15 @@ The controller should use libvirt state events plus bounded retries, not blind s
 
 ## Hardware envelope
 
-The final install target is model 1983, Surface Pro 8 Wi-Fi ([Microsoft service guide](https://learn.microsoft.com/en-us/surface/service-guides/surface-pro8/surface-pro8-device-information-and-service-parts)). The Intel/x86_64 family is established, but exact CPU/RAM and actual hardware configuration need measurement ([Microsoft specifications](https://support.microsoft.com/en-us/surface/models/surface-pro-8-features-and-specs)). The user reports Windows 11 and a 128 GB factory marking, superseding the earlier 1 TB estimate; installed drive capacity, firmware access and Linux support remain untested.
+The final install target is the **HP Envy x360 (1 TB)** — AMD Ryzen 7 8840HS, 16 GB, Radeon 780M, AMD-V (`svm`) — set by the user on 20 October 2026. It runs Windows today and is the project's build/emulation helper; **its internal disk is in no erase approval**. Exact CPU/RAM/GPU/storage are inherited from earlier records and deliberately not re-measured. Replacing its Windows is the end state, gated on the test machine passing and a fresh explicit go/no-go with the exact disk identified first; see [the Envy transfer and readiness notes](docs/envy-transfer.md).
 
-The Surface Laptop Studio (Core i5-11300H, 16 GiB, Iris Xe, Fedora 44) is a second, Fedora-running test machine with KVM-capable hardware; see [its page](docs/surface-laptop-studio-test-machine.md). It is evidence only, not a stand-in for the Pro 8.
+The Surface Laptop Studio (Core i5-11300H, 16 GiB, Iris Xe, Fedora 44) is the Fedora-running **test machine** with KVM-capable Intel hardware; see [its page](docs/surface-laptop-studio-test-machine.md). Its results are evidence only, **not a stand-in for the AMD Envy**.
 
 The first preview uses stock Fedora with external USB keyboard/mouse, which the user has confirmed are available. Do not allocate a 128 GiB guest on an assumed 128 GB physical disk: collect actual storage/RAM, reserve Linux/update/free-space headroom, then make an explicit Windows storage decision. The 512 GB SSD is currently approved as installer media, not automatically committed to permanent guest storage.
 
-The earlier Ryzen 7 8840HS/Radeon 780M, 16 GB RAM, and storage screenshot belongs to the HP Envy helper. It is not evidence for sizing the Surface guest, and the Laptop Studio's 16 GiB is not the Pro 8's RAM either; collect target facts through [the no-login identification/live-test route](docs/target-machines.md).
+The Ryzen 7 8840HS / Radeon 780M / 16 GB record belongs to the **HP Envy, which is now the install target**. It is inherited from earlier records and deliberately not re-measured, so treat it as **unverified** until the target is measured. Collect target facts through [the target record](docs/target-machines.md).
 
-Historical benchmark proposal for the HP, not an approved Surface configuration:
+Benchmark proposal recorded on the HP helper; **not yet an approved Envy guest configuration**:
 
 - **Guest CPU:** 4 vCPUs; adjust after measuring concurrent host/guest use, not by dedicating all host resources.
 - **Guest memory:** fixed 6 GiB as an initial measurement point, not the accepted final budget; account separately for QEMU, the host, filesystem cache, and integrated graphics. Test 8 GiB if measured host headroom supports it, and reject the profile if full-Windows/Comet use is unsatisfactory.
@@ -60,7 +60,7 @@ Historical benchmark proposal for the HP, not an approved Surface configuration:
 
 Microsoft lists VM requirements including at least 4 GB RAM, 64 GB storage, two virtual processors, Secure Boot capability, and virtual TPM; these are installation minima, not a promise of good performance ([Windows 11 requirements](https://learn.microsoft.com/en-gb/windows/whats-new/windows-11-requirements)). Libvirt documents UEFI, Secure Boot-capable firmware, memory/vCPU configuration, and an emulated TPM backend using `swtpm`; capability flags alone do not prove Secure Boot is enabled in the guest ([libvirt domain format](https://libvirt.org/formatdomain.html)).
 
-Comet specifies 4 GB RAM minimum and 8 GB recommended; this is an environment requirement, not an instruction to add 8 GB to the Windows allocation ([Comet requirements](https://www.perplexity.ai/help-center/comet/en/articles/11734730-operating-system-requirements)). Select a Surface-specific guest allocation only after identifying its memory and CPU; the historical 6 GiB proposal is below that recommendation and is not a validated default.
+The user's browser (Firefox, recorded as “Comet”) needs a working Windows with a reasonable RAM allowance; that is an environment requirement, not an instruction to add 8 GB to the Windows allocation. Select an **Envy-specific** guest allocation only after identifying its memory and CPU; the historical 6 GiB proposal is not a validated default.
 
 ## Milestones and dependencies
 
@@ -91,7 +91,7 @@ This table is the prototype issue map. OS0–OS2 map onto M0–M5; the OS plan a
 
 Tasks:
 
-- Model identification is complete: Surface Pro 8 Wi-Fi, Intel/x86_64 family. Boot the diagnostic preview and collect actual resources/device information; Windows sign-in and the PowerShell tool are not prerequisites.
+- Target identification: **HP Envy x360 (1 TB), AMD Ryzen 7 8840HS** (the Surface Pro 8 is dropped). Boot the preview live and collect actual resource/device information; a Windows sign-in and the PowerShell tool are not prerequisites. Nothing is written to the Envy without a fresh go/no-go.
 - Record source machine role, collection time, tool version/hash, and reviewed fields; keep the historical HP/archive observations separate from Surface results.
 - Record full Windows and Comet as fixed product requirements; gather additional representative workloads for test coverage, not an installation allowlist. Obtain the Windows edition/licensing decision, backup/recovery readiness, and approval for a reversible Linux test route.
 - Check real GPU inventory, firmware virtualisation availability, `/dev/kvm`, storage headroom, and the target release's device support.

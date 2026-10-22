@@ -1,8 +1,8 @@
 # Kavi'ka OS: OS implementation plan
 
-Checkpoint updated 19 October 2026. WSL Ubuntu produced the pinned Fedora-derived diagnostic ISO. A WHPX-accelerated disposable VM booted the previous build to a working KDE desktop; the Test Centre, hardware report, installer guard, SELinux and network checks passed, but the Meta+F12 workspace switch failed because overlay files had CRLF line endings. The source fix is committed and a fixed ISO is rebuilt; it is not yet re-tested. A second machine, a Fedora-running Surface Laptop Studio, is available for KVM and virtual-machine testing; its read-only preflight passed on 20 October 2026 and confirmed KVM is usable. The Surface Pro 8 remains the final target. No Kavi'ka image has booted on a Surface yet.
+Checkpoint updated 21 October 2026. WSL Ubuntu produced the pinned Fedora-derived diagnostic ISO; the CRLF Meta+F12 defect is fixed and the rebuilt `bd8407d6…` image is **re-tested** — the workspace switch works both directions in a KVM guest, from USB on the Laptop Studio, and (user-reported) on the HP Envy. The **HP Envy x360 (1 TB) is the install target** (AMD Ryzen 7 8840HS); the **Surface Laptop Studio** (Fedora, KVM) is the test machine; the **Surface Pro 8 is dropped**. A Windows 11 KVM *feasibility guest* installs to the desktop and is now self-contained, and the user's browser (Firefox) opens in it. No Kavi'ka image has been **installed** on any machine; the Envy has only been booted live from USB.
 
-Version 0.5 | Updated 19 October 2026 for the Surface Pro 8 target, the Surface Laptop Studio test machine and the current diagnostic-preview gate.
+Version 0.5 | Updated 21 October 2026 for the HP Envy x360 target, the Surface Laptop Studio test machine, and the Windows 11 feasibility guest.
 
 ## Product and scope
 
@@ -13,17 +13,14 @@ from scratch. Preserve full general-purpose Windows, including Comet and normal
 user-chosen applications. VM compatibility must be measured, not promised.
 
 The supplied project changes introduce this OS roadmap and repository implementation.
-The user now authorises complete Windows replacement on the Surface Pro 8 (not the Laptop Studio)
-and erasure of an empty 512 GB external SSD for installation media. Identify the
-actual devices before writing. HP Envy disk changes, firmware-security changes,
-Windows purchases, guest provisioning, and a public ISO release are not included.
+The user's stated end state is complete Windows replacement on the **HP Envy x360** (not the Laptop Studio). The earlier approval covering the Surface Pro 8's internal disk is **withdrawn, not transferred** — **no erase approval is on record for the Envy**. An empty 512 GB external SSD is approved as installation media only. Identify the actual devices before writing, and obtain a **fresh explicit go/no-go at the moment of any internal-disk write**. Firmware-security changes, Windows purchases, guest provisioning, and a public ISO release are not included. See [the Envy transfer and readiness notes](docs/envy-transfer.md).
 The user requested this checkpoint's source/docs be updated in the existing public
 repository after the visibility notice; do not change its visibility.
 Preserve the approved logo and original brief unchanged.
 
 ## Architecture
 
-- Base: Fedora KDE 44 `44-1.7.x86_64` is pinned for the diagnostic preview; Surface Pro 8 Wi-Fi (final target) and Surface Laptop Studio (Fedora test machine) are Intel/x86_64 Tiger Lake machines. Hardware approval remains pending; see the sourced [target record](docs/target-machines.md).
+- Base: Fedora KDE 44 `44-1.7.x86_64` is pinned for the diagnostic preview. Target: **HP Envy x360 (AMD Ryzen 7 8840HS, AMD-V / `svm`)**; test machine: **Surface Laptop Studio** (Fedora, Intel Tiger Lake, `vmx`); the Surface Pro 8 is dropped. Platform specifics do **not** transfer between AMD and Intel; see the sourced [target record](docs/target-machines.md).
 - Windows: QEMU/KVM and libvirt, with SPICE as the first viewer candidate.
 - Integration: an unprivileged session controller, desktop rules, explicit escape,
   and a private authenticated shared folder. Windows starts on demand.
@@ -74,23 +71,26 @@ The later OS requirements O01–O04 are defined in `features.md`; T17–T23 in `
 
 ## Implementation order
 
-1. Model identification is complete: Surface Pro 8 Wi-Fi, model 1983. Validate the
-   x86_64 diagnostic preview in a disposable VM, then collect live Surface
-   resources/device information without depending on Windows or PowerShell.
-   Record source-machine role, UTC time and tool revision/hash; earlier HP/archive
-   results do not establish Surface hardware.
-2. Use the approved empty 512 GB external SSD as media and the Surface's internal
-   drive as the eventual installation destination. Its factory marking is 128 GB,
-   replacing the earlier 1 TB assumption; measure actual capacity and identities
-   before writes and keep the HP Envy internal drive untouched. Record guest
+1. Target identification: **HP Envy x360 (1 TB), AMD Ryzen 7 8840HS** (the Surface Pro 8 is dropped). Validate the
+   x86_64 diagnostic preview in a disposable VM, then collect live **Envy**
+   resource/device information without depending on Windows or PowerShell.
+   Record source-machine role, UTC time and tool revision/hash; results on the
+   Intel Laptop Studio do not establish Envy hardware.
+2. Use the approved empty 512 GB external SSD as media; the **HP Envy's internal
+   1 TB drive** is the eventual installation destination, but it is **in no erase
+   approval**. Measure actual capacity and identities before any write, and obtain
+   a fresh explicit go/no-go at the moment of the write. Record guest
    Windows edition/licensing and additional representative workloads. An
    existing Windows activation is not proof of guest licensing rights.
 3. On that Linux environment, check `/dev/kvm`, GPU inventory, touchpad four-finger
    events, Wi-Fi, keyboard, audio, brightness, touch/pen and suspend. Measure
    VM-off CPU, memory and battery baseline and record exact software versions.
 4. Manually validate a fresh Windows guest and viewer before writing provisioning
-   automation. Choose a Surface-specific memory/storage budget against Comet and
-   concurrent Linux work; do not reuse the HP's 6 GiB/128 GiB proposal.
+   automation. A full Windows 11 guest already installs to the desktop and is
+   self-contained; the remaining gap is wiring it into the image with the
+   workspace/swipe path. Choose an **Envy-specific** memory/storage budget against
+   the user's browser and concurrent Linux work; do not reuse the old
+   6 GiB/128 GiB proposal.
 5. Implement and test a narrow controller with libvirt state events, bounded
    timeouts, duplicate-launch protection and reconnect. Never force power-off on
    timeout. Add workspace rules only against the validated Plasma API.

@@ -4,9 +4,9 @@
 
 A Linux-first desktop experience with a real Windows workspace one four-finger swipe away. The goal is to keep both environments available and make moving files between them straightforward.
 
-The Windows side must be full, general-purpose Windows, including Comet and normal user-chosen app installation, not a restricted collection of supported apps. A test matrix measures compatibility; it must not become an app allowlist, and a VM limitation must be reported rather than silently redefined as out of scope.
+The Windows side must be full, general-purpose Windows, including Comet and normal user-chosen app installation, not a restricted collection of supported apps. A test matrix measures compatibility; it must not become an app allowlist, and a VM limitation must be reported rather than silently redefined as out of scope. (The user's shorthand **"Comet" means the browser they use — Firefox** — not a specific third-party product; it opens in the feasibility guest.)
 
-**Status: development checkpoint, not an installation release.** A Fedora-based diagnostic ISO and its source are implemented. The previous build reached a working KDE desktop in a disposable VM, and the Test Centre, hardware report, installer guard, SELinux and networking checks passed there. Its Meta+F12 workspace switch failed because of a line-ending defect; that is fixed, and a locally rebuilt image (SHA-256 `bd8407d6…`) has been booted both in a disposable KVM guest ([boot record](docs/validation/vm-boot-2026-10-20-laptop-studio.md)) and from USB on the Surface Laptop Studio, where the switch worked every time alongside pointer input, speakers, microphone, camera and Wi-Fi ([hardware boot record](docs/validation/hardware-boot-2026-10-20-laptop-studio.md)). The Surface Pro 8 has still never been booted with Kavi'ka. **The HP Envy x360 has now been booted live from USB, on 21 October 2026**, with Meta+F12 and Bluetooth both reported working ([record](docs/validation/hardware-boot-2026-10-21-envy.md)); it was not installed to. No ISO is approved for flashing. Windows/Comet, cross-OS integration, a Surface-specific kernel and supported installation are not included; on the Windows side a feasibility guest completed a full Windows 11 installation and reached the desktop (bootstrapped from an ESP boot image with a hardware-requirement bypass).
+**Status: development checkpoint, not an installation release.** A Fedora-based diagnostic ISO and its source are implemented. The previous build reached a working KDE desktop in a disposable VM, and the Test Centre, hardware report, installer guard, SELinux and networking checks passed there. Its Meta+F12 workspace switch failed because of a line-ending defect; that is fixed, and a locally rebuilt image (SHA-256 `bd8407d6…`) has been booted both in a disposable KVM guest ([boot record](docs/validation/vm-boot-2026-10-20-laptop-studio.md)) and from USB on the Surface Laptop Studio, where the switch worked every time alongside pointer input, speakers, microphone, camera and Wi-Fi ([hardware boot record](docs/validation/hardware-boot-2026-10-20-laptop-studio.md)). The Surface Pro 8 (now dropped as a target) has never been booted with Kavi'ka. **The HP Envy x360 has now been booted live from USB, on 21 October 2026**, with Meta+F12 and Bluetooth both reported working ([record](docs/validation/hardware-boot-2026-10-21-envy.md)); it was not installed to. No ISO is approved for flashing. Cross-OS integration, a Windows guest inside the shipped image, a Surface-specific kernel and supported installation are not included; on the Windows side a **feasibility guest** completed a full Windows 11 installation, reached the desktop, **runs the user's browser (Firefox, recorded in the spec as "Comet")**, and is now **self-contained** — it boots with only its own disk attached, no external boot media (D21 closed). See the [Windows workspace notes](docs/windows-workspace.md) and the [Windows install recipe](docs/windows-install-recipe.md). The next milestone is the [HP Envy readiness gate](docs/envy-transfer.md).
 
 See [the preview guide](docs/live-preview.md), [build instructions](docs/build.md), and [validation record](docs/validation/live-preview-0.1.0.md) before using an image. A desktop named “Windows (not installed)” is a Linux workspace, not a Windows implementation.
 
@@ -22,6 +22,7 @@ See [the preview guide](docs/live-preview.md), [build instructions](docs/build.m
 - [Build instructions](docs/build.md): pinned source, builder prerequisites, and validation limits.
 
 - [Target machines](docs/target-machines.md): the HP Envy install target, the Laptop Studio test machine, the dropped Surface Pro 8, permissions and the test route.
+- [Envy transfer and readiness](docs/envy-transfer.md): what carries over to the HP Envy, what does not, and the gate before its Windows is replaced.
 - [Surface Laptop Studio test machine](docs/surface-laptop-studio-test-machine.md): the Fedora machine used for KVM and VM testing, how it differs from the Pro 8, and the safe test steps.
 - [Archive review](docs/review-upload.md): changes reviewed, documentation corrections, and verification limits.
 - [Bug tracker](bugtracker.md): confirmed-defect policy, untested risks, and verification checklist.
@@ -68,7 +69,7 @@ Wine is optional for individual applications; it is not the Windows workspace. W
 
 The user-selected project logo is stored at [`assets/branding/kavi-ka-os-logo.png`](assets/branding/kavi-ka-os-logo.png). The supplied image is preserved unchanged; the README only sets its display width.
 
-## Targets: HP Envy (final), Surface Laptop Studio (test), Surface Pro 8 (pending)
+## Targets: HP Envy (final), Surface Laptop Studio (test), Surface Pro 8 (dropped)
 
 | Machine | Role |
 |---|---|

@@ -43,7 +43,7 @@ Environment overrides:
   KAVIKA_WINDOWS_VM_DIR    guest directory        (default ~/.local/share/kavika/windows)
   KAVIKA_WINDOWS_DESKTOP   desktop number, 1-based (default 2)
   KAVIKA_WINDOWS_LAUNCHER  launcher path          (default /usr/local/lib/kavika/...)
-  KAVIKA_WINDOWS_BOOT_ESP  boot ESP image         (default <vm dir>/boot-esp.img)
+  KAVIKA_WINDOWS_BOOT_ESP  optional boot ESP image (default <vm dir>/boot-esp.img; only a pre-D21 guest needs it)
   KAVIKA_WINDOWS_MEM_MIB   guest RAM in MiB       (default 5120)
 EOF
 }
@@ -95,17 +95,16 @@ if [ ! -f "$LAUNCHER" ]; then
     say "launcher not found at $LAUNCHER (set KAVIKA_WINDOWS_LAUNCHER)"
     exit 4
 fi
-if [ ! -f "$BOOT_ESP" ]; then
-    say "boot ESP not found at $BOOT_ESP (set KAVIKA_WINDOWS_BOOT_ESP)"
-    say "the guest cannot start without it: see the limitation in docs/windows-install-recipe.md"
-    exit 5
+# The boot ESP is OPTIONAL. Since the D21 fix the installed guest owns its boot files on
+# its own disk, so a provisioned guest starts with no external media attached. Attach an
+# ESP only when one is present, for a guest provisioned before that fix.
+launcher_args=(--vm-dir "$VM_DIR" --reuse --display gtk --full-screen
+               --guest-mib "$MEM_MIB" --allow-reboot)
+if [ -f "$BOOT_ESP" ]; then
+    launcher_args+=(--esp-image "$BOOT_ESP")
+else
+    say "no boot ESP at $BOOT_ESP; starting the guest from its own disk (expected: a self-contained guest, D21)"
 fi
 
 say "starting the Windows guest full-screen on desktop $WINDOWS_DESKTOP"
-exec "$PYTHON" "$LAUNCHER" \
-    --vm-dir "$VM_DIR" \
-    --reuse \
-    --display gtk --full-screen \
-    --esp-image "$BOOT_ESP" \
-    --guest-mib "$MEM_MIB" \
-    --allow-reboot
+exec "$PYTHON" "$LAUNCHER" "${launcher_args[@]}"

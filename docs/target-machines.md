@@ -48,7 +48,7 @@ The immediate deliverable is still a private live diagnostic preview. The previe
 | **Test machine** | Surface Laptop Studio running Fedora 44. Internal disk and firmware settings are **not** in any erase approval |
 | Envy internal disk | Currently holds Windows and is the build/emulation helper. **Must not be written, repartitioned or erased** without a fresh explicit go/no-go. No approval is on record for it |
 | Envy specifications | Inherited from earlier records: Ryzen 7 8840HS, 16 GB, Radeon 780M, 1 TB. Deliberately **not** re-measured yet; treat as unverified |
-| Windows workspace | Full Windows including Comet remains required; absent from the preview |
+| Windows workspace | Full Windows including the user's browser (recorded as "Comet"; Firefox) is **verified working in a KVM feasibility guest** on the Laptop Studio — installed to the desktop and self-contained (D21). It is still **absent from the bootable preview image**, which ships no Windows |
 | Media | A 4 GB USB stick already written with the preview (payload verified on the stick). No other medium is claimed |
 | External input | USB keyboard and mouse plus connection hardware are available |
 | Firmware, Secure Boot | No firmware-security changes are authorised on any machine. The Laptop Studio has Secure Boot disabled and its platform in Setup Mode; the Envy's state is unmeasured |
@@ -61,8 +61,8 @@ The user's device serial is deliberately excluded from the repository and diagno
 ## Test route
 
 1. **Test on the Laptop Studio**, which has KVM-capable hardware and now runs the preview from USB. Done: preflight, KVM guest boot, and a physical USB boot with the workspace switch working repeatedly.
-2. **Fill the product gaps while the test machine is the target:** full Windows 11 plus Comet in a KVM guest (`tools/launch-windows-vm-linux.py`), cross-OS switching by gesture as well as shortcut, and file sharing between the two sides.
-3. **Only when it works perfectly on the Laptop Studio**, prepare the HP Envy: identify its exact internal disk, back up anything that matters, and treat replacing its Windows as a separate destructive step needing a fresh explicit go/no-go.
+2. **Fill the product gaps while the test machine is the target:** the Windows guest works (`tools/launch-windows-vm-linux.py`) — a full Windows 11 installed to the desktop, now **self-contained** (D21), with the user's browser (Firefox, recorded as "Comet") opening (D24). Still outstanding: cross-OS switching by gesture, wiring the guest into the image, and file sharing between the two sides.
+3. **Only when it works perfectly on the Laptop Studio**, prepare the HP Envy: identify its exact internal disk, back up anything that matters (including the BitLocker recovery key), and treat replacing its Windows as a separate destructive step needing a fresh explicit go/no-go. See [the Envy transfer and readiness notes](envy-transfer.md).
 4. Then install on the Envy and validate there. Nothing measured on the Intel/Tiger Lake Laptop Studio should be assumed to hold on the AMD Envy.
 
 Windows 11's documented minimums are 64 GB of storage and 4 GB of RAM before practical headroom ([Microsoft requirements](https://learn.microsoft.com/en-gb/windows/whats-new/windows-11-requirements)). The Envy's 1 TB and 16 GB make a full Windows guest far more comfortable than the dropped Pro 8 route would have been, but the guest sizing is not decided and must be measured, not assumed.
@@ -83,4 +83,4 @@ Previously recorded as "why not move the Pro 8's internal SSD into the HP?". It 
 
 The diagnostic preview pins Fedora KDE 44 `44-1.7.x86_64`, preserves the upstream kernel/base filesystem and adds an original-logo live overlay. Its build provenance and test results are in [the validation record](validation/live-preview-0.1.0.md); end-user instructions are in [the preview guide](live-preview.md).
 
-It contains no Windows guest or Comet and does not implement cross-OS switching, shared folders or persistent installation. Successful VM boot would not pass Surface hardware, Windows or installer gates.
+It contains no Windows guest (the feasibility guest is separate and is not shipped) and does not implement cross-OS switching, shared folders or persistent installation. Successful VM boot would not pass target hardware, Windows or installer gates.

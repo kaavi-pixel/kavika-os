@@ -52,8 +52,9 @@ reach for if a gesture misbehaves.
 binary's own help text rather than from memory.
 
 `--reuse` deliberately does **not** attach the install ISO and does **not** force the boot
-order at the CD; a provisioned guest boots its own disk. It still expects the boot ESP,
-because of the limitation below.
+order at the CD; a provisioned guest boots its own disk. It attaches the boot ESP **only if
+one exists**: since the D21 fix a provisioned guest owns its boot files on its own disk, so
+no external media is needed to start it.
 
 ## Verified, and not
 
@@ -65,7 +66,8 @@ because of the limitation below.
 - `--reuse` refuses a directory that is not a provisioned guest, with a clear message.
 - `kavika-windows-workspace` passes `bash -n`, prints usage, exits 2 on an unknown argument,
   and exits 3 with actionable guidance when no guest is provisioned.
-- 41 unit tests pass.
+- 50 unit tests pass, including that a **self-contained guest starts without a boot ESP** and
+  that an ESP is attached only when one is present.
 
 **Not verified. Do not claim otherwise:**
 
@@ -94,13 +96,16 @@ any Fedora KDE install.
 6. Repeat with Meta+F12, which should always work.
 7. Record what happened, including failures. A gesture that misbehaves is a result.
 
-## The open limitation
+## The open limitation — resolved 21 October 2026
 
-The guest depends on an attached boot ESP, because Windows Setup services the boot files to
-the volume it booted from rather than to the target disk's own ESP. That is why
-`kavika-windows-workspace` insists the ESP image exists before starting anything. Closing it
-properly is an open item; the attempted automatic fix made things worse and is documented in
-[windows-install-recipe.md](windows-install-recipe.md).
+The guest used to depend on an attached boot ESP, because Windows Setup serviced the boot
+files to the volume it booted from rather than to the target disk's own ESP. **That is
+closed (D21).** The answer file now assigns the target ESP drive letter `S:` and runs a
+plain `bcdboot C:\Windows /s S: /f UEFI` in the `specialize` pass, so the NVMe's own ESP is
+populated and the guest boots with only its own disk attached (verified in
+`Kavika-Win11-Install11`; see [windows-install-recipe.md](windows-install-recipe.md) and
+[bugtracker.md](../bugtracker.md) D21). `kavika-windows-workspace` therefore treats the boot
+ESP as **optional** and starts a provisioned guest without one.
 
 ## Status
 

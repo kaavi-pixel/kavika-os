@@ -1,8 +1,8 @@
 # Kavi'ka OS: features v2
 
-Version 0.9 | 20 October 2026 | Product specification; Surface Pro 8 final target, Surface Laptop Studio Fedora test machine with the read-only preflight complete (KVM usable), diagnostic live preview built.
+Version 0.9 | updated 21 October 2026 | Product specification. Install target: **HP Envy x360 (1 TB)**; test machine: Surface Laptop Studio (Fedora, KVM); the Surface Pro 8 is dropped. Diagnostic live preview built; a Windows 11 feasibility guest installs to the desktop and is self-contained.
 
-Work resumed on 19 October 2026. The previous diagnostic image reached a working KDE desktop in a disposable VM but its Meta+F12 workspace switch failed (line-ending defect, fixed in source and rebuilt, not yet re-tested). See [handoff.md](handoff.md) before treating any image as ready for a Surface.
+Work resumed on 19 October 2026. The previous diagnostic image reached a working KDE desktop in a disposable VM but its Meta+F12 workspace switch failed (line-ending defect). The fix is rebuilt as `bd8407d6…` and **re-tested**: the switch works both directions in a KVM guest, from USB on the Laptop Studio, and (user-reported) on the HP Envy. See [handoff.md](handoff.md) before treating any image as ready.
 
 This expands the supplied brief into testable requirements without replacing its original goals. Technical choices and numerical targets below are proposals, not measured results or additional user commitments.
 
@@ -26,6 +26,8 @@ The Windows workspace must be a full, general-purpose Windows installation, not 
 
 The user must be able to install and use applications of their choice, with Comet explicitly required. A compatibility test list is evidence coverage, never an allowlist limiting what may be installed; “everything” does not mean every program is preinstalled or that the current laptop's files and apps have already been migrated.
 
+> Naming note, 21 October 2026: the user clarified that “Comet” is their shorthand for the browser they use, and that it is **Firefox** — not a specific third-party product. Read the requirement as “the user's browser (Firefox)”. It **opens in the Windows feasibility guest** (D24, user-reported); the full F15/T16 flow is not yet tested.
+
 Full Windows functionality is the product requirement; universal VM compatibility is not an established technical fact. If an important workload fails because of the proposed VM architecture, investigate an architecture change and discuss the trade-off rather than silently narrowing the requirement.
 
 ## Goals
@@ -38,19 +40,19 @@ Full Windows functionality is the product requirement; universal VM compatibilit
 
 ### First physical target
 
-The final install target is Surface Pro 8 Wi-Fi, identified by the user's model 1983 marking ([Microsoft service guide](https://learn.microsoft.com/en-us/surface/service-guides/surface-pro8/surface-pro8-device-information-and-service-parts)). The user reports Windows 11 and a 128 GB factory marking, replacing the earlier 1 TB estimate; actual installed capacity remains unmeasured. The user authorises replacing its Windows installation and erasing an empty 512 GB external SSD for media; precise disk identification remains mandatory before writing either disk.
+The final install target is the **HP Envy x360 (1 TB)** — AMD Ryzen 7 8840HS, 16 GB, Radeon 780M, AMD-V (set by the user on 20 October 2026; the specs are inherited from earlier records and deliberately not re-measured). It runs Windows today and is the project's build/emulation helper. **Its internal disk is in no erase approval.** Replacing its Windows is the stated end state, gated on the test machine passing and a **fresh explicit go/no-go with the exact disk identified first**. See [the Envy transfer and readiness notes](docs/envy-transfer.md).
 
-The first test machine is the Surface Laptop Studio, which already runs Fedora and has KVM-capable Intel hardware ([test-machine page](docs/surface-laptop-studio-test-machine.md)). Its results are evidence for the Pro 8, never proof.
+The test machine is the **Surface Laptop Studio** (Core i5-11300H, 16 GB, 256 GB NVMe), which already runs Fedora and has KVM-capable Intel hardware ([test-machine page](docs/surface-laptop-studio-test-machine.md)). Its results are evidence only, never proof for the AMD Envy.
 
-The Windows account password is unknown; signing in is not a prerequisite for the live-test route. The model family is Intel/x86_64, but exact CPU, RAM, installed GPU configuration and storage need live measurement ([Microsoft specifications](https://support.microsoft.com/en-us/surface/models/surface-pro-8-features-and-specs)). External USB keyboard and mouse are available; no resource or compatibility claims transfer from the HP.
+The **Surface Pro 8 is dropped as a target**; its earlier approvals are withdrawn rather than transferred. Its record is retained for reference only: model 1983 Wi-Fi, owner-reported 128 GB factory marking, CPU/RAM/SSD never measured.
 
-The external medium does not limit the size of the installation on the Surface's internal drive. See [the Surface test target](docs/target-machines.md) for scope and the staged test route.
+External USB keyboard and mouse are available. No resource or compatibility claim transfers between the Intel test machine and the AMD target.
 
 ### What the first preview implements
 
 The 0.1.0 live preview pins Fedora KDE 44 x86_64, adds the unchanged logo, Test Centre, a privacy-filtered hardware report and a `Meta+F12` two-desktop demonstration. The second desktop is labelled “Windows (not installed)”; both desktops are Linux. Implementation and runtime validation are tracked separately in [the preview evidence](docs/validation/live-preview-0.1.0.md).
 
-Windows, Comet, a guest VM, cross-OS file sharing, four-finger acceptance, persistence and installation are not provided by this preview. Full Windows remains the requirement; diagnostic media is an earlier testing aid, not a scope reduction or completion of F01–F15/O01–O04.
+Windows, the user's browser, a guest VM, cross-OS file sharing, four-finger acceptance, persistence and installation are not provided by this preview. (The Windows side is **proven separately** in a KVM feasibility guest — installed, self-contained, browser opening — but that work is not in this image.) Full Windows remains the requirement; diagnostic media is an earlier testing aid, not a scope reduction or completion of F01–F15/O01–O04.
 
 Surface Pro 8 native Type Cover/touchpad, touch and pen are listed with a custom-kernel requirement by linux-surface, so the stock-kernel first preview uses the available external inputs ([linux-surface matrix](https://github.com/linux-surface/linux-surface/wiki/Supported-Devices-and-Features)). A custom-kernel/signing path requires separate implementation and testing; no automatic firmware changes are permitted.
 
@@ -138,7 +140,7 @@ All values are provisional acceptance targets. Record the baseline and raw test 
 |---|---|---|
 | Which Windows edition and valid VM licensing route will be used? | User | Blocks guest provisioning and RDP selection, not documentation. |
 | Which additional workloads should be tested first beyond the full Windows baseline and Comet? | User | Guides test coverage; does not restrict app installation. Comet is already required. |
-| What are the actual Surface RAM, CPU and installed disk capacity/identity? | User / implementer | Model 1983/Pro 8 Wi-Fi and Intel/x86_64 family are established; live measurements still block guest sizing and destructive installation. Erase scope is already approved. |
+| What are the actual target RAM, CPU and installed disk capacity/identity? | User / implementer | The HP Envy x360 (1 TB) is the target; its specs are inherited, not measured, and the surface-level Pro 8 record is dropped. **No erase approval covers the Envy** — identify the exact disk and obtain a fresh go/no-go before any write. |
 | Does the actual touchpad expose reliable four-finger gestures under Linux? | Implementer | Blocks F02. Touchscreen “10 touch points” in the screenshot does not answer this. |
 | Which supported Linux/KDE release and viewer build pass the hardware gates? | Implementer | Blocks a pinned installation guide. |
 | Is optional clipboard sharing desired, and should Windows start at login? | User | Non-blocking; defaults are clipboard off and Windows started on demand. |
@@ -163,4 +165,4 @@ This choice does not guarantee that concurrent Linux and Windows use will feel l
 
 Looking Glass documents a requirement for two usable GPU devices, including some integrated/discrete or virtual-GPU combinations ([Looking Glass requirements](https://looking-glass.io/docs/B7/requirements/)). No such configuration has been verified on the Surface, so it remains deferred from the baseline.
 
-Comet's published requirements include 64-bit Windows 10/11, 4 GB minimum RAM and 8 GB recommended; those OS requirements do not certify the proposed VM/display configuration ([Comet operating system requirements](https://www.perplexity.ai/help-center/comet/en/articles/11734730-operating-system-requirements)). Test it inside the guest with Linux concurrently active before claiming it works in Kavi'ka OS.
+The user's browser (**Firefox**, recorded in this spec as “Comet”) needs a working 64-bit Windows with a reasonable RAM allowance; that says nothing about whether the proposed VM/display configuration is adequate. It already **opens in the Windows feasibility guest**, but test it inside the guest with Linux concurrently active before claiming it works well in Kavi'ka OS.

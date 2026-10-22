@@ -1,10 +1,10 @@
 # Kavi'ka OS: Surface live-preview guide
 
-Version 0.1.0 | Private diagnostic preview | Guide updated 19 October 2026
+Version 0.1.0 | Private diagnostic preview | Guide updated 21 October 2026
 
-**Two machines:** the Surface Laptop Studio (Fedora, KVM-capable) is the first test machine and the Surface Pro 8 is the final target. Test in a disposable VM on the Laptop Studio first ([steps](surface-laptop-studio-test-machine.md)), then boot from external media. Laptop Studio results are evidence for the Pro 8, never proof.
+**The machines:** the **HP Envy x360 (1 TB)** is the install target; the **Surface Laptop Studio** (Fedora, KVM-capable) is the test machine; the **Surface Pro 8 is dropped**. This guide covers booting the preview on a Surface; to boot and evaluate it on the Envy, use [testinstall.md](../testinstall.md). Test in a disposable VM on the Laptop Studio first ([steps](surface-laptop-studio-test-machine.md)), then boot from external media. Laptop Studio results are evidence, never proof for the AMD Envy.
 
-This is a draft guide for the first Linux hardware test, not the finished Linux/Windows OS. **Do not flash at this checkpoint:** the latest rebuilt image has not been booted yet, and its predecessor failed the Meta+F12 workspace test. Follow the [handoff](../handoff.md) before resuming, then read the matching [validation record](validation/live-preview-0.1.0.md); an image being built is not proof that its desktop or your Surface works.
+**Do not flash this as an installation.** The rebuilt image (SHA-256 `bd8407d6…`) **has been booted** — in a KVM guest, from USB on the Laptop Studio, and live from USB on the Envy — and its Meta+F12 workspace switch works; but it is a diagnostic preview with no installer and no Windows guest. Follow the [handoff](../handoff.md) before resuming, then read the matching [validation record](validation/live-preview-0.1.0.md); an image being built is not proof that your target works.
 
 ## What is in it
 
@@ -14,11 +14,11 @@ This is a draft guide for the first Linux hardware test, not the finished Linux/
 - **Navigation prototype:** two Linux desktops, “Linux” and “Windows (not installed),” with `Meta+F12` intended to toggle them. Meta is the Windows-logo key on most PC keyboards.
 - **Installation guard:** normal live installer entry points are hidden/disabled. Underlying upstream installer packages remain; do not bypass the guard or run Anaconda manually.
 
-No Windows guest, Comet, cross-OS shared folder, VM lifecycle, persistence or installed-system update path is included. The second desktop is not Windows, and the live image does not meet the full product requirements.
+No Windows guest, browser, cross-OS shared folder, VM lifecycle, persistence or installed-system update path is included. The second desktop is not Windows, and the live image does not meet the full product requirements.
 
-## Prepare on the HP Envy
+## Prepare the media
 
-Use the approved empty 512 GB external SSD only. Keep the Surface's internal SSD in the Surface, unplug other external storage, and never choose the HP's internal drive.
+Use a normal USB flash drive (a 4 GB stick is enough). Keep any laptop's internal drive out of the write — never choose an internal device, and on Windows hosts use the **HP Envy** only as a helper, choosing the external stick explicitly.
 
 1. Download the ISO and its matching `.iso.sha256` file from the supplied deliverables. Do not rename a ZIP to `.iso` or simply copy the ISO onto the SSD as a normal file.
 2. In PowerShell, from the download folder, verify the file using the command below. Its SHA-256 must exactly match the 64-character value in the supplied checksum file; stop on any mismatch.
@@ -110,6 +110,4 @@ sudo bash tools/write-preview-to-usb.sh \
 
 ## What follows
 
-Actual memory/storage determine whether this Surface can comfortably run Linux plus full Windows and Comet. Do not reuse the old HP allocation or assume 1 TB; a 128 GiB Windows disk is not a safe default for a device marked 128 GB.
-
-Next work is native Surface input/kernel validation, measured Windows feasibility and an installer tested on disposable disks. Your permission to erase the Surface and external SSD is preserved; it does not replace those validation steps or authorise changing the HP disk or firmware security.
+Actual memory/storage determine whether a machine can comfortably run Linux plus full Windows and the user's browser. On the **HP Envy (16 GB host RAM, 1 TB)** a full Windows guest is far more comfortable than the dropped Pro 8 route would have been, but the guest sizing is **not decided** and must be measured, not assumed. Next work is measured Windows feasibility on the installed OS, an installer tested on disposable disks, and the [Envy readiness gate](envy-transfer.md). No permission is on record to erase the Envy's disk, and no firmware-security change is authorised.
