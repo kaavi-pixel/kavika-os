@@ -52,17 +52,20 @@ def digest(path: Path) -> str:
     return h.hexdigest()
 
 
-def grub_netinst(text: str, test_target: str | None = None) -> str:
+def grub_netinst(text: str, test_target: str | None = None, test_consent: str | None = None) -> str:
     """Add an automated 'Install Kavi'ka OS' entry that points at the bundled kickstart.
 
-    The entry is inserted first and becomes the default. When `test_target` is set (e.g.
-    /dev/vda for a disposable KVM run) the consent tokens kavika.target=/kavika.confirm= are
-    baked in; without them the installer's %pre refuses (fail-closed).
+    The entry is inserted first and becomes the default. `test_consent` bakes an arbitrary
+    kernel-cmdline consent string verbatim (for exercising the refusal matrix); otherwise
+    `test_target` bakes matching kavika.target/confirm tokens. With neither, the installer's
+    %pre refuses (fail-closed).
     """
     if f"inst.stage2=hd:LABEL={LABEL}" not in text:
         raise ValueError("Unexpected upstream netinst GRUB configuration")
     extra = ""
-    if test_target:
+    if test_consent:
+        extra = " " + test_consent.strip()
+    elif test_target:
         extra = f" kavika.target={test_target} kavika.confirm={test_target}"
     entry = (
         'menuentry "Install Kavi\'ka OS (automated)" --class fedora --class gnu-linux --class gnu --class os {\n'
@@ -105,6 +108,7 @@ def main() -> int:
     parser.add_argument("--base", type=Path, required=True, help="verified Fedora 44 netinst ISO")
     parser.add_argument("--output", type=Path, required=True, help="new .iso output path")
     parser.add_argument("--test-target", help="bake kavika.target/confirm for a disposable KVM run (e.g. /dev/vda)")
+    parser.add_argument("--test-consent", help="bake an arbitrary kernel-cmdline consent string verbatim (refusal-matrix testing)")
     parser.add_argument("--repo-dir", type=Path, help="bundle this local repo (repodata + *.rpm) onto the media and switch the source to cdrom")
     args = parser.parse_args()
     base = args.base.resolve(strict=True)
@@ -154,8 +158,8 @@ def main() -> int:
             upstream = work / ("upstream-" + rel.replace("/", "-"))
             extract_grub(base, upstream, iso_path)
             patched = work / ("patched-" + rel.replace("/", "-"))
-            patched.write_text(grub_netinst(upstream.read_text(encoding="utf-8"), args.test_target),
-                               encoding="utf-8")
+            patched.write_text(grub_netinst(upstream.read_text(encoding="utf-8"), args.test_target,
+                                            args.test_consent), encoding="utf-8")
             subprocess.run([grub_check, str(patched)], check=True)
             grub_files[rel] = patched
 

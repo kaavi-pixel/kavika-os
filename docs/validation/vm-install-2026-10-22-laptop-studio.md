@@ -13,8 +13,10 @@ installed system booted with the Kavi'ka identity and the virtualization stack.
 - Base: `Fedora-Everything-netinst-x86_64-44-1.7.iso`
   (sha256 `bd285201494dd0ba09b54d05ac707de1401668b8512a573edb5922dcf9d7067e`).
 - Installer ISO: `build/Kavika-OS-0.1.0-netinst-installer.iso`
-  sha256 `6df5fe2537594656d0ef81cef4d61c3996ed12d35245149f1bcc0cd29e2591b6`
   (offline variant: bundled repo of 2455 RPMs + comps.xml, source = `cdrom`).
+  The install proof below used build `6df5fe2537594656d0ef81cef4d61c3996ed12d35245149f1bcc0cd29e2591b6`;
+  the current build is `160b805824705d13ac646d5bc1440702cc0af0699ff19fa6dc3b7ce9fa1304d5`
+  (identical except the `%pre` now prints refusal reasons to the serial console).
 - Kickstart: `image/install/kavika-net.ks` (bundled as `/kavika-net.ks`).
 - Target: `/dev/vda` (256 GiB virtio qcow2), consented via the test GRUB entry's
   `kavika.target=/dev/vda kavika.confirm=/dev/vda`.
@@ -70,6 +72,40 @@ Welcome to Kavi'ka OS 0.1.0 (Live Preview, Fedora KDE 44)!
   was added to the local repo (`createrepo_c -g comps.xml`).
 - **offline repo was missing boot packages** — `grub2-tools-extra`/`grubby`/`dosfstools`
   (anaconda's bootloader mandatory set) were added.
+
+## T19 evidence — attached non-selected disk unchanged
+
+The installer was run with **two** disks attached in the same guest: the target (`/dev/vda`,
+256 GiB virtio qcow2) and a fixture (`/dev/vdb`, 256 MiB raw) whose content was hashed
+before and after.
+
+- fixture before: `a6d72ac7690f53be6ae46ba88506bd97302a093f7108472bd9efc3cefda06484`
+- fixture after:  `a6d72ac7690f53be6ae46ba88506bd97302a093f7108472bd9efc3cefda06484`
+- `sha256sum -c`: **OK** ; target after: 14.6 GiB (the install ran)
+
+Anaconda's log shows the layout was created on `/dev/vda` only (`Creating ext4 on
+/dev/vda3…vda5`, `efi on /dev/vda1`) — `/dev/vdb` was never touched. The before/after hash
+is the evidence, not the installer's exit code.
+
+## Refusal matrix (validation rung 2)
+
+Each refusal ISO boots the automated installer with bad consent baked into the install
+entry (via `build-netinst-install.py --test-consent "<string>"`), with the same target +
+fixture attached. In every case the `%pre` refused, printed its reason to the serial
+console, and Anaconda terminated **before any storage write** — the target qcow2 stayed at
+196 KiB and no `Creating ext4` line appeared:
+
+| Case | Consent on the cmdline | `%pre` refusal (serial) | Target |
+|---|---|---|---|
+| none | *(none)* | `KAVIKA CONSENT-REFUSED: no kavika.target= on the kernel command line; refusing to install` | 196 KiB |
+| mismatch | `kavika.target=/dev/vda kavika.confirm=/dev/vdb` | `KAVIKA CONSENT-REFUSED: kavika.target (/dev/vda) != kavika.confirm (/dev/vdb)` | 196 KiB |
+| small | `kavika.target=/dev/vdb kavika.confirm=/dev/vdb` | `KAVIKA CONSENT-REFUSED: vdb is too small (268435456 < 257698037760 bytes)` | 196 KiB |
+| pseudo | `kavika.target=/dev/zram0 kavika.confirm=/dev/zram0` | `KAVIKA CONSENT-REFUSED: /dev/zram0 is a pseudo-disk` | 196 KiB |
+
+In every case the anaconda error was `Unable to open input kickstart file: … '/tmp/kavika-storage.ks'`
+followed by `The installer will now terminate.` — the `%pre` did not write the scoped-storage
+include, so Anaconda had nothing to act on and stopped. The fixture hash stayed
+`a6d72ac7…` in all four cases too.
 
 ## Not done / not authorised here
 

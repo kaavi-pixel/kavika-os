@@ -193,9 +193,11 @@ is built and **verified end-to-end in a disposable KVM guest** — see
 `docs/validation/vm-install-2026-10-22-laptop-studio.md`. Items 1–5 below are done via the
 netinst build (`kavika-net.ks`, `build-netinst-install.py`, the `%pre` consent, the overlay
 `%post`). The live-image "install entry" (the earlier items 2–4 wording) remains an
-*interactive* installer only, because live installs cannot be kickstart-automated. Remaining:
-the refusal matrix (item 6), physical USB disks (item 6), first-boot opt-in polish (item 7),
-and recovery rehearsal (item 8).
+*interactive* installer only, because live installs cannot be kickstart-automated. Rungs 1
+and 2 of the validation ladder are done: rung 1 (disposable KVM target + a second fixture
+proven byte-identical) and rung 2 (refusal matrix — none/mismatch/too-small/pseudo all
+refuse and terminate before any storage write). Remaining: rung 3 (physical USB disks),
+first-boot opt-in polish (item 7), and recovery rehearsal (item 8).
 
 | # | Item | Size | Done when |
 |---|---|---|---|

@@ -48,7 +48,12 @@ set -uo pipefail
 TARGET=$(sed -n 's/.*kavika\.target=\([^ ]*\).*/\1/p' /proc/cmdline)
 CONFIRM=$(sed -n 's/.*kavika\.confirm=\([^ ]*\).*/\1/p' /proc/cmdline)
 MIN_BYTES=$((240 * 1024 * 1024 * 1024))
-fail() { echo "KAVIKA CONSENT: $*" >&2; exit 1; }
+fail() {
+    echo "KAVIKA CONSENT-REFUSED: $*" > /dev/ttyS0 2>/dev/null
+    echo "KAVIKA CONSENT-REFUSED: $*" > /dev/console 2>/dev/null
+    echo "KAVIKA CONSENT: $*" >&2
+    exit 1
+}
 
 [ -n "$TARGET" ] || fail "no kavika.target= on the kernel command line; refusing to install"
 [ -n "$CONFIRM" ] || fail "no kavika.confirm= on the kernel command line; refusing to install"
@@ -63,21 +68,28 @@ lsblk -J -b -o name,size,type,mountpoints "$TARGET" > /tmp/kavika-lsblk.json 2>/
     || fail "cannot inspect $TARGET with lsblk"
 python3 - "$NAME" "$MIN_BYTES" <<'PY'
 import json, sys
+def refuse(msg):
+    print("KAVIKA CONSENT-REFUSED: " + msg, file=sys.stderr)
+    try:
+        with open("/dev/ttyS0", "w") as fh:
+            fh.write("KAVIKA CONSENT-REFUSED: " + msg + "\n")
+    except Exception:
+        pass
+    sys.exit(1)
 name, min_bytes = sys.argv[1], int(sys.argv[2])
 try:
     data = json.load(open("/tmp/kavika-lsblk.json"))
 except Exception as e:
-    print("KAVIKA CONSENT: bad lsblk output: %s" % e, file=sys.stderr); sys.exit(1)
-blk = data.get("blockdevices") or [{}]
-blk = blk[0]
+    refuse("bad lsblk output: %s" % e)
+blk = (data.get("blockdevices") or [{}])[0]
 if blk.get("type") != "disk":
-    print("KAVIKA CONSENT: %s is not a whole disk" % name, file=sys.stderr); sys.exit(1)
+    refuse("%s is not a whole disk" % name)
 mounts = [m for m in (blk.get("mountpoints") or []) if m]
 if mounts:
-    print("KAVIKA CONSENT: %s is mounted (%s)" % (name, ",".join(mounts)), file=sys.stderr); sys.exit(1)
+    refuse("%s is mounted (%s)" % (name, ",".join(mounts)))
 size = int(blk.get("size", 0))
 if size < min_bytes:
-    print("KAVIKA CONSENT: %s is too small (%d < %d bytes)" % (name, size, min_bytes), file=sys.stderr); sys.exit(1)
+    refuse("%s is too small (%d < %d bytes)" % (name, size, min_bytes))
 print("KAVIKA CONSENT: %s confirmed (%d GiB)" % (name, size // 2**30))
 PY
 [ $? -eq 0 ] || exit 1

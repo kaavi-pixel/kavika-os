@@ -190,6 +190,9 @@ class NetinstKickstartTests(unittest.TestCase):
         with_target = netinst_builder.grub_netinst(source, test_target="/dev/vda")
         self.assertIn("kavika.target=/dev/vda kavika.confirm=/dev/vda", with_target)
 
+        with_consent = netinst_builder.grub_netinst(source, test_consent="kavika.target=/dev/vda kavika.confirm=/dev/vdb")
+        self.assertIn("kavika.target=/dev/vda kavika.confirm=/dev/vdb", with_consent)
+
     def test_rewrite_kickstart_source_switches_to_cdrom(self):
         ks = 'lang en_GB.UTF-8\nurl --url="https://example.invalid/os/"\ntext\n'
         self.assertEqual(netinst_builder.rewrite_kickstart_source(ks, "/some/repo"),
