@@ -36,8 +36,9 @@ only.
 
 ## 1. Get the image and verify it
 
-Use the newest build — **`f9e6e569…`** (22 October 2026), which adds the Kavi'ka OS identity
-in `os-release` and ships the Windows workspace plumbing, and is boot-verified in a KVM guest
+Use the newest build — **`b5b650bc…`** (22 October 2026), which adds the Kavi'ka OS identity
+in `os-release`, ships the Windows workspace plumbing, and carries the installer assets
+(pre-flight + kickstart), and is boot-verified in a KVM guest
 ([record](docs/validation/vm-boot-2026-10-22-laptop-studio.md)). The copy in `~/Downloads` may
 be the **older broken build** (`10074299…`) whose Meta+F12 does nothing, so always check the hash.
 
@@ -45,7 +46,7 @@ be the **older broken build** (`10074299…`) whose Meta+F12 does nothing, so al
 ISO=~/src/kavika-os/build/Kavika-OS-0.1.0-Surface-Pro-8-Live-Preview.iso
 sha256sum "$ISO"
 # must print:
-# f9e6e5693b682924ae4042c4203fd265a98ee98fecf28f1e815e13410612bc34
+# b5b650bcd236fe80ffac95730f275ca23e071c1d759a29906d8da9c478fb65e3
 ```
 
 If it does not match, do not use it. Rebuild from source instead of guessing.

@@ -149,11 +149,19 @@ def main() -> int:
         launcher_dst = payload / "usr/local/lib/kavika/launch-windows-vm-linux.py"
         launcher_dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(repo / "tools/launch-windows-vm-linux.py", launcher_dst)
+        # Ship the installer pre-flight and its kickstart template (installerinstallation.md).
+        installer_dst = payload / "usr/local/sbin/kavika-install"
+        installer_dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(repo / "tools/kavika-install.py", installer_dst)
+        ks_dst = payload / "usr/lib/kavika/installer/kavika.ks"
+        ks_dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(repo / "image/install/kavika.ks", ks_dst)
         normalize_payload_tree(payload)
         for relative in ("usr/local/bin/kavika-hardware", "usr/local/bin/kavika-test-centre",
                          "usr/local/bin/kavika-live-session",
                          "usr/local/bin/kavika-windows-workspace",
                          "usr/local/lib/kavika/launch-windows-vm-linux.py",
+                         "usr/local/sbin/kavika-install",
                          "usr/bin/liveinst", "usr/bin/plasma-welcome"):
             (payload / relative).chmod(0o755)
         for item in stage.rglob("*"):
@@ -181,10 +189,11 @@ def main() -> int:
         subprocess.run(["implantisomd5", "--force", str(output)], check=True)
         sha = digest(output)
         manifest = {
-            "name": "Kavika OS 0.1.0 Surface live diagnostic preview (Pro 8 target, Laptop Studio test machine)",
+            "name": "Kavi'ka OS 0.1.0 live diagnostic preview (HP Envy target, Laptop Studio test machine)",
             "base": BASE_NAME, "base_sha256": base_hash,
             "output_sha256": sha, "output_bytes": output.stat().st_size,
             "architecture": "x86_64", "installer_supported": False,
+            "installer_assets_included": True,
             "windows_included": False, "surface_kernel_included": False,
             "persistence_supported": False,
             "logo_sha256": digest(logo), "builder_sha256": digest(Path(__file__)),

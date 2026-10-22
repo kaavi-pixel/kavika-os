@@ -35,7 +35,8 @@ the machine it was measured on, never proof for the other.
   USB on the Envy on 21 October 2026, with Meta+F12 workspace switching and Bluetooth
   reported working. This is the one Envy fact on record, and it is **user-reported**, not
   captured ([record](validation/hardware-boot-2026-10-21-envy.md)). The newest build
-  (`f9e6e569…`, 22 Oct) adds the Kavi'ka identity and Windows plumbing; it is boot-verified
+  (`b5b650bc…`, 22 Oct) adds the Kavi'ka identity, the Windows plumbing and the installer
+  assets; it is boot-verified
   in a KVM guest but has not yet been booted on the Envy.
 - **The Windows-in-KVM recipe is host-agnostic in shape.** The ESP-on-USB boot, the
   `removable=on` answer stick, the `LabConfig` hardware bypass, and the `bcdboot` ESP

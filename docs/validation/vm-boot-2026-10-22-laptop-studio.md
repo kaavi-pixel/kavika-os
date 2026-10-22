@@ -29,4 +29,23 @@ Runtime (disposable KVM guest, `~/kavika-vm-f9e6`):
 
 - `/etc/os-release` was verified at **payload level**, not by reading it back inside the guest: `capture-vm-evidence.py cmd` types into the QEMU monitor, not the guest console, so no in-guest `cat` was possible. The boot itself is the runtime evidence that the overlay applies cleanly.
 - The three-finger swipe remains untested (no touchpad in a VM).
-- This image still contains **no Windows, no virtualization stack and no installer**; it is a diagnostic preview.
+- This image still contains **no Windows, no virtualization stack and no bootable installer**
+  (the installer *assets* ship, but the install entry is not wired); it is a diagnostic preview.
+
+## Addendum — build `b5b650bc…` (same day)
+
+A further build added the **installer assets** (the pre-flight `tools/kavika-install.py` and
+the kickstart template `image/install/kavika.ks`, both shipped into the image via the
+builder, plus `installer_assets_included: true` in the manifest — `installer_supported`
+stays `false`). This is additive and does not change the live preview's behaviour.
+
+- Build level: the payload carries `usr/local/sbin/kavika-install` (executable) and
+  `usr/lib/kavika/installer/kavika.ks` (placeholder + virtualization stack intact),
+  `checkisomd5` passes.
+- Runtime: the image **boots to the KDE desktop** again (disposable KVM guest
+  `~/kavika-vm-b5b6`; frame is 62% wallpaper gold, 28% white dialog/panel, ~0% black —
+  the same desktop signature as `f9e6e569`), clean shutdown.
+
+No installer was *run* — only its assets were shipped and the pre-flight's logic unit-tested
+(68 tests pass). The boot entry and an actual Anaconda install remain the next rung
+([installerinstallation.md](../../installerinstallation.md) §5–§6).

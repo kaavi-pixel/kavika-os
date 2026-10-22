@@ -52,6 +52,12 @@ means. The acceptance criteria come from [features.md](features.md) (O02) and
 | D5 | First boot | Anaconda creates the user (kickstart); a Kavi'ka first-boot dialog then presents the **Windows-workspace opt-in** (T20) and never runs it without consent | §7 |
 | D6 | Update policy | Keep stock Fedora repos (works because `ID_LIKE=fedora`, `VERSION_ID=44`); Kavi'ka-only content ships via the RPM from D4 | §3 |
 
+**Decisions recorded 22 October 2026.** D1 = Anaconda driven by a Kavi'ka kickstart. D2 = one
+hybrid ISO with two entries, but only the *assets* ship today (the boot entry is not wired yet).
+D3 = the layout in `image/install/kavika.ks` (sizes provisional until measured). D4 = short-term
+`%post` from media, long-term a `kavika` RPM. D5 = `firstboot --enable` for user creation, then the
+Windows opt-in. D6 = stock Fedora repos.
+
 ## 3. The kickstart (step 1 of the build)
 
 `image/install/kavika.ks`, owned by the repo:
@@ -155,6 +161,13 @@ gives a fresh explicit go/no-go with its exact disk identified.
   a log, a manifest or a validation record.
 
 ## 9. Work breakdown (ordered)
+
+**Status 22 October 2026:** items 1, 2 and 3 are done — D1–D6 are decided above;
+`image/install/kavika.ks` v1 exists (storage scoped to the confirmed device, the virtualization
+stack, `firstboot --enable`, no baked-in password); `tools/kavika-install.py` implements the
+double-typed confirmation and every refusal rule, and its unit tests pass. Both files ship in the
+image via the builder (`installer_assets_included: true` in the manifest). The next rung is item 4
+(the boot entry) followed by the validation ladder (items 5–8).
 
 | # | Item | Size | Done when |
 |---|---|---|---|

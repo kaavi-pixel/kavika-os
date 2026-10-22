@@ -183,6 +183,13 @@ class PreviewTests(unittest.TestCase):
         self.assertIn('payload / "usr/local/lib/kavika/launch-windows-vm-linux.py"', builder_src)
         self.assertIn("tools/launch-windows-vm-linux.py", builder_src)
 
+    def test_builder_ships_the_installer_assets(self):
+        builder_src = (ROOT / "tools/build-live-preview.py").read_text()
+        self.assertIn('payload / "usr/local/sbin/kavika-install"', builder_src)
+        self.assertIn('payload / "usr/lib/kavika/installer/kavika.ks"', builder_src)
+        self.assertIn('"installer_assets_included": True', builder_src)
+        self.assertNotIn('installer_supported": True', builder_src)  # still a preview, not an installer
+
     def test_workspace_script_explains_missing_virtualization_stack(self):
         script = (ROOT / "image/live-preview/root/usr/local/bin/kavika-windows-workspace").read_text()
         self.assertIn("qemu-system-x86_64", script)
