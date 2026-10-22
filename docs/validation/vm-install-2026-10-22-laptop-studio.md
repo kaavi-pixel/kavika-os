@@ -107,6 +107,28 @@ followed by `The installer will now terminate.` — the `%pre` did not write the
 include, so Anaconda had nothing to act on and stopped. The fixture hash stayed
 `a6d72ac7…` in all four cases too.
 
+## Source shapes — both verified
+
+Two install sources exist and both were verified end-to-end in the VM:
+
+- **offline** (`--repo-dir`, kickstart source `cdrom`): a bundled repo of 2455 RPMs +
+  `comps.xml` sits on the media — fast and fully offline; used for the install proof above.
+- **network** (no `--repo-dir`, source `url`): Anaconda fetches from the Fedora 44 Everything
+  repo. Verified 22 October 2026 — the install completed (2424 packages) and `%post` reported
+  `os-release=Kavika` with qemu-kvm/swtpm/edk2-ovmf/mtools installed. This is the shape for a
+  machine with real internet (the Envy); the offline shape exists because user-mode QEMU
+  networking is slow.
+
+## Product artifacts
+
+- `build/Kavika-OS-0.1.0-netinst-offline.iso` — sha256 `6d0c30bd39405bacc0be0013cc2bb4f199a70b028687c3e65a68de3e716accb9`
+- `build/Kavika-OS-0.1.0-netinst-network.iso` — sha256 `7703cafa9aa3a991d0d08903eb1cbfcfd31c2814c67b8baab2912aa6eb99890e`
+
+Both ship **fail-closed**: the install entry carries **no** `kavika.target`/`kavika.confirm`
+(checked: 0 occurrences). The operator must name the target on the kernel command line —
+currently by editing the GRUB entry to append `kavika.target=/dev/… kavika.confirm=/dev/…` —
+or the `%pre` refuses. A friendlier in-boot consent prompt is a later UX step.
+
 ## Not done / not authorised here
 
 - A physical-disk install, and any write to the Laptop Studio NVMe or the HP Envy. The
