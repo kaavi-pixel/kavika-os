@@ -28,6 +28,7 @@ See [the preview guide](docs/live-preview.md), [build instructions](docs/build.m
 - [Bug tracker](bugtracker.md): confirmed-defect policy, untested risks, and verification checklist.
 - [Handoff](handoff.md): paused checkpoint, exact validation boundary, permissions and resume instructions.
 - [Test install on the HP Envy](testinstall.md): how to boot and evaluate the preview on the install-target laptop without touching its Windows.
+- [Installer build plan](installerinstallation.md): the phased roadmap for turning the preview into a safe, consent-driven installer (OS4) — decisions, kickstart, pre-flight, validation ladder.
 - [Original brief](docs/original-features.md): supplied text, with Markdown heading syntax repaired only.
 - [GitHub Issues](https://github.com/kaavi-pixel/kavika-os/issues): live task and risk tracking.
 

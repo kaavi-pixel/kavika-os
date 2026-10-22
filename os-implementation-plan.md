@@ -65,7 +65,7 @@ The later OS requirements O01–O04 are defined in `features.md`; T17–T23 in `
 | Later stage | Live issue | Review state |
 |---|---|---|
 | OS3: development live ISO | [#12](https://github.com/kaavi-pixel/kavika-os/issues/12) | Blocked by OS2/M5 |
-| OS4: installer and first boot | [#13](https://github.com/kaavi-pixel/kavika-os/issues/13) | Blocked by OS3 |
+| OS4: installer and first boot ([build plan](installerinstallation.md)) | [#13](https://github.com/kaavi-pixel/kavika-os/issues/13) | Blocked by OS3 |
 | OS5: hardware pilot | [#14](https://github.com/kaavi-pixel/kavika-os/issues/14) | Blocked by OS4 and specific test-disk approval |
 | OS6: maintained release | [#15](https://github.com/kaavi-pixel/kavika-os/issues/15) | Blocked by OS5 and release decisions |
 

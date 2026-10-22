@@ -93,7 +93,7 @@ Each gap names what closes it.
 
 | Gap | Why it exists | What closes it |
 |---|---|---|
-| **Not installable** — no installer; the live image deliberately disables Anaconda's entry points (the installation guard) | the preview is diagnostic by design; installer safety (explicit target selection, non-selected disks untouched) is unimplemented | the OS4 installer milestone: a guarded install flow validated on disposable disks (T19/T20) |
+| **Not installable** — no installer; the live image deliberately disables Anaconda's entry points (the installation guard) | the preview is diagnostic by design; installer safety (explicit target selection, non-selected disks untouched) is unimplemented | the OS4 installer milestone: a guarded install flow validated on disposable disks (T19/T20) — **the phased build plan is [installerinstallation.md](installerinstallation.md)** |
 | **No persistence** — the session runs from RAM; files, settings and any guest vanish at shutdown | live-image architecture; the 3.8 GB stick also cannot hold an overlay plus a 16 GB Windows guest | installation to real storage (OS4); optionally a persistent live overlay on a larger stick |
 | **No user accounts / first boot** — a single live user; no account creation or personal settings | live session | the installer's first-boot setup (T20) |
 | **No system updates** — no persistent root to `dnf update` | live session | an installed system plus a validated update/upgrade procedure (O04/T22) |
