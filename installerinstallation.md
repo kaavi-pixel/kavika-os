@@ -11,6 +11,32 @@ means. The acceptance criteria come from [features.md](features.md) (O02) and
 [bugtracker.md](bugtracker.md) (T19/T20); the gap this closes is the first row of the
 [Fedora gap table in handoff.md](handoff.md#gaps-vs-a-normal-installed-fedora-and-vs-windows).
 
+## Status update — 22 October 2026 (post-validation)
+
+The automated installer (Path B) now works end-to-end and is verified in a disposable KVM
+guest: see [docs/validation/vm-install-2026-10-22-laptop-studio.md](docs/validation/vm-install-2026-10-22-laptop-studio.md).
+
+Key facts established since this plan was first written:
+
+- **A Fedora live install cannot be kickstart-automated.** Anaconda gates every kickstart
+  path (`--kickstart`, `inst.ks`) on `not options.liveinst` and always loads
+  `interactive-defaults.ks` in live mode; it also ignores kickstart `part` commands. So the
+  live image is an *interactive* installer only.
+- **The automated installer is a dnf/netinst build (Path B), not the live image.** A new
+  kickstart `image/install/kavika-net.ks` drives Anaconda from the Fedora 44 Everything repo
+  (or a bundled offline repo), where `%packages`, `part`, and unattended automation all work.
+- **The fail-closed consent lives in the kickstart `%pre`** (not the Python pre-flight): it
+  reads `kavika.target=`/`kavika.confirm=` from the kernel command line and aborts before any
+  storage write unless they match and the device is a whole, unmounted, large-enough disk.
+- **Data partitions use ext4, not btrfs.** btrfs + `--grow` root produced an invalid root
+  filesystem ("bad superblock") in validation; ext4 is the robust choice for v1.
+- **The overlay delivery needs `cpio -idmu`.** The overlay cpio is built `--reproducible`
+  (1970 timestamps), so plain `cpio -i` skipped overwriting newer on-disk files and the
+  Kavi'ka os-release identity never landed.
+- New tooling: `tools/build-netinst-install.py` (netinst builder, optional `--repo-dir` and
+  `--test-target`), `tools/kavika_overlay.py` (shared overlay-cpio builder), and
+  `image/install/kavika-net.ks`.
+
 ## 0. What the installer must satisfy (acceptance)
 
 - **T19 / O02:** installation requires **explicit target confirmation**, succeeds on a
@@ -162,12 +188,14 @@ gives a fresh explicit go/no-go with its exact disk identified.
 
 ## 9. Work breakdown (ordered)
 
-**Status 22 October 2026:** items 1, 2 and 3 are done — D1–D6 are decided above;
-`image/install/kavika.ks` v1 exists (storage scoped to the confirmed device, the virtualization
-stack, `firstboot --enable`, no baked-in password); `tools/kavika-install.py` implements the
-double-typed confirmation and every refusal rule, and its unit tests pass. Both files ship in the
-image via the builder (`installer_assets_included: true` in the manifest). The next rung is item 4
-(the boot entry) followed by the validation ladder (items 5–8).
+**Status 22 October 2026 (post-validation):** the automated dnf/netinst installer (Path B)
+is built and **verified end-to-end in a disposable KVM guest** — see
+`docs/validation/vm-install-2026-10-22-laptop-studio.md`. Items 1–5 below are done via the
+netinst build (`kavika-net.ks`, `build-netinst-install.py`, the `%pre` consent, the overlay
+`%post`). The live-image "install entry" (the earlier items 2–4 wording) remains an
+*interactive* installer only, because live installs cannot be kickstart-automated. Remaining:
+the refusal matrix (item 6), physical USB disks (item 6), first-boot opt-in polish (item 7),
+and recovery rehearsal (item 8).
 
 | # | Item | Size | Done when |
 |---|---|---|---|

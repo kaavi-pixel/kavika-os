@@ -1,9 +1,14 @@
 #!/usr/bin/bash
 # Deliberately replaces the ordinary launcher only in this disposable preview.
+# Refuse by default; forward to the real live installer only when the boot carried
+# `kavika.install=1` (the "Install Kavi'ka OS" GRUB entry).
+if grep -qw 'kavika.install=1' /proc/cmdline 2>/dev/null; then
+    exec /usr/libexec/kavika/real-liveinst "$@"
+fi
 if [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
     /usr/bin/kdialog --title "Live preview only" --sorry \
-        "Internal installation is disabled in this Kavi'ka diagnostic preview. Test the desktop and save the hardware report first. This image has no Windows workspace and is not an installation release."
+        "Internal installation is disabled in this live preview. To install, reboot and choose the 'Install Kavi'ka OS' boot entry."
 else
-    printf '%s\n' "Kavi'ka live preview: installation is disabled. Use a separately validated installation release."
+    printf '%s\n' "Kavi'ka live preview: installation is disabled. Reboot and choose the 'Install Kavi'ka OS' entry to install."
 fi
 exit 1

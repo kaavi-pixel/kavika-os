@@ -52,6 +52,38 @@ class PreviewTests(unittest.TestCase):
             "linux root=live:CDLABEL=Fedora-KDE-Live-44\n}\n")
         self.assertEqual(result.splitlines()[0].count("'"), 2)
 
+    def test_grub_adds_install_entry_with_flag(self):
+        source = (
+            'set default="1"\nset timeout=10\n'
+            'menuentry "Start Fedora-KDE-Desktop-Live" {\n'
+            'linux ($root)/boot/x86_64/loader/linux root=live:CDLABEL=Fedora-KDE-Live-44 rd.live.image\n'
+            'initrd ($root)/boot/x86_64/loader/initrd\n}\n'
+            'menuentry "Test this media & start Fedora-KDE-Desktop-Live" {\n'
+            'linux ($root)/boot/x86_64/loader/linux root=live:CDLABEL=Fedora-KDE-Live-44 rd.live.image rd.live.check\n'
+            'initrd ($root)/boot/x86_64/loader/initrd\n}\n'
+        )
+        result = builder.grub_preview(source)
+        self.assertIn('menuentry "Install Kavi\'ka OS"', result)
+        self.assertIn("kavika.install=1", result)
+        self.assertIn("rd.live.image kavika.install=1", result)
+        # the install entry's initrd must also carry the overlay cpio
+        self.assertIn("kavika-preview.cpio", result)
+        if builder.grub_script_check():
+            parsed = subprocess.run([builder.grub_script_check()], input=result,
+                                    text=True, capture_output=True)
+            self.assertEqual(parsed.returncode, 0, parsed.stderr)
+
+    def test_guard_forwards_to_real_installer_on_flag(self):
+        guard = (ROOT / "image/live-preview/root/usr/bin/liveinst").read_text()
+        self.assertIn("kavika.install=1", guard)
+        self.assertIn("/usr/libexec/kavika/real-liveinst", guard)
+
+    def test_real_liveinst_is_vendored(self):
+        real = ROOT / "image/live-preview/root/usr/libexec/kavika/real-liveinst"
+        self.assertTrue(real.is_file())
+        text = real.read_text()
+        self.assertIn("anaconda --liveinst", text)  # the LIVECMD default
+
     @unittest.skipUnless(builder.grub_script_check(), "GRUB parser unavailable")
     def test_upstream_nested_video_function_is_normalized(self):
         source = (
@@ -66,8 +98,10 @@ class PreviewTests(unittest.TestCase):
     def test_preview_is_explicit_about_missing_windows(self):
         guide = (ROOT / "image/live-preview/root/usr/share/kavika/START-HERE.txt").read_text()
         self.assertIn("not Windows", guide)
-        self.assertIn("not an installation release", (
-            ROOT / "image/live-preview/root/usr/bin/liveinst").read_text())
+        # The default path still refuses to install; only the install entry forwards.
+        guard = (ROOT / "image/live-preview/root/usr/bin/liveinst").read_text()
+        self.assertIn("installation is disabled", guard)
+        self.assertIn("kavika.install=1", guard)
 
     def test_live_defaults_run_after_upstream_kde_setup(self):
         extra = (ROOT / "image/live-preview/root/var/lib/livesys/livesys-session-extra").read_text()
@@ -179,14 +213,16 @@ class PreviewTests(unittest.TestCase):
         self.assertIn("removable", guide)     # the D16 trap
 
     def test_builder_ships_the_windows_launcher(self):
-        builder_src = (ROOT / "tools/build-live-preview.py").read_text()
-        self.assertIn('payload / "usr/local/lib/kavika/launch-windows-vm-linux.py"', builder_src)
-        self.assertIn("tools/launch-windows-vm-linux.py", builder_src)
+        # The overlay assembly now lives in the shared kavika_overlay module used by both builders.
+        overlay_src = (ROOT / "tools/kavika_overlay.py").read_text()
+        self.assertIn('payload / "usr/local/lib/kavika/launch-windows-vm-linux.py"', overlay_src)
+        self.assertIn("tools/launch-windows-vm-linux.py", overlay_src)
 
     def test_builder_ships_the_installer_assets(self):
+        overlay_src = (ROOT / "tools/kavika_overlay.py").read_text()
+        self.assertIn('payload / "usr/local/sbin/kavika-install"', overlay_src)
+        self.assertIn('payload / "usr/lib/kavika/installer/kavika.ks"', overlay_src)
         builder_src = (ROOT / "tools/build-live-preview.py").read_text()
-        self.assertIn('payload / "usr/local/sbin/kavika-install"', builder_src)
-        self.assertIn('payload / "usr/lib/kavika/installer/kavika.ks"', builder_src)
         self.assertIn('"installer_assets_included": True', builder_src)
         self.assertNotIn('installer_supported": True', builder_src)  # still a preview, not an installer
 

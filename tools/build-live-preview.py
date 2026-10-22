@@ -14,8 +14,16 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
+
+# Make the sibling shared overlay builder importable regardless of how this module is loaded
+# (direct script run adds tools/ to sys.path[0]; the unit tests import it via importlib).
+_TOOLS_DIR = str(Path(__file__).resolve().parent)
+if _TOOLS_DIR not in sys.path:
+    sys.path.insert(0, _TOOLS_DIR)
+import kavika_overlay
 
 BASE_SHA256 = "c8295961d4c41adbf785a31a17c21a971d3b7415fda72dcad0c11c49577bf03a"
 BASE_NAME = "Fedora-KDE-Desktop-Live-44-1.7.x86_64.iso"
@@ -88,6 +96,15 @@ fi
 ''', text, count=1, flags=re.S)
         if count != 1:
             raise ValueError("Could not normalize upstream GRUB video function")
+    # Add a second entry that boots the same live image with kavika.install=1, which turns
+    # the guarded liveinst into the real installer and makes the session run the pre-flight.
+    install_entry = (
+        'menuentry "Install Kavi\'ka OS" --class fedora --class gnu-linux --class gnu --class os {\n'
+        '\tlinux ($root)/boot/x86_64/loader/linux quiet rhgb  root=live:CDLABEL=Fedora-KDE-Live-44 rd.live.image kavika.install=1\n'
+        '\tinitrd ($root)/boot/x86_64/loader/initrd\n'
+        '}\n'
+    )
+    text = text.replace('menuentry "Test this media', install_entry + 'menuentry "Test this media', 1)
     lines = []
     for line in text.splitlines():
         if line.strip().startswith("initrd "):
@@ -140,33 +157,16 @@ def main() -> int:
         work = Path(temp_dir)
         stage = work / "stage"
         payload = stage / "updates"
-        shutil.copytree(repo / "image/live-preview/root", payload,
-                        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo"))
-        logo = repo / "assets/branding/kavi-ka-os-logo.png"
-        shutil.copy2(logo, payload / "usr/share/kavika/logo.png")
-        # Ship the Windows guest launcher inside the image so the Windows workspace
-        # has its plumbing; the source of truth stays tools/launch-windows-vm-linux.py.
-        launcher_dst = payload / "usr/local/lib/kavika/launch-windows-vm-linux.py"
-        launcher_dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(repo / "tools/launch-windows-vm-linux.py", launcher_dst)
-        # Ship the installer pre-flight and its kickstart template (installerinstallation.md).
-        installer_dst = payload / "usr/local/sbin/kavika-install"
-        installer_dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(repo / "tools/kavika-install.py", installer_dst)
-        ks_dst = payload / "usr/lib/kavika/installer/kavika.ks"
-        ks_dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(repo / "image/install/kavika.ks", ks_dst)
-        normalize_payload_tree(payload)
-        for relative in ("usr/local/bin/kavika-hardware", "usr/local/bin/kavika-test-centre",
-                         "usr/local/bin/kavika-live-session",
-                         "usr/local/bin/kavika-windows-workspace",
-                         "usr/local/lib/kavika/launch-windows-vm-linux.py",
-                         "usr/local/sbin/kavika-install",
-                         "usr/bin/liveinst", "usr/bin/plasma-welcome"):
-            (payload / relative).chmod(0o755)
-        for item in stage.rglob("*"):
-            if not item.is_symlink():
-                os.utime(item, (0, 0))
+        kavika_overlay.build_overlay_payload(repo, payload)
+
+        # D4: build a clean, root-relative cpio of the overlay so the installer's %post can
+        # deliver the Kavi'ka delta onto the installed root, then nest it inside the overlay
+        # itself (it is added AFTER this archive is built, so it does not recurse).
+        overlay_cpio = kavika_overlay.build_overlay_cpio(repo, work)
+        nested_dst = payload / "usr/lib/kavika/installer/kavika-overlay.cpio"
+        nested_dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(overlay_cpio, nested_dst)
+        os.utime(nested_dst, (0, 0))
 
         entries = sorted(item.relative_to(stage).as_posix() for item in stage.rglob("*"))
         cpio_path = work / "kavika-preview.cpio"
@@ -196,7 +196,8 @@ def main() -> int:
             "installer_assets_included": True,
             "windows_included": False, "surface_kernel_included": False,
             "persistence_supported": False,
-            "logo_sha256": digest(logo), "builder_sha256": digest(Path(__file__)),
+            "logo_sha256": digest(repo / "assets/branding/kavi-ka-os-logo.png"),
+            "builder_sha256": digest(Path(__file__)),
             "payload_files": [{"path": item.relative_to(payload).as_posix(), "sha256": digest(item)}
                               for item in sorted(payload.rglob("*")) if item.is_file()],
             "build_method": "xorriso hybrid/UEFI replay with initramfs cpio overlay",

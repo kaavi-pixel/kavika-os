@@ -30,7 +30,20 @@ mkdir -p "$HOME/Desktop"
 cp /usr/share/applications/kavika-test-centre.desktop "$HOME/Desktop/"
 chmod u+x "$HOME/Desktop/kavika-test-centre.desktop"
 
+echo "KAVIKA_SESSION_READY"
+if grep -qw 'kavika.install=1' /proc/cmdline 2>/dev/null; then
+    # The "Install Kavi'ka OS" boot entry: run the consent-driven pre-flight instead of the
+    # Test Centre. kavika.target=/kavika.confirm= are an explicit, documented override for
+    # automated/disposable validation; without them the pre-flight asks for the device.
+    mode=$(sed -n 's/.*kavika\.mode=\([^ ]*\).*/\1/p' /proc/cmdline); mode="${mode:-graphical}"
+    target=$(sed -n 's/.*kavika\.target=\([^ ]*\).*/\1/p' /proc/cmdline)
+    confirm=$(sed -n 's/.*kavika\.confirm=\([^ ]*\).*/\1/p' /proc/cmdline)
+    args=(/usr/local/sbin/kavika-install --mode "$mode")
+    if [ -n "$target" ] && [ -n "$confirm" ]; then
+        args+=(--device "$target" --confirm-device "$confirm" --yes)
+    fi
+    exec "${args[@]}"
+fi
 # The live ISO is not an installation release. Remove only live-session installer shortcuts.
 rm -f "$HOME/Desktop/liveinst.desktop" "$HOME/Desktop/org.fedoraproject.AnacondaInstaller.desktop"
-echo "KAVIKA_SESSION_READY"
 kavika-test-centre

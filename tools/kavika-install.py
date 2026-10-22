@@ -11,13 +11,22 @@ synthetic inventories and no disk access. Importing it performs no destructive a
 """
 import argparse
 import json
+import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 PLACEHOLDER = "@@TARGET_DEVICE@@"
 KICKSTART_TEMPLATE = "/usr/lib/kavika/installer/kavika.ks"
-INSTALLER_CMD = "/usr/sbin/liveinst"  # the real Fedora live installer; NOT the guarded /usr/bin/liveinst
+# The vendored real live installer; the guarded /usr/bin/liveinst forwards here when the
+# boot carried kavika.install=1.
+INSTALLER_CMD = "/usr/libexec/kavika/real-liveinst"
+# Anaconda in --liveinst mode IGNORES both --kickstart and inst.ks (pyanaconda/startup_utils.py
+# gates them on `not options.liveinst`) and always loads this file as the kickstart. So the
+# resolved kickstart is delivered here; a copy also lives under /run for traceability.
+INTERACTIVE_DEFAULTS_KS = "/usr/share/anaconda/interactive-defaults.ks"
+RESOLVED_KS_PATH = "/run/kavika-install-resolved.ks"
 DEFAULT_MIN_BYTES = 240 * 1024 ** 3   # provisional: the v1 layout totals ~211 GiB, plus headroom
 
 
@@ -80,6 +89,36 @@ def resolve_kickstart(template_text, device):
     return resolved
 
 
+def livecmd(mode):
+    """The anaconda command to run, injected via LIVECMD. No --kickstart: live installs
+    ignore it and read /usr/share/anaconda/interactive-defaults.ks instead."""
+    return f"anaconda --liveinst --{mode}"
+
+
+def deliver_kickstart(resolved, interactive_defaults=INTERACTIVE_DEFAULTS_KS,
+                      resolved_path=RESOLVED_KS_PATH):
+    """Write the resolved kickstart where Anaconda's live install will actually read it.
+
+    Returns the list of paths written. Backs up (once) the stock interactive-defaults.ks so
+    it can be restored. This is the only supported way to inject a kickstart into a live
+    install, because Anaconda gates --kickstart and inst.ks on `not options.liveinst`.
+    """
+    written = []
+    Path(resolved_path).write_text(resolved, encoding="utf-8")
+    written.append(resolved_path)
+    defaults = Path(interactive_defaults)
+    if defaults.exists():
+        backup = defaults.with_name(defaults.name + ".kavika-orig")
+        if not backup.exists():
+            shutil.copy2(defaults, backup)
+        defaults.write_text(resolved, encoding="utf-8")
+        written.append(str(defaults))
+    else:
+        print(f"warning: {interactive_defaults} not found; the live install may stay "
+              "interactive with stock defaults", file=sys.stderr)
+    return written
+
+
 def inventory_report(disks):
     lines = ["Target candidates (whole disks):"]
     for d in disks:
@@ -100,6 +139,8 @@ def main(argv=None):
     ap.add_argument("--min-size", type=int, default=DEFAULT_MIN_BYTES, help="minimum target size in bytes")
     ap.add_argument("--kickstart", default=KICKSTART_TEMPLATE, help="kickstart template path")
     ap.add_argument("--installer-cmd", default=INSTALLER_CMD, help="installer to launch after the checks")
+    ap.add_argument("--mode", choices=("graphical", "text"), default="graphical",
+                    help="anaconda display mode (default graphical)")
     ap.add_argument("--dry-run", action="store_true", help="run every check and print the plan; write nothing")
     ap.add_argument("--yes", action="store_true", help="required (without --dry-run) to actually launch the installer")
     args = ap.parse_args(argv)
@@ -130,11 +171,12 @@ def main(argv=None):
               file=sys.stderr)
         return 3
 
-    ks_path = "/run/kavika-install-resolved.ks"
-    Path(ks_path).write_text(resolved, encoding="utf-8")
-    cmd = [args.installer_cmd, "--kickstart", ks_path]
-    print("launching:", " ".join(cmd))
-    return subprocess.call(cmd)
+    written = deliver_kickstart(resolved)
+    print("kickstart delivered to: " + ", ".join(written))
+    env = dict(os.environ, LIVECMD=livecmd(args.mode))
+    cmd = [args.installer_cmd]
+    print("launching:", " ".join(cmd), "with LIVECMD:", env["LIVECMD"])
+    return subprocess.call(cmd, env=env)
 
 
 if __name__ == "__main__":
