@@ -1,0 +1,29 @@
+THE WINDOWS WORKSPACE IN KAVI'KA OS — STATUS AND HOW IT WILL BE PROVISIONED
+
+WHAT WORKS TODAY (verified on the Surface Laptop Studio test machine)
+  - A full Windows 11 KVM guest installs to the desktop and is SELF-CONTAINED:
+    it boots from its own disk with no external boot media attached.
+  - The user's browser (Firefox) opens in that guest.
+  - This image ships the workspace plumbing:
+      /usr/local/bin/kavika-windows-workspace   switch to desktop 2 and start the guest
+      /usr/local/lib/kavika/launch-windows-vm-linux.py   the guest launcher
+
+WHAT THIS IMAGE DOES NOT CONTAIN
+  - No Windows, no Windows licence, no guest disk.
+  - No virtualization stack: qemu, swtpm, OVMF and mtools are NOT in this live
+    preview, so the guest cannot be provisioned or started from this session.
+  - The desktop labelled "Windows (not installed)" is a Linux workspace.
+
+HOW WINDOWS WILL BE PROVISIONED (on an installed Kavi'ka system)
+  1. Install the virtualization stack and mtools on the installed system.
+  2. Provision the guest with your own Windows 11 ISO, following the verified
+     recipe in the repository (docs/windows-install-recipe.md):
+       - build the boot ESP from the ISO's own files (NEVER reuse an ESP image
+         captured from a previous run - it will not boot),
+       - attach the answer stick as REMOVABLE media (usb-storage removable=on),
+       - install to a private disk image; afterwards the guest boots on its own.
+  3. Run `kavika-windows-workspace`: the guest appears full-screen on desktop 2.
+     Meta+F12 switches workspaces; Plasma's built-in three-finger horizontal
+     swipe is the gesture path (the desktops are one row).
+
+Windows licensing and activation are yours. Kavi'ka ships none of it.

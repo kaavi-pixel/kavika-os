@@ -1,0 +1,17 @@
+# Kavi'ka OS identity overlay. /etc/os-release in the base is a symlink to this file.
+# VERSION_ID deliberately stays 44 so anything reading $releasever (dnf & co.) keeps
+# resolving; the Kavi'ka version lives in KAVIKA_VERSION and PRETTY_NAME.
+NAME="Kavi'ka OS"
+VERSION="0.1.0 (Live Preview, Fedora KDE 44)"
+ID=kavika
+ID_LIKE=fedora
+VERSION_ID=44
+KAVIKA_VERSION="0.1.0"
+PRETTY_NAME="Kavi'ka OS 0.1.0 (Live Preview, Fedora KDE 44)"
+ANSI_COLOR="0;33"
+VARIANT="Live Preview"
+VARIANT_ID=live-preview
+HOME_URL="https://github.com/kaavi-pixel/kavika-os"
+SUPPORT_URL="https://github.com/kaavi-pixel/kavika-os/issues"
+BUG_REPORT_URL="https://github.com/kaavi-pixel/kavika-os/issues"
+CPE_NAME="cpe:/o:fedoraproject:fedora:44"
