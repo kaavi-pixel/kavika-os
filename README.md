@@ -94,6 +94,7 @@ See [the target machines record](docs/target-machines.md) and [the Laptop Studio
 - **Outside the recorded approval:** any internal-disk change to the HP Envy or the Laptop Studio, other drives, firmware-security changes, Windows licence purchases, and a public ISO release. Guest provisioning remains a separate opt-in step.
 - **Not included:** Windows installation media, activation keys, VM disks, recovery keys, device identifiers, or the original hardware screenshot.
 - **Licensing:** no project-wide open-source licence has been selected. Third-party components retain their own licences; a Windows licence decision remains a setup gate.
+- **Rejected scope, 22 October 2026:** a three-world layout adding a macOS guest was considered and **dropped**. macOS cannot legally run on non-Apple hardware (Apple's EULA) and could never be redistributed in a Kavi'ka image; on the AMD HP Envy (Ryzen 7 8840HS, Radeon 780M) it would also have no GPU support and run software-rendered. The product stays **two-world: Linux host + Windows guest**. Do not re-open without the user explicitly asking.
 
 The user has requested a testable OS for the spare Surface. An explicitly labelled private boot/diagnostic preview may be built before all integration gates pass, but the full installer/release gates remain; booting a preview is not proof of full Windows functionality.
 
