@@ -1,6 +1,6 @@
 # Kavi'ka OS: handoff
 
-Checkpoint updated 20 October 2026. This remains a diagnostic image, not an installation release. Do not flash/install or perform destructive disk actions without passing the gates below and a fresh explicit user go/no-go.
+Checkpoint updated 22 October 2026. The newest image (`f9e6e569…`) presents itself as **Kavi'ka OS** in `os-release` and ships the Windows workspace plumbing; it is boot-verified in a KVM guest ([record](docs/validation/vm-boot-2026-10-22-laptop-studio.md)). This remains a diagnostic image, not an installation release. The [gap checklist below](#gaps-vs-a-normal-installed-fedora-and-vs-windows) states exactly what is missing versus a normal installed Fedora and versus Windows. Do not flash/install or perform destructive disk actions without passing the gates below and a fresh explicit user go/no-go.
 
 **Progress to a full working OS: about 20%.** Per-stage breakdown is tracked in [os-implementation-plan.md](os-implementation-plan.md#stage-progress-22-october-2026).
 

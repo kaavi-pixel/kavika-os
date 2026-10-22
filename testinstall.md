@@ -36,14 +36,16 @@ only.
 
 ## 1. Get the image and verify it
 
-Use the rebuilt image whose workspace switch works. The copy in `~/Downloads` may be the
-**older broken build** (`10074299…`) whose Meta+F12 does nothing, so always check the hash.
+Use the newest build — **`f9e6e569…`** (22 October 2026), which adds the Kavi'ka OS identity
+in `os-release` and ships the Windows workspace plumbing, and is boot-verified in a KVM guest
+([record](docs/validation/vm-boot-2026-10-22-laptop-studio.md)). The copy in `~/Downloads` may
+be the **older broken build** (`10074299…`) whose Meta+F12 does nothing, so always check the hash.
 
 ```bash
 ISO=~/src/kavika-os/build/Kavika-OS-0.1.0-Surface-Pro-8-Live-Preview.iso
 sha256sum "$ISO"
 # must print:
-# bd8407d6393a12f8a5829ef15a86371b854f08834d9fd7df4a85ddbdc8820e0d
+# f9e6e5693b682924ae4042c4203fd265a98ee98fecf28f1e815e13410612bc34
 ```
 
 If it does not match, do not use it. Rebuild from source instead of guessing.
