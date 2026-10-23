@@ -179,7 +179,15 @@ and after:
      --device /dev/sdX --confirm-wipe /dev/sdX --dry-run
    ```
 
-   Drop `--dry-run` to actually write. Two notes: a **USB flash stick** reports `RM=1`, but
+   Drop `--dry-run` to actually write. Media sizing: the **offline** ISO is 5,030,150,144 B
+   and needs a disk of at least 5.1 GB (the 3.8 GB stick used for the earlier physical boot
+   tests is too small for it and the writer refuses it on the size check); the **network** ISO
+   is 1,218,707,456 B and fits that stick with ~2.6 GiB to spare. Unmount the target first
+   (`udisksctl unmount -b /dev/sdX1`) — the writer treats a mounted partition as fatal for a
+   write, though only a warning for a dry run. After flashing, the stick's volume label reads
+   `Fedora-E-dvd-x86_64-44` (the label baked into the ISO), not "Kavika".
+
+   Two further notes: a **USB flash stick** reports `RM=1`, but
    an **external USB hard drive** almost always reports `RM=0` (its bridge does not advertise
    removable media), which the writer refuses by default — pass `--allow-fixed-usb` for those,
    which relaxes only that flag and keeps every other check. And the live media cannot be its
