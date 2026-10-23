@@ -154,6 +154,38 @@ and after:
    `kavika.target=/dev/sdA kavika.confirm=/dev/sdA` (disk A's exact device); confirm the
    install lands on A and B is byte-identical after. Both product ISOs ship fail-closed (no
    consent baked), so nothing is written until that device is named twice.
+
+   **Writing the installer media.** Identify the target first, by model and size, never by
+   position (USB enumeration order changes between boots):
+
+   ```bash
+   lsblk -o NAME,SIZE,TYPE,RM,TRAN,LABEL,FSTYPE,MOUNTPOINT,MODEL
+   ```
+
+   Then write it, naming the device twice. `--dry-run` runs every check and writes nothing,
+   so run that first:
+
+   ```bash
+   # network installer (1.2 GB, needs internet during install)
+   sudo bash tools/write-preview-to-usb.sh \
+     --iso build/Kavika-OS-0.1.0-netinst-network.iso \
+     --sha256-file build/Kavika-OS-0.1.0-netinst-network.iso.sha256 \
+     --device /dev/sdX --confirm-wipe /dev/sdX --dry-run
+
+   # offline installer (5.0 GB, bundles the repo; needs a >= 5.1 GB disk)
+   sudo bash tools/write-preview-to-usb.sh \
+     --iso build/Kavika-OS-0.1.0-netinst-offline.iso \
+     --sha256-file build/Kavika-OS-0.1.0-netinst-offline.iso.sha256 \
+     --device /dev/sdX --confirm-wipe /dev/sdX --dry-run
+   ```
+
+   Drop `--dry-run` to actually write. Two notes: a **USB flash stick** reports `RM=1`, but
+   an **external USB hard drive** almost always reports `RM=0` (its bridge does not advertise
+   removable media), which the writer refuses by default — pass `--allow-fixed-usb` for those,
+   which relaxes only that flag and keeps every other check. And the live media cannot be its
+   own install target, so installing *onto* a disk means booting the installer from a
+   different one. The writer is `tools/write-preview-to-usb.sh`; the agent cannot perform the
+   raw write itself and hands the operator the guarded command.
 4. **First boot on real hardware** (a disposable machine or the Laptop Studio's **USB**
    disk, never its internal NVMe): user created, opt-in dialog shown, no Windows
    provisioning started (T20).

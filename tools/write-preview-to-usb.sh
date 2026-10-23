@@ -12,9 +12,17 @@
 #
 # Add --dry-run to execute every check and print the plan without writing.
 #
+# External USB *hard drives* (SATA/ATA bridges in an enclosure) usually report RM=0
+# because the bridge does not advertise removable media, unlike a USB flash stick.
+# Such a disk is still a legitimate USB target, so pass --allow-fixed-usb to accept
+# it. That override relaxes ONLY the removable-media flag: the whole-disk, USB
+# transport, not-mounted, size, hash and double-naming checks all still apply, and the
+# disk must still be named twice.
+#
 # Refused unless ALL of these hold:
 #   * the target is a whole disk, not a partition
-#   * the target is removable (RM=1) and on the USB transport
+#   * the target is removable (RM=1) and on the USB transport, or RM=0 on USB with
+#     --allow-fixed-usb
 #   * the target is not the internal NVMe/NVMe-style system disk
 #   * nothing on the target is mounted
 #   * the target is at least as large as the image
@@ -28,7 +36,7 @@ set -u
 
 die() { printf 'refusing: %s\n' "$1" >&2; exit 1; }
 
-iso="" sha_file="" expected="" device="" confirm="" dry_run=0 verify_only=0
+iso="" sha_file="" expected="" device="" confirm="" dry_run=0 verify_only=0 allow_fixed=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --iso) iso=$2; shift 2 ;;
@@ -38,6 +46,7 @@ while [ $# -gt 0 ]; do
     --confirm-wipe) confirm=$2; shift 2 ;;
     --dry-run) dry_run=1; shift ;;
     --verify-only) verify_only=1; shift ;;
+    --allow-fixed-usb) allow_fixed=1; shift ;;
     *) die "unknown argument: $1" ;;
   esac
 done
@@ -64,11 +73,19 @@ case "$device" in
   *nvme*|*mmcblk*boot*|*loop*|*zram*) die "$device looks like an internal or virtual disk" ;;
 esac
 
-# Removable USB only.
-rm_flag=$(lsblk -ndo RM "$device" 2>/dev/null | tr -d ' ')
-[ "$rm_flag" = "1" ] || die "$device is not removable (RM=$rm_flag); refusing to treat it as a USB stick"
+# Removable USB only, with an explicit opt-in for fixed-mode USB bridges.
 tran=$(lsblk -ndo TRAN "$device" 2>/dev/null | tr -d ' ')
 [ "$tran" = "usb" ] || die "$device transport is '$tran', not 'usb'"
+rm_flag=$(lsblk -ndo RM "$device" 2>/dev/null | tr -d ' ')
+if [ "$rm_flag" != "1" ]; then
+  if [ "$allow_fixed" = "1" ]; then
+    echo "note: $device reports RM=$rm_flag (a USB hard drive, not removable media)."
+    echo "      --allow-fixed-usb was given, so this is accepted; the remaining checks still apply."
+    lsblk -ndo NAME,SIZE,TYPE,RM,TRAN,MODEL "$device"
+  else
+    die "$device is not removable (RM=$rm_flag). A USB flash stick reports RM=1; an external USB hard drive usually reports RM=0 and is refused here. If this really is the external USB disk you mean, confirm its model above and rerun with --allow-fixed-usb."
+  fi
+fi
 
 # Nothing mounted: fatal before a write, only a warning for the read-only paths.
 mounted=$(lsblk -no MOUNTPOINT "$device" 2>/dev/null | grep -v '^$' || true)
@@ -103,6 +120,7 @@ else
 fi
 
 # Report what is about to be destroyed.
+actual_label=$(blkid -p "$iso" -o value -s LABEL 2>/dev/null || true)
 echo
 echo "device : $device"
 lsblk -o NAME,SIZE,TYPE,RM,TRAN,LABEL,FSTYPE,MODEL "$device"
@@ -149,7 +167,8 @@ readback=$(dd if="$device" bs=8M iflag=direct count=$(( iso_size / 8388608 + 1 )
            | head -c "$iso_size" | sha256sum | cut -d' ' -f1)
 if [ "$readback" = "$actual" ]; then
   echo "read-back SHA-256 MATCH: $readback"
-  echo "write verified. The volume label is the preserved upstream one (Fedora-KDE-Live-44), not 'Kavika'."
+  echo "write verified. The media keeps the volume label baked into the ISO, not 'Kavika'."
+  echo "image label: ${actual_label:-unknown}"
 else
   echo "read-back SHA-256 MISMATCH: got $readback" >&2
   echo "expected                    $actual" >&2
