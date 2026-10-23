@@ -217,6 +217,49 @@ and after:
 The Envy is **not** on this ladder. It enters only after every rung passes and the user
 gives a fresh explicit go/no-go with its exact disk identified.
 
+### The physical rung, end to end (runbook)
+
+Two disks, two jobs. Confusing them is the only way this goes wrong:
+
+| Disk | Node here (23 Oct) | Job |
+|---|---|---|
+| 3.8 GB USB stick | `/dev/sdb`, `RM=1`, `usb` | installer media. Boot only, never a target |
+| 1 TB Toshiba external | `/dev/sdc`, `RM=0`, `usb` | the Kavi'ka **system** disk, and the home of the 128 GiB guest volume |
+
+**Nodes change between boots and between machines.** Derive them from `lsblk` model and size
+every time; this disk has already been `/dev/sda`, `/dev/sdb` and `/dev/sdc` in one session.
+
+1. **Flash the installer** to the stick (`write-preview-to-usb.sh`, below). Done when the
+   read-back SHA-256 matches the sidecar.
+2. **Capture the before state** of every disk in the test computer, without root:
+   `lsblk -o NAME,SIZE,TYPE,FSTYPE,LABEL,UUID,PARTUUID,MOUNTPOINT`. UUIDs and PARTUUIDs are
+   the fingerprint; if the installer touches a disk it did not name, they change.
+3. **Attach both disks to the test computer**, enable USB boot, and check Secure Boot. Fedora's
+   shim is Microsoft-signed, so it normally boots with Secure Boot on; changing firmware is
+   outside this project's approval and is the operator's call.
+4. **Boot the stick.** Nothing is written yet. Before committing, get a shell in the installer
+   and run `lsblk -o NAME,SIZE,TYPE,TRAN,MODEL` **there**: the Toshiba will not carry the node
+   it had on the dev host.
+5. **At GRUB**, press `e` on "Install Kavi'ka OS" and append the target **twice**, both tokens
+   being the Toshiba's node as the installer sees it, then Ctrl+X:
+   `kavika.target=/dev/sdX kavika.confirm=/dev/sdX`. The install erases that disk completely.
+   The ≥ 240 GiB size check protects against naming the stick, but **not** against naming a
+   large internal disk, so be certain.
+6. **Read the console.** Proceed only on `KAVIKA CONSENT: <name> confirmed (<GiB>)`; a
+   `KAVIKA CONSENT-REFUSED:` line means nothing was written and the reason is stated.
+7. **Re-run the step-2 fingerprint on the test computer.** The named disk should now carry the
+   Kavi'ka layout; every other disk must be byte-identical. This, not the installer's exit
+   code, is the T19 evidence.
+8. **Boot the test computer from the Toshiba**, complete first boot (initial-setup creates the
+   user), and answer the Windows opt-in.
+9. **Give the guest its volume** (Anaconda leaves it `root:root`):
+   `sudo chown "$USER" /var/lib/kavika/windows`.
+10. **Get your Windows ISO onto the installed system** (8.5 GB; the installer stick cannot
+    carry it). Offline method: boot the dev host, plug the Toshiba in, mount its `/home` and
+    copy the ISO in.
+11. **Provision and show it:** `kavika-windows-provision --iso <iso>`, then
+    `kavika-windows-workspace`. See [windows-workspace.md](../docs/windows-workspace.md).
+
 ## 7. First boot and the Windows opt-in (step 5)
 
 - Anaconda creates the user (D5); the desktop comes up as Kavi'ka OS with the two-desktop
