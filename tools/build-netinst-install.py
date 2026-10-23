@@ -52,13 +52,15 @@ def digest(path: Path) -> str:
     return h.hexdigest()
 
 
-def grub_netinst(text: str, test_target: str | None = None, test_consent: str | None = None) -> str:
+def grub_netinst(text: str, test_target: str | None = None, test_consent: str | None = None,
+                 compact: bool = False) -> str:
     """Add an automated 'Install Kavi'ka OS' entry that points at the bundled kickstart.
 
     The entry is inserted first and becomes the default. `test_consent` bakes an arbitrary
     kernel-cmdline consent string verbatim (for exercising the refusal matrix); otherwise
     `test_target` bakes matching kavika.target/confirm tokens. With neither, the installer's
-    %pre refuses (fail-closed).
+    %pre refuses (fail-closed). `compact` bakes `kavika.compact=1`, which selects the
+    compact layout and lower size floor in the %pre for a target under 240 GiB.
     """
     if f"inst.stage2=hd:LABEL={LABEL}" not in text:
         raise ValueError("Unexpected upstream netinst GRUB configuration")
@@ -67,6 +69,8 @@ def grub_netinst(text: str, test_target: str | None = None, test_consent: str | 
         extra = " " + test_consent.strip()
     elif test_target:
         extra = f" kavika.target={test_target} kavika.confirm={test_target}"
+    if compact:
+        extra += " kavika.compact=1"
     entry = (
         'menuentry "Install Kavi\'ka OS (automated)" --class fedora --class gnu-linux --class gnu --class os {\n'
         f'\tlinux /images/pxeboot/vmlinuz inst.stage2=hd:LABEL={LABEL} '
@@ -109,6 +113,8 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True, help="new .iso output path")
     parser.add_argument("--test-target", help="bake kavika.target/confirm for a disposable KVM run (e.g. /dev/vda)")
     parser.add_argument("--test-consent", help="bake an arbitrary kernel-cmdline consent string verbatim (refusal-matrix testing)")
+    parser.add_argument("--compact", action="store_true",
+                        help="bake kavika.compact=1: compact layout and a lower size floor, for a target under 240 GiB (a small test disk). A 64 GiB guest will not fit; provision with --disk-gib 32")
     parser.add_argument("--repo-dir", type=Path, help="bundle this local repo (repodata + *.rpm) onto the media and switch the source to cdrom")
     args = parser.parse_args()
     base = args.base.resolve(strict=True)
@@ -159,7 +165,7 @@ def main() -> int:
             extract_grub(base, upstream, iso_path)
             patched = work / ("patched-" + rel.replace("/", "-"))
             patched.write_text(grub_netinst(upstream.read_text(encoding="utf-8"), args.test_target,
-                                            args.test_consent), encoding="utf-8")
+                                            args.test_consent, args.compact), encoding="utf-8")
             subprocess.run([grub_check, str(patched)], check=True)
             grub_files[rel] = patched
 
@@ -187,7 +193,7 @@ def main() -> int:
                                "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Everything/x86_64/os/"),
             "offline_repo_bundled": repo_dir is not None,
             "kickstart": KICKSTART_ON_ISO, "overlay": OVERLAY_ON_ISO,
-            "volume_label": LABEL, "test_target": args.test_target,
+            "volume_label": LABEL, "test_target": args.test_target, "compact": args.compact,
             "overlay_cpio_sha256": digest(overlay_cpio),
             "kickstart_sha256": digest(ks_file),
             "builder_sha256": digest(Path(__file__)),

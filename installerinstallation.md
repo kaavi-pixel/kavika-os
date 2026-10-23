@@ -260,6 +260,56 @@ every time; this disk has already been `/dev/sda`, `/dev/sdb` and `/dev/sdc` in 
 11. **Provision and show it:** `kavika-windows-provision --iso <iso>`, then
     `kavika-windows-workspace`. See [windows-workspace.md](../docs/windows-workspace.md).
 
+### Compact profile: targets under 240 GiB
+
+The product layout needs 240 GiB (ESP 1 + `/boot` 2 + `/home` 20 + a 128 GiB guest volume +
+`/` 60). A smaller target is refused outright. For a small test disk there is an opt-in
+compact profile:
+
+| | product | compact |
+|---|---|---|
+| size floor | 240 GiB | 76 GiB |
+| `/home` | 20 GiB | 10 GiB |
+| guest volume | 128 GiB | 40 GiB |
+| `/` | 60 GiB minimum, grow | 20 GiB minimum, grow |
+
+Selected with `kavika.compact=1` on the kernel command line, or baked at build time with
+`--compact`. On a 119.2 GiB disk (a 128 GB SSD) it yields 66 GiB for `/`. The guest volume is
+40 GiB, so provision there with `--disk-gib 32`; the default 64 GiB guest does **not** fit.
+Compact is never the default, and both the floor and the volume sizes are asserted in
+`tests/test_kavika_install.py` so the product layout cannot silently regress.
+
+Built 23 October 2026: `build/Kavika-OS-0.1.0-netinst-compact.iso`, SHA-256
+`1123230d…`, 1,218,707,456 bytes, built with `--compact --test-target /dev/vda`,
+`checkisomd5` OK.
+
+### When the target machine will not boot the installer medium
+
+Observed 23 October 2026 on the test PC: the firmware **offered** the USB stick, the operator
+selected it, and it fell through to Windows. That is the firmware finding no acceptable boot
+entry on the stick; the machine itself boots a GPT disk with an ESP, in UEFI mode.
+
+Because the machine *does* boot its own internal disk, the install can be driven from the dev
+host instead:
+
+1. Attach **only** the target disk to the dev host, and identify it by model, size and serial.
+2. Build with `--compact --test-target /dev/vda`. A baked `/dev/vda` target is safe on bare
+   metal, because virtio nodes do not exist there and the `%pre` refuses.
+3. Boot that ISO in QEMU with the physical disk attached as virtio-blk, so it appears as
+   `/dev/vda` inside the guest. Use `-no-reboot` so the installer's own reboot ends QEMU
+   instead of restarting into the installer again, and `-boot order=d` so the firmware boots
+   the CD rather than the Windows already on the target.
+4. Watch the console for `KAVIKA CONSENT: vda confirmed` and the `KAVIKA-VERIFY:` lines.
+
+**The boot entry travels with the disk, not the machine.** Anaconda registers its entry with
+`efibootmgr` on whatever machine ran the installer, so a disk installed in a VM has no entry
+on the target machine. The `%post` therefore also writes the UEFI removable-media fallback
+`\EFI\BOOT\BOOTX64.EFI` onto the ESP, which is what firmware with no valid entry boots. If a
+machine still will not boot it, add an entry in firmware pointing at
+`\EFI\fedora\shimx64.efi` on that ESP.
+
+The agent does not perform raw writes to physical disks. The operator runs the command.
+
 ## 7. First boot and the Windows opt-in (step 5)
 
 - Anaconda creates the user (D5); the desktop comes up as Kavi'ka OS with the two-desktop

@@ -164,11 +164,32 @@ class NetinstKickstartTests(unittest.TestCase):
         self.assertIn("ignoredisk --only-use=$TARGET", NET_KICKSTART)
         self.assertIn("clearpart --all --initlabel --drives=$TARGET", NET_KICKSTART)
 
+    def test_compact_profile_is_opt_in_and_keeps_the_product_default(self):
+        # The product floor and the 128 GiB guest volume must survive: compact is opt-in.
+        self.assertIn("kavika.compact=", NET_KICKSTART)
+        self.assertIn("MIN_BYTES=$((240 * 1024 * 1024 * 1024))", NET_KICKSTART)
+        self.assertIn("WIN_SIZE=131072", NET_KICKSTART)
+        # and the compact branch must lower the floor and shrink the guest volume
+        self.assertIn("MIN_BYTES=$((76 * 1024 * 1024 * 1024))", NET_KICKSTART)
+        self.assertIn("WIN_SIZE=40960", NET_KICKSTART)
+        # the layout must be driven by the variables, not hardcoded, or compact would do nothing
+        for line in ("part /home --fstype=ext4 --size=$HOME_SIZE",
+                     "part /var/lib/kavika/windows --fstype=ext4 --size=$WIN_SIZE",
+                     "part / --fstype=ext4 --size=$ROOT_SIZE --grow"):
+            self.assertIn(line, NET_KICKSTART)
+
     def test_delivers_overlay_in_post_and_reboots(self):
         self.assertIn("%post --nochroot", NET_KICKSTART)
         self.assertIn("kavika-overlay.cpio", NET_KICKSTART)
         self.assertIn("cpio -idmu", NET_KICKSTART)
         self.assertIn("reboot", NET_KICKSTART)
+
+    def test_installs_the_esp_boot_fallback_for_physical_installs(self):
+        # A disk installed in a VM or moved to another machine has no NVRAM entry there, so
+        # the ESP must also carry the removable-media fallback path.
+        self.assertIn('ESP="$SYSROOT/boot/efi"', NET_KICKSTART)
+        self.assertIn("EFI/fedora/shimx64.efi", NET_KICKSTART)
+        self.assertIn('cp -f "$ESP/EFI/fedora/shimx64.efi" "$ESP/EFI/BOOT/BOOTX64.EFI"', NET_KICKSTART)
 
     def test_no_baked_password(self):
         self.assertNotIn("--password", NET_KICKSTART)
@@ -192,6 +213,12 @@ class NetinstKickstartTests(unittest.TestCase):
 
         with_consent = netinst_builder.grub_netinst(source, test_consent="kavika.target=/dev/vda kavika.confirm=/dev/vdb")
         self.assertIn("kavika.target=/dev/vda kavika.confirm=/dev/vdb", with_consent)
+
+        # compact is baked only when asked for, and composes with a baked target
+        self.assertNotIn("kavika.compact=", result)
+        compacted = netinst_builder.grub_netinst(source, test_target="/dev/vda", compact=True)
+        self.assertIn("kavika.target=/dev/vda kavika.confirm=/dev/vda", compacted)
+        self.assertIn("kavika.compact=1", compacted)
 
     def test_rewrite_kickstart_source_switches_to_cdrom(self):
         ks = 'lang en_GB.UTF-8\nurl --url="https://example.invalid/os/"\ntext\n'

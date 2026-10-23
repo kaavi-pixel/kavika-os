@@ -53,7 +53,28 @@ initial-setup-gui
 set -uo pipefail
 TARGET=$(sed -n 's/.*kavika\.target=\([^ ]*\).*/\1/p' /proc/cmdline)
 CONFIRM=$(sed -n 's/.*kavika\.confirm=\([^ ]*\).*/\1/p' /proc/cmdline)
-MIN_BYTES=$((240 * 1024 * 1024 * 1024))
+# The size floor and layout. Default is the product layout: a 128 GiB volume for the
+# Windows guest, which needs a 240 GiB disk. `kavika.compact=1` on the kernel command line
+# selects a compact layout for a smaller target (about 76 GiB minimum), shrinking the guest
+# volume to 40 GiB and /home to 10 GiB. Compact is for test rigs and small disks and is
+# never the default; a 64 GiB guest does NOT fit in a 40 GiB volume, so provision with
+# --disk-gib 32 there. See installerinstallation.md.
+COMPACT=$(sed -n 's/.*kavika\.compact=\([^ ]*\).*/\1/p' /proc/cmdline)
+case "$COMPACT" in
+    1|yes|true) COMPACT=1 ;;
+    *) COMPACT=0 ;;
+esac
+if [ "$COMPACT" = "1" ]; then
+    MIN_BYTES=$((76 * 1024 * 1024 * 1024))
+    HOME_SIZE=10240
+    WIN_SIZE=40960
+    ROOT_SIZE=20480
+else
+    MIN_BYTES=$((240 * 1024 * 1024 * 1024))
+    HOME_SIZE=20480
+    WIN_SIZE=131072
+    ROOT_SIZE=61440
+fi
 fail() {
     echo "KAVIKA CONSENT-REFUSED: $*" > /dev/ttyS0 2>/dev/null
     echo "KAVIKA CONSENT-REFUSED: $*" > /dev/console 2>/dev/null
@@ -105,12 +126,12 @@ ignoredisk --only-use=$TARGET
 clearpart --all --initlabel --drives=$TARGET
 part /boot/efi --fstype=efi --size=1024
 part /boot --fstype=ext4 --size=2048
-part /home --fstype=ext4 --size=20480
-part /var/lib/kavika/windows --fstype=ext4 --size=131072
-part / --fstype=ext4 --size=61440 --grow
+part /home --fstype=ext4 --size=$HOME_SIZE
+part /var/lib/kavika/windows --fstype=ext4 --size=$WIN_SIZE
+part / --fstype=ext4 --size=$ROOT_SIZE --grow
 bootloader --boot-drive=$TARGET
 KS
-echo "KAVIKA CONSENT: storage scoped to $TARGET"
+echo "KAVIKA CONSENT: storage scoped to $TARGET (compact=$COMPACT)"
 %end
 
 %post --nochroot --log=/root/kavika-overlay.log
@@ -150,6 +171,20 @@ else
     echo "KAVIKA-VERIFY: os-release=NOT-Kavika" > /dev/console
 fi
 rpm -q --root="$SYSROOT" qemu-kvm swtpm edk2-ovmf mtools 7zip parted dosfstools 2>&1 | sed 's/^/KAVIKA-VERIFY: pkg /' > /dev/console
+# Physical installs: Anaconda registers its boot entry with efibootmgr on whatever machine
+# ran the installer. When the disk is then moved to another machine, or installed from a VM,
+# that NVRAM entry does not exist there and some firmware then finds nothing to boot. Also
+# provide the UEFI removable-media fallback path on the ESP: firmware that has no valid
+# entry boots \EFI\BOOT\BOOTX64.EFI. shim loads the vendor second stage from its own
+# compiled prefix, so copying shim alone is enough.
+ESP="$SYSROOT/boot/efi"
+if [ -f "$ESP/EFI/fedora/shimx64.efi" ]; then
+    mkdir -p "$ESP/EFI/BOOT"
+    cp -f "$ESP/EFI/fedora/shimx64.efi" "$ESP/EFI/BOOT/BOOTX64.EFI"
+    echo "KAVIKA-VERIFY: ESP fallback EFI/BOOT/BOOTX64.EFI installed" > /dev/console
+else
+    echo "KAVIKA-VERIFY: no ESP shim found; fallback BOOTX64.EFI not installed" > /dev/console
+fi
 %end
 
 reboot
