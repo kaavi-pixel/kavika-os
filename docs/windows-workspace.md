@@ -42,10 +42,18 @@ reach for if a gesture misbehaves.
 | Component | Role |
 |---|---|
 | `usr/local/bin/kavika-windows-workspace` | switches to the Windows desktop and starts the guest full-screen if it is not already running |
-| `tools/launch-windows-vm-linux.py --reuse` | starts an **already-provisioned** guest: no disk creation, no wipe, no install media attached |
-| `tools/launch-windows-vm-linux.py --full-screen` | `-display gtk,full-screen=on` |
+| `usr/local/bin/kavika-windows-provision` | builds the media from your Windows ISO and runs the unattended install (one command) |
+| `usr/local/bin/kavika-windows-optin` (+ `/etc/skel/.config/autostart/kavika-windows-optin.desktop`) | offers the workspace once on first login (T20); silent where qemu is absent |
+| `usr/local/lib/kavika/kavika-windows-media.py` | builds the boot ESP and the answer stick from the ISO |
+| `/usr/share/kavika/autounattend.xml` | the unattended answer file |
+| `usr/local/lib/kavika/launch-windows-vm-linux.py --reuse` | starts an **already-provisioned** guest: no disk creation, no wipe, no install media attached |
+| `usr/local/lib/kavika/launch-windows-vm-linux.py --full-screen` | `-display gtk,full-screen=on` |
 | `kavika-preview` KWin script | Meta+F12 toggle |
 | `kwinrc` | the two-desktop, single-row layout |
+
+`kavika-windows-provision` builds the boot ESP and answer stick with the media builder, then
+calls the launcher with `--esp-image`, `--answer-image` and `--allow-reboot`. The builder is
+the reason the ESP is never reused: it rebuilds from the ISO every run (D23).
 
 `--full-screen` composes the display option exactly as this QEMU documents it:
 `-display gtk[,full-screen=on|off][,gl=on|off][,grab-on-hover=on|off]`, taken from the
@@ -60,6 +68,9 @@ no external media is needed to start it.
 
 **Verified here:**
 
+- `--reuse` **really starts** a provisioned guest, not only in dry-run: a real boot with
+  nothing but the guest's own disk attached reached the Windows desktop. (D30: `mkdir` used
+  to fail on the existing directory, so this had never worked - see [bugtracker](../bugtracker.md).)
 - The launcher's `--reuse` and `--full-screen` behave correctly, checked by dry-run against a
   real provisioned guest: no `-cdrom`, no `-boot`, boot ESP attached, `-display
   gtk,full-screen=on` emitted.
@@ -89,7 +100,7 @@ any Fedora KDE install.
 1. Confirm the desktops exist and are one row:
    `qdbus6 org.kde.KWin /KWin org.kde.KWin.VirtualDesktopManager.desktops`
 2. Confirm the switch works at all: `qdbus6 org.kde.KWin /KWin org.kde.KWin.setCurrentDesktop 2`
-3. Provision a Windows guest (see [windows-install-recipe.md](windows-install-recipe.md)).
+3. Provision a Windows guest: `kavika-windows-provision --iso /path/to/Windows11.iso`.
 4. Run `kavika-windows-workspace`. The guest should appear full-screen on desktop 2.
 5. Now the actual question: **swipe three fingers left and right** and see whether the desktop
    changes. If it does not, check whether the desktop layout is still a single row.
@@ -109,6 +120,14 @@ ESP as **optional** and starts a provisioned guest without one.
 
 ## Status
 
-No Windows is shipped in this image and none can be: Windows provisioning is a separate,
-opt-in, licensed step. Until a guest is provisioned, the Windows workspace is an empty
-desktop and `kavika-windows-workspace` says so rather than starting something unexpected.
+No Windows is shipped in this image and none can be: provisioning is a separate, opt-in,
+licensed step. What the image now ships is the tooling to do it on an installed system -
+`kavika-windows-provision` builds the media and runs the unattended install, and the
+first-login opt-in offers it once. Until a guest is provisioned the Windows workspace is an
+empty desktop and `kavika-windows-workspace` says so rather than starting something
+unexpected.
+
+The guest installed from builder-made media reached the desktop, booted with nothing but its
+own disk attached and ran Firefox ([provisioning record](validation/windows-provisioning-2026-10-23.md)).
+What still needs a KDE host with a touchpad, rather than a headless VM: the opt-in dialog
+being drawn, and the desktop switch and the swipe themselves.

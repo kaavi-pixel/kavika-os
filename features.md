@@ -1,6 +1,6 @@
 # Kavi'ka OS: features v2
 
-Version 0.9 | updated 21 October 2026 | Product specification. Install target: **HP Envy x360 (1 TB)**; test machine: Surface Laptop Studio (Fedora, KVM); the Surface Pro 8 is dropped. Diagnostic live preview built; a Windows 11 feasibility guest installs to the desktop and is self-contained.
+Version 0.9 | updated 23 October 2026 | Product specification. Install target: **HP Envy x360 (1 TB)**; test machine: Surface Laptop Studio (Fedora, KVM); the Surface Pro 8 is dropped. Diagnostic live preview built; a Windows 11 feasibility guest installs to the desktop and is self-contained, and the image now ships the Windows provisioning tooling.
 
 Work resumed on 19 October 2026. The previous diagnostic image reached a working KDE desktop in a disposable VM but its Meta+F12 workspace switch failed (line-ending defect). The fix is rebuilt as `bd8407d6…` and **re-tested**: the switch works both directions in a KVM guest, from USB on the Laptop Studio, and (user-reported) on the HP Envy. See [handoff.md](handoff.md) before treating any image as ready.
 
@@ -52,7 +52,7 @@ External USB keyboard and mouse are available. No resource or compatibility clai
 
 The 0.1.0 live preview pins Fedora KDE 44 x86_64, adds the unchanged logo, Test Centre, a privacy-filtered hardware report and a `Meta+F12` two-desktop demonstration. The second desktop is labelled “Windows (not installed)”; both desktops are Linux. Implementation and runtime validation are tracked separately in [the preview evidence](docs/validation/live-preview-0.1.0.md).
 
-Windows, the user's browser, a guest VM, cross-OS file sharing, four-finger acceptance, persistence and installation are not provided by this preview. (The Windows side is **proven separately** in a KVM feasibility guest — installed, self-contained, browser opening — but that work is not in this image.) Full Windows remains the requirement; diagnostic media is an earlier testing aid, not a scope reduction or completion of F01–F15/O01–O04.
+Windows, the user's browser, a guest VM, cross-OS file sharing, four-finger acceptance, persistence and installation are not provided by this preview. (The Windows side is **proven separately** in a KVM feasibility guest — installed, self-contained, browser opening — and since 23 October 2026 the image **ships the tooling to reproduce it**: a one-command provisioner, a media builder, the unattended answer file and a first-login opt-in. The guest itself still is not in the image, because Windows is opt-in and licensed.) Full Windows remains the requirement; diagnostic media is an earlier testing aid, not a scope reduction or completion of F01–F15/O01–O04.
 
 Surface Pro 8 native Type Cover/touchpad, touch and pen are listed with a custom-kernel requirement by linux-surface, so the stock-kernel first preview uses the available external inputs ([linux-surface matrix](https://github.com/linux-surface/linux-surface/wiki/Supported-Devices-and-Features)). A custom-kernel/signing path requires separate implementation and testing; no automatic firmware changes are permitted.
 
