@@ -25,6 +25,11 @@
 #     --allow-fixed-usb
 #   * the target is not the internal NVMe/NVMe-style system disk
 #   * nothing on the target is mounted
+#     If a device will not unmount with "target is busy", a file manager is almost always
+#     holding the mountpoint: find it with `fuser -vm <mountpoint>` (GNOME Files shows as
+#     `nautilus`, KDE as `dolphin`), quit it (`nautilus -q`) or close that window, then
+#     unmount. This script deliberately never unmounts the target itself: a surprising
+#     unmount is how the wrong disk gets erased.
 #   * the target is at least as large as the image
 #   * the ISO's SHA-256 matches the sidecar or --sha256 value
 #   * --device and --confirm-wipe name the same device

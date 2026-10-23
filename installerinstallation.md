@@ -184,7 +184,11 @@ and after:
    tests is too small for it and the writer refuses it on the size check); the **network** ISO
    is 1,218,707,456 B and fits that stick with ~2.6 GiB to spare. Unmount the target first
    (`udisksctl unmount -b /dev/sdX1`) — the writer treats a mounted partition as fatal for a
-   write, though only a warning for a dry run. After flashing, the stick's volume label reads
+   write, though only a warning for a dry run. If the unmount fails with **"target is busy"**,
+   a file manager is holding the mountpoint: find the holder with `fuser -vm <mountpoint>`
+   (GNOME Files appears as `nautilus`, KDE as `dolphin`), quit it (`nautilus -q`) or close that
+   window, then unmount again. A read-only ISO mount cannot lose data by being unmounted, so
+   this is always safe. After flashing, the stick's volume label reads
    `Fedora-E-dvd-x86_64-44` (the label baked into the ISO), not "Kavika".
 
    Two further notes: a **USB flash stick** reports `RM=1`, but
