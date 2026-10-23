@@ -147,8 +147,10 @@ and after:
    zero physical risk. Done when: the installed image boots to first boot, and the guest's
    *other* disks (a second qcow2 fixture with a known hash) are byte-identical after.
 2. **Refusal matrix.** Every §4 refusal path exercised and recorded.
-3. **Physical disposable USB disks.** Two sacrificial sticks: install to one, prove the
-   other unchanged by hash. This is the T19 evidence. Procedure: write
+3. **Physical disposable USB disks.** Two sacrificial USB **disks of at least 240 GiB each** —
+   the `%pre` refuses any target below 240 GiB (`MIN_BYTES`), so an ordinary flash stick can
+   never serve as the install *target* (it can only be the boot medium). Install to one, prove
+   the other unchanged by hash. This is the T19 evidence. Procedure: write
    `build/Kavika-OS-0.1.0-netinst-network.iso` (or `-offline`) to USB disk A; attach USB disk
    B (known hash) beside it; boot, and at the GRUB menu edit the entry to append
    `kavika.target=/dev/sdA kavika.confirm=/dev/sdA` (disk A's exact device); confirm the
@@ -199,8 +201,8 @@ and after:
    different one. The writer is `tools/write-preview-to-usb.sh`; the agent cannot perform the
    raw write itself and hands the operator the guarded command.
 4. **First boot on real hardware** (a disposable machine or the Laptop Studio's **USB**
-   disk, never its internal NVMe): user created, opt-in dialog shown, no Windows
-   provisioning started (T20).
+   disk, never its internal NVMe, and again at least 240 GiB): user created, opt-in dialog
+   shown, no Windows provisioning started (T20).
 5. **Recovery/update rehearsal (T22):** define and test the rollback story before any
    release gate.
 

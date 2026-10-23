@@ -131,3 +131,22 @@ The guest installed from builder-made media reached the desktop, booted with not
 own disk attached and ran Firefox ([provisioning record](validation/windows-provisioning-2026-10-23.md)).
 What still needs a KDE host with a touchpad, rather than a headless VM: the opt-in dialog
 being drawn, and the desktop switch and the swipe themselves.
+
+### Why there is no single image with Windows already in it
+
+Asked directly on 23 October 2026. Three independent reasons, any one of which is fatal:
+
+- **Licensing and policy.** Kavi'ka ships no Windows, no licence and no guest disk; Windows is
+  provisioned from the user's own ISO on an installed system. That is a product decision, not
+  a missing feature.
+- **The live preview has no virtualization stack.** `qemu-kvm`, `swtpm`, `edk2-ovmf` and
+  `mtools` are in the *installed* package set, not on the live media, so a guest can neither be
+  provisioned nor run from a live session.
+- **Size.** The installer's layout includes a dedicated `/var/lib/kavika/windows` volume of
+  128 GiB and a default guest disk of 64 GiB, and the installer refuses any target under
+  **240 GiB**. A 3.8 GB flash stick is short by about a factor of 60, and can only ever be the
+  boot medium.
+
+The installed media do now ship the tooling, so the shortest real route is: **install** to a
+disk of at least 240 GiB, boot it, then `kavika-windows-provision --iso /path/to/Windows11.iso`,
+then `kavika-windows-workspace`.
