@@ -16,7 +16,19 @@
 
 set -u
 
-VM_DIR="${KAVIKA_WINDOWS_VM_DIR:-$HOME/.local/share/kavika/windows}"
+# Where the guest disk lives. The installer creates a dedicated volume for exactly this
+# (/var/lib/kavika/windows, 128 GiB). Prefer it when it exists and is writable: the
+# fallback under $HOME lands on the 20 GiB /home, which a 64 GiB guest cannot fit in
+# (the qcow2 alone grew to ~18-20 GiB in the 23 Oct validation), and it would share that
+# space with the user's own files.
+KAVIKA_WINDOWS_VOLUME="${KAVIKA_WINDOWS_VOLUME:-/var/lib/kavika/windows}"
+if [ -n "${KAVIKA_WINDOWS_VM_DIR:-}" ]; then
+    VM_DIR="$KAVIKA_WINDOWS_VM_DIR"
+elif [ -d "$KAVIKA_WINDOWS_VOLUME" ] && [ -w "$KAVIKA_WINDOWS_VOLUME" ]; then
+    VM_DIR="$KAVIKA_WINDOWS_VOLUME"
+else
+    VM_DIR="$HOME/.local/share/kavika/windows"
+fi
 MEDIA_DIR="$VM_DIR/media"
 LAUNCHER="${KAVIKA_WINDOWS_LAUNCHER:-/usr/local/lib/kavika/launch-windows-vm-linux.py}"
 MEDIA_BUILDER="${KAVIKA_WINDOWS_MEDIA_TOOL:-/usr/local/lib/kavika/kavika-windows-media.py}"
@@ -38,9 +50,18 @@ image in the guest directory. Nothing outside the guest directory is written.
 
 Options:
   --iso PATH        your Windows 11 ISO (required)
-  --vm-dir DIR      guest directory            (default ~/.local/share/kavika/windows)
+  --vm-dir DIR      guest directory            (default: /var/lib/kavika/windows when that
+                                                volume exists and is writable, i.e. on an
+                                                installed Kavi'ka; otherwise
+                                                ~/.local/share/kavika/windows)
   --disk-gib N      guest disk size in GiB     (default 64)
   --dry-run         build the media, then print the install command and stop
+
+On an installed system the guest belongs on the dedicated /var/lib/kavika/windows volume
+(128 GiB), not in $HOME, whose 20 GiB /home cannot hold a 64 GiB guest. If that volume is
+not writable by you yet, make it so once:
+
+  sudo chown "$USER" /var/lib/kavika/windows
 
 Environment overrides mirror the variables at the top of this script.
 EOF
@@ -90,6 +111,7 @@ fi
 
 mkdir -p "$MEDIA_DIR"
 
+say "guest directory: $VM_DIR"
 say "building the boot ESP and answer stick from $ISO ..."
 if ! "$PYTHON" "$MEDIA_BUILDER" --iso "$ISO" --out-dir "$MEDIA_DIR" --answer "$ANSWER"; then
     say "media build failed; nothing was installed"

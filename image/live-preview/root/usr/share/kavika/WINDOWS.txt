@@ -27,8 +27,20 @@ WHAT IT DOES NOT CONTAIN
 HOW TO PROVISION (on an installed Kavi'ka system)
   1. kavika-windows-provision --iso /path/to/Windows11.iso
      This builds the boot ESP and the answer stick from YOUR ISO, then starts an
-     unattended Windows 11 install into a private disk image
-     (~/.local/share/kavika/windows). It never touches a physical disk.
+     unattended Windows 11 install into a private disk image. It never touches a
+     physical disk.
+
+     WHERE THE GUEST LIVES. The installer creates a dedicated volume for guest disks,
+     /var/lib/kavika/windows (128 GiB), and the provisioner uses it by default when it
+     exists and is writable. Do NOT let the guest land in $HOME: /home is 20 GiB and a
+     64 GiB guest cannot fit, so you would run out of space part-way through the install.
+     If the volume is not writable by you yet, do this once:
+
+       sudo chown "$USER" /var/lib/kavika/windows
+
+     Pass --vm-dir DIR, or set KAVIKA_WINDOWS_VM_DIR, to put the guest somewhere else
+     deliberately. The provisioner prints the directory it chose before it starts.
+
      NEVER reuse an ESP image captured from a previous run - Windows Setup rewrites its
      BCD, so a captured image boots a stale install and fails. kavika-windows-provision
      always rebuilds from the ISO.
