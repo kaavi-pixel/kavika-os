@@ -207,10 +207,11 @@ class PreviewTests(unittest.TestCase):
 
     def test_windows_provisioning_guide_ships_and_is_honest(self):
         guide = (ROOT / "image/live-preview/root/usr/share/kavika/WINDOWS.txt").read_text()
-        self.assertIn("WHAT THIS IMAGE DOES NOT CONTAIN", guide)
+        self.assertIn("WHAT IT DOES NOT CONTAIN", guide)
+        self.assertIn("No Windows, no Windows licence", guide)
         self.assertIn("windows-install-recipe.md", guide)
         self.assertIn("NEVER reuse", guide)  # the D23 trap
-        self.assertIn("removable", guide)     # the D16 trap
+        self.assertIn("kavika-windows-provision", guide)  # names the shipped command
 
     def test_builder_ships_the_windows_launcher(self):
         # The overlay assembly now lives in the shared kavika_overlay module used by both builders.

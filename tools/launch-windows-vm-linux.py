@@ -270,7 +270,7 @@ def main(argv=None) -> int:
         print("--dry-run: nothing was created")
         return 0
 
-    vm_dir.mkdir(parents=True)
+    vm_dir.mkdir(parents=True, exist_ok=True)
     disk = vm_dir / "windows11.qcow2"
     efi_vars = vm_dir / "efi-vars.fd"
     serial_log = vm_dir / "serial.log"

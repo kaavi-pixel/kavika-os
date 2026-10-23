@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+# kavika-windows-provision - provision the Windows workspace guest from your own Windows ISO.
+#
+# On an installed Kavi'ka system this:
+#   1. builds the boot ESP and the answer stick from your Windows 11 ISO
+#      (kavika-windows-media.py - the ISO's own boot files, NEVER a captured ESP),
+#   2. starts an unattended Windows install into a private disk image,
+#   3. tells you how to start the guest afterwards (kavika-windows-workspace).
+#
+# It writes only inside the guest directory (default ~/.local/share/kavika/windows). It
+# never touches a physical disk, never downloads Windows, and carries no licence key:
+# Windows licensing and activation are yours.
+#
+# WHY A SEPARATE STEP: Windows provisioning is an opt-in, licensed action, so Kavi'ka never
+# starts it on its own. See /usr/share/kavika/WINDOWS.txt for the whole picture.
+
+set -u
+
+VM_DIR="${KAVIKA_WINDOWS_VM_DIR:-$HOME/.local/share/kavika/windows}"
+MEDIA_DIR="$VM_DIR/media"
+LAUNCHER="${KAVIKA_WINDOWS_LAUNCHER:-/usr/local/lib/kavika/launch-windows-vm-linux.py}"
+MEDIA_BUILDER="${KAVIKA_WINDOWS_MEDIA_TOOL:-/usr/local/lib/kavika/kavika-windows-media.py}"
+ANSWER="${KAVIKA_WINDOWS_ANSWER:-/usr/share/kavika/autounattend.xml}"
+PYTHON="${KAVIKA_PYTHON:-python3}"
+DISK_GIB="${KAVIKA_WINDOWS_DISK_GIB:-64}"
+MEM_MIB="${KAVIKA_WINDOWS_MEM_MIB:-5120}"
+CPUS="${KAVIKA_WINDOWS_CPUS:-4}"
+
+say() { printf 'kavika-windows-provision: %s\n' "$*" >&2; }
+
+usage() {
+    cat <<'EOF'
+Usage: kavika-windows-provision --iso /path/to/Windows11.iso [options]
+
+Provision the Windows workspace guest from your own Windows 11 ISO. Builds the boot ESP
+and the answer stick from the ISO, then starts an unattended install into a private disk
+image in the guest directory. Nothing outside the guest directory is written.
+
+Options:
+  --iso PATH        your Windows 11 ISO (required)
+  --vm-dir DIR      guest directory            (default ~/.local/share/kavika/windows)
+  --disk-gib N      guest disk size in GiB     (default 64)
+  --dry-run         build the media, then print the install command and stop
+
+Environment overrides mirror the variables at the top of this script.
+EOF
+}
+
+ISO=""
+DRY_RUN=0
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --iso) ISO="${2:-}"; shift 2 ;;
+        --vm-dir) VM_DIR="${2:-}"; MEDIA_DIR="$VM_DIR/media"; shift 2 ;;
+        --disk-gib) DISK_GIB="${2:-}"; shift 2 ;;
+        --dry-run) DRY_RUN=1; shift ;;
+        -h|--help) usage; exit 0 ;;
+        *) say "unknown argument: $1"; usage; exit 2 ;;
+    esac
+done
+
+if [ -z "$ISO" ]; then
+    say "--iso is required (your Windows 11 ISO)"
+    usage
+    exit 2
+fi
+if [ ! -f "$ISO" ]; then
+    say "ISO not found: $ISO"
+    exit 3
+fi
+for tool in qemu-system-x86_64; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        say "$tool is not installed. Install the virtualization stack first; on Kavi'ka it"
+        say "ships in the installed system (qemu-kvm, swtpm, edk2-ovmf, mtools)."
+        exit 6
+    fi
+done
+if [ ! -f "$LAUNCHER" ]; then
+    say "launcher not found at $LAUNCHER"
+    exit 4
+fi
+if [ ! -f "$MEDIA_BUILDER" ]; then
+    say "media builder not found at $MEDIA_BUILDER"
+    exit 4
+fi
+if [ ! -f "$ANSWER" ]; then
+    say "answer file not found at $ANSWER"
+    exit 4
+fi
+
+mkdir -p "$MEDIA_DIR"
+
+say "building the boot ESP and answer stick from $ISO ..."
+if ! "$PYTHON" "$MEDIA_BUILDER" --iso "$ISO" --out-dir "$MEDIA_DIR" --answer "$ANSWER"; then
+    say "media build failed; nothing was installed"
+    exit 5
+fi
+
+LAUNCH_ARGS=(--iso "$ISO" --vm-dir "$VM_DIR" --disk-gib "$DISK_GIB"
+             --guest-mib "$MEM_MIB" --cpus "$CPUS"
+             --esp-image "$MEDIA_DIR/esp.img" --answer-image "$MEDIA_DIR/af.img"
+             --display gtk --allow-reboot)
+
+if [ "$DRY_RUN" = 1 ]; then
+    say "dry run; the install command would be:"
+    printf '  %s %s' "$PYTHON" "$LAUNCHER"
+    printf ' %q' "${LAUNCH_ARGS[@]}"
+    printf '\n'
+    exit 0
+fi
+
+say "starting the unattended Windows 11 install (about 15 to 25 minutes)."
+say "when Setup finishes you will land on the Windows desktop; then run"
+say "  kavika-windows-workspace"
+say "to show it full-screen as the Windows workspace."
+exec "$PYTHON" "$LAUNCHER" "${LAUNCH_ARGS[@]}"

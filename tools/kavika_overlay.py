@@ -18,7 +18,10 @@ _EXECUTABLES = (
     "usr/local/bin/kavika-test-centre",
     "usr/local/bin/kavika-live-session",
     "usr/local/bin/kavika-windows-workspace",
+    "usr/local/bin/kavika-windows-provision",
+    "usr/local/bin/kavika-windows-optin",
     "usr/local/lib/kavika/launch-windows-vm-linux.py",
+    "usr/local/lib/kavika/kavika-windows-media.py",
     "usr/local/sbin/kavika-install",
     "usr/bin/liveinst",
     "usr/bin/plasma-welcome",
@@ -56,6 +59,13 @@ def build_overlay_payload(repo: Path, payload: Path) -> Path:
     launcher_dst = payload / "usr/local/lib/kavika/launch-windows-vm-linux.py"
     launcher_dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(repo / "tools/launch-windows-vm-linux.py", launcher_dst)
+    # The Windows provisioning media builder ships so an installed system can build the
+    # boot ESP + answer stick from the user's own Windows ISO without the repository.
+    media_tool_dst = payload / "usr/local/lib/kavika/kavika-windows-media.py"
+    shutil.copy2(repo / "tools/kavika-windows-media.py", media_tool_dst)
+    answer_dst = payload / "usr/share/kavika/autounattend.xml"
+    answer_dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(repo / "image/windows/autounattend.xml", answer_dst)
     installer_dst = payload / "usr/local/sbin/kavika-install"
     installer_dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(repo / "tools/kavika-install.py", installer_dst)

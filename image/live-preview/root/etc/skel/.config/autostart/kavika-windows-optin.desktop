@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Kavi'ka Windows workspace opt-in
+Comment=Asks once, on first login, whether to set up the Windows workspace
+Exec=/usr/local/bin/kavika-windows-optin
+Terminal=false
+NoDisplay=true
+OnlyShowIn=KDE;
+X-KDE-autostart-after=panel

@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# kavika-windows-optin - the first-login prompt that offers the Windows workspace (T20).
+#
+# Kavi'ka runs Windows as an opt-in, licensed guest; it ships no Windows and no licence.
+# So the system asks once, on first login, and does nothing at all unless the user says
+# yes. Declining is remembered; the prompt never returns.
+#
+# It stays silent where the answer cannot be acted on:
+#   - the live preview ships no virtualization stack, so there is no qemu to launch;
+#   - a system that already has a guest does not need the prompt.
+#
+# Nothing here provisions anything. "Open the guide" only opens the provisioning guide;
+# the actual install is a separate, explicit command (kavika-windows-provision).
+
+set -u
+
+VM_DIR="${KAVIKA_WINDOWS_VM_DIR:-$HOME/.local/share/kavika/windows}"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/kavika"
+MARKER="$CONFIG_DIR/windows-optin-answered"
+GUIDE="/usr/share/kavika/WINDOWS.txt"
+
+# Asked once already.
+[ -e "$MARKER" ] && exit 0
+
+# Only on a system that can actually do it: the live preview ships no qemu.
+command -v qemu-system-x86_64 >/dev/null 2>&1 || exit 0
+
+# Already provisioned: nothing to offer.
+[ -f "$VM_DIR/windows11.qcow2" ] && exit 0
+
+mkdir -p "$CONFIG_DIR"
+
+if command -v kdialog >/dev/null 2>&1; then
+    kdialog --title "Kavi'ka OS - Windows workspace" --yesno \
+"Kavi'ka can run a full Windows 11 workspace in a guest, one swipe away.
+
+This is opt-in and licensed: Kavi'ka ships no Windows and no licence key. You supply your own Windows 11 ISO, and Windows activation is yours.
+
+Open the provisioning guide now?" \
+        --yes-label "Open the guide" --no-label "Later" >/dev/null 2>&1
+    answer=$?
+    : > "$MARKER"
+    if [ "$answer" = 0 ]; then
+        xdg-open "$GUIDE" >/dev/null 2>&1 &
+    fi
+else
+    # No dialog available (a non-KDE session): record that the prompt was considered so it
+    # does not retry forever, and leave a pointer.
+    : > "$MARKER"
+fi
+
+exit 0

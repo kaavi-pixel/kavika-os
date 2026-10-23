@@ -1,29 +1,44 @@
-THE WINDOWS WORKSPACE IN KAVI'KA OS — STATUS AND HOW IT WILL BE PROVISIONED
+THE WINDOWS WORKSPACE IN KAVI'KA OS
 
-WHAT WORKS TODAY (verified on the Surface Laptop Studio test machine)
-  - A full Windows 11 KVM guest installs to the desktop and is SELF-CONTAINED:
-    it boots from its own disk with no external boot media attached.
-  - The user's browser (Firefox) opens in that guest.
-  - This image ships the workspace plumbing:
-      /usr/local/bin/kavika-windows-workspace   switch to desktop 2 and start the guest
-      /usr/local/lib/kavika/launch-windows-vm-linux.py   the guest launcher
 
-WHAT THIS IMAGE DOES NOT CONTAIN
-  - No Windows, no Windows licence, no guest disk.
-  - No virtualization stack: qemu, swtpm, OVMF and mtools are NOT in this live
-    preview, so the guest cannot be provisioned or started from this session.
-  - The desktop labelled "Windows (not installed)" is a Linux workspace.
+WHAT KAVI'KA SHIPS
+  Kavi'ka presents Windows as a full-screen workspace one swipe away. The plumbing for
+  that ships in this image:
 
-HOW WINDOWS WILL BE PROVISIONED (on an installed Kavi'ka system)
-  1. Install the virtualization stack and mtools on the installed system.
-  2. Provision the guest with your own Windows 11 ISO, following the verified
-     recipe in the repository (docs/windows-install-recipe.md):
-       - build the boot ESP from the ISO's own files (NEVER reuse an ESP image
-         captured from a previous run - it will not boot),
-       - attach the answer stick as REMOVABLE media (usb-storage removable=on),
-       - install to a private disk image; afterwards the guest boots on its own.
-  3. Run `kavika-windows-workspace`: the guest appears full-screen on desktop 2.
-     Meta+F12 switches workspaces; Plasma's built-in three-finger horizontal
-     swipe is the gesture path (the desktops are one row).
+    /usr/local/bin/kavika-windows-workspace   switch to desktop 2, start the guest full-screen
+    /usr/local/bin/kavika-windows-provision   build the media + run an unattended install
+    /usr/local/bin/kavika-windows-optin       the first-login offer (runs once)
+    /usr/local/lib/kavika/launch-windows-vm-linux.py   the guest launcher
+    /usr/local/lib/kavika/kavika-windows-media.py      build the boot ESP + answer stick
+    /usr/share/kavika/autounattend.xml        the unattended answer file
 
-Windows licensing and activation are yours. Kavi'ka ships none of it.
+  The desktop layout is two virtual desktops in one row (Linux, then Windows), which is
+  what makes Plasma's built-in three-finger horizontal swipe land on Windows.
+
+
+WHAT IT DOES NOT CONTAIN
+  - No Windows, no Windows licence, no guest disk. Kavi'ka ships none of that; Windows
+    licensing and activation are yours.
+  - The live preview also ships no virtualization stack, so no guest can be provisioned
+    from a live session. Provision on an installed Kavi'ka system, which carries
+    qemu-kvm, swtpm, edk2-ovmf and mtools.
+
+
+HOW TO PROVISION (on an installed Kavi'ka system)
+  1. kavika-windows-provision --iso /path/to/Windows11.iso
+     This builds the boot ESP and the answer stick from YOUR ISO, then starts an
+     unattended Windows 11 install into a private disk image
+     (~/.local/share/kavika/windows). It never touches a physical disk.
+     NEVER reuse an ESP image captured from a previous run - Windows Setup rewrites its
+     BCD, so a captured image boots a stale install and fails. kavika-windows-provision
+     always rebuilds from the ISO.
+  2. When Setup finishes you land on the Windows desktop. Afterwards run
+
+       kavika-windows-workspace
+
+     to show the guest full-screen on the Windows desktop. Meta+F12 switches workspaces;
+     Plasma's built-in three-finger horizontal swipe is the gesture path (the desktops are
+     one row).
+
+The full recipe, with every failure mode and why it exists, is in the repository:
+docs/windows-install-recipe.md.
