@@ -255,6 +255,14 @@ class InstallerDependencyTests(unittest.TestCase):
         for pkg in ("7zip", "parted", "dosfstools", "mtools"):
             self.assertIn(pkg, ks.split("rpm -q --root=", 1)[1].split("\n", 1)[0])
 
+    def test_text_install_sets_graphical_default_target(self):
+        # D32: `text` makes Anaconda leave the installed system on multi-user.target, so the
+        # finished install boots to a text console with no desktop. The kickstart must undo it.
+        ks = (ROOT / "image/install/kavika-net.ks").read_text()
+        self.assertIn("text", ks.splitlines(), "the installer still runs in text mode")
+        self.assertIn('set-default graphical.target', ks,
+                      "text-mode installs must set the installed system back to graphical.target")
+
 
 if __name__ == "__main__":
     unittest.main()

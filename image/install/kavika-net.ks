@@ -16,6 +16,9 @@ lang en_GB.UTF-8
 keyboard uk
 timezone UTC --utc
 # Text-mode Anaconda: an unattended install with the progress visible on the serial console.
+# D32: text mode makes Anaconda set the INSTALLED system's default target to
+# multi-user.target, so a finished install boots to a black text console instead of the
+# desktop. The %post below sets graphical.target explicitly to undo that.
 text
 
 url --url="https://download.fedoraproject.org/pub/fedora/linux/releases/44/Everything/x86_64/os/"
@@ -184,6 +187,13 @@ if [ -f "$ESP/EFI/fedora/shimx64.efi" ]; then
     echo "KAVIKA-VERIFY: ESP fallback EFI/BOOT/BOOTX64.EFI installed" > /dev/console
 else
     echo "KAVIKA-VERIFY: no ESP shim found; fallback BOOTX64.EFI not installed" > /dev/console
+fi
+# D32: a text-mode install leaves default.target = multi-user.target, so the finished system
+# boots to a text console with no desktop. Set graphical.target so SDDM comes up at boot.
+if systemctl --root="$SYSROOT" set-default graphical.target; then
+    echo "KAVIKA-VERIFY: default target = graphical" > /dev/console
+else
+    echo "KAVIKA-VERIFY: default target NOT set to graphical" > /dev/console
 fi
 %end
 
