@@ -17,6 +17,7 @@ See [the preview guide](docs/live-preview.md), [build instructions](docs/build.m
 - [OS implementation plan](os-implementation-plan.md): roadmap from the validated integration prototype to a live ISO, installer, and maintained OS release.
 - [Windows preview VM guide](docs/windows-vm-preview.md): disposable Linux smoke-test guest, not the full Windows product workspace.
 - [Windows install recipe](docs/windows-install-recipe.md): the verified way to install Windows 11 in a KVM guest here, and why each non-obvious step exists.
+- [Reusing the existing Windows](docs/windows-reuse-existing-install.md): whether the Windows workspace can be the Windows already on the machine, the three routes, and their real costs (BitLocker/TPM, activation, no GPU acceleration).
 - [Windows workspace](docs/windows-workspace.md): how Windows is presented as a swipeable workspace, and what is verified versus still assumed.
 - [Get a diagnostic ISO](docs/getting-the-iso.md): prepare an isolated Ubuntu-on-WSL builder, verify Fedora input and build the explicitly non-installable preview.
 - [Build instructions](docs/build.md): pinned source, builder prerequisites, and validation limits.

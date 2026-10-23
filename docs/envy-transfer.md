@@ -60,6 +60,7 @@ the machine it was measured on, never proof for the other.
 | The user's browser (Firefox) in the Windows guest | **Works** — reported opening without problem (user-reported) |
 | Cross-OS workspace + swipe, end-to-end | **Not verified** — the layout and the `kavika-windows-workspace` script exist, but no booted image has a real guest on desktop 2, and no swipe has ever been performed on a KDE host |
 | Product Windows workspace (guest wired into the image) | **Not built** — the Test Centre says so; the preview ships no Windows |
+| **Reusing the Envy's existing Windows as the workspace** | **Designed, not tested** — three routes (keep it native + share its files; copy it into a guest disk; or P2V the physical partitions in place) are analysed in [windows-reuse-existing-install.md](windows-reuse-existing-install.md). The Envy's BitLocker state, Windows edition and M.2 slot count are **unmeasured**, and none of the three has been attempted. |
 | A supported **installer**, recovery/rollback, updates | **Not built** |
 | Secure Boot chain | **Unmeasured** on every machine |
 
@@ -75,7 +76,10 @@ moment of the write:
 3. The exact Envy disk is identified by **role, model, capacity, connection and path** —
    never by a drive letter, "Disk 0", or an assumed `/dev/nvme0n1`.
 4. Anything worth keeping on the Envy is backed up, **including the BitLocker recovery key**
-   if the drive is encrypted — losing it makes recovery impossible.
+   if the drive is encrypted — losing it makes recovery impossible. **Decide first whether the
+   existing Windows is to be *reused* as the workspace, and if so by which route**
+   ([windows-reuse-existing-install.md](windows-reuse-existing-install.md)); P2V in place makes
+   the install dependent on a virtual TPM and a partition handoff, and is not a rollback path.
 5. Recovery/rollback for the Envy is defined.
 
 ## 5. Procedure, once the gate passes (sketch, not authorisation)
