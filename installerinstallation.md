@@ -157,6 +157,14 @@ and after:
    install lands on A and B is byte-identical after. Both product ISOs ship fail-closed (no
    consent baked), so nothing is written until that device is named twice.
 
+   **Designated sacrificial disk (23 October 2026).** The 1 TB Toshiba external
+   (`usb-TOSHIBA_EXTERNAL_USB_20260806007777F-0:0`, `TOSHIBA MQ04UBF100`, 931.5 GiB, USB,
+   `RM=0`) is the intended rung-3/4 target. It was verified **empty** on 23 October 2026
+   (NTFS, 115 MB used, no entries at the top level), so erasing it destroys nothing. The boot
+   medium remains the 3.8 GB flash stick, which is too small to be a target. Note the `RM=0`:
+   that flag only matters to `write-preview-to-usb.sh`, not to the installer, whose `%pre`
+   checks whole-disk, unmounted, non-pseudo and ≥ 240 GiB but says nothing about `RM`.
+
    **Writing the installer media.** Identify the target first, by model and size, never by
    position (USB enumeration order changes between boots):
 
@@ -224,7 +232,11 @@ gives a fresh explicit go/no-go with its exact disk identified.
 
 - **Never identify a disk by name or position** — USB enumeration order changes between
   boots; the D23 lesson (a stale path/BCD pointing at something that no longer exists) is
-  the same class of bug one layer down.
+  the same class of bug one layer down. Concrete case, 23 October 2026: `/dev/sda` was the
+  3.8 GB installer stick on the host, and became the 1 TB Toshiba the moment the stick was
+  unplugged. **A command that was correct ten minutes ago can name a different disk now**, so
+  re-derive the device from `lsblk` model and size before every write, and never reuse a
+  command's `/dev/sdX` from an earlier session.
 - **The installer's exit code is not evidence.** The before/after hashes of non-selected
   disks are.
 - **A mounted target must be refused**, not unmounted by the tool (surprising unmounts
