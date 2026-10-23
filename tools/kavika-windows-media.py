@@ -92,7 +92,8 @@ def require_tools(names) -> dict:
         die(
             "missing required tool(s): "
             + ", ".join(missing)
-            + "\n  install: mtools (mformat/mcopy), parted, and p7zip (7z) or libarchive (bsdtar)",
+            + "\n  install: mtools (mformat/mcopy), parted, dosfstools (mkfs.vfat), and 7zip (7z)"
+            + " or libarchive (bsdtar)",
         )
     return found
 

@@ -236,5 +236,25 @@ class OverlayShippingTests(unittest.TestCase):
         self.assertIn("kavika-windows-workspace", text)
 
 
+class InstallerDependencyTests(unittest.TestCase):
+    """The installed system must carry what the shipped media builder needs."""
+
+    def test_kickstart_installs_the_media_builder_dependencies(self):
+        ks = (ROOT / "image/install/kavika-net.ks").read_text()
+        block = ks.split("%packages", 1)[1].split("%end", 1)[0]
+        pkgs = {ln.strip() for ln in block.splitlines()
+                if ln.strip() and not ln.strip().startswith("#")}
+        # qemu/swtpm/OVMF run the guest; 7zip+parted+dosfstools+mtools build its media.
+        for required in ("qemu-kvm", "swtpm", "edk2-ovmf", "mtools",
+                         "7zip", "parted", "dosfstools"):
+            self.assertIn(required, pkgs, f"kickstart %packages must install {required}")
+
+    def test_post_verification_checks_them(self):
+        ks = (ROOT / "image/install/kavika-net.ks").read_text()
+        self.assertIn("rpm -q --root=\"$SYSROOT\"", ks)
+        for pkg in ("7zip", "parted", "dosfstools", "mtools"):
+            self.assertIn(pkg, ks.split("rpm -q --root=", 1)[1].split("\n", 1)[0])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -37,6 +37,12 @@ swtpm
 swtpm-tools
 edk2-ovmf
 mtools
+# The Windows provisioning tooling the overlay ships (kavika-windows-media.py) needs an
+# extractor for the Windows UDF ISO, a partitioner for the boot ESP image, and a FAT
+# formatter for the answer stick. 7zip provides 7z; parted and dosfstools the rest.
+7zip
+parted
+dosfstools
 virt-install
 virt-manager
 initial-setup
@@ -143,7 +149,7 @@ if grep -q 'NAME="Kavi' "$SYSROOT/etc/os-release" 2>/dev/null; then
 else
     echo "KAVIKA-VERIFY: os-release=NOT-Kavika" > /dev/console
 fi
-rpm -q --root="$SYSROOT" qemu-kvm swtpm edk2-ovmf mtools 2>&1 | sed 's/^/KAVIKA-VERIFY: pkg /' > /dev/console
+rpm -q --root="$SYSROOT" qemu-kvm swtpm edk2-ovmf mtools 7zip parted dosfstools 2>&1 | sed 's/^/KAVIKA-VERIFY: pkg /' > /dev/console
 %end
 
 reboot
