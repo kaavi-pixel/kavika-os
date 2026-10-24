@@ -8,6 +8,7 @@ import importlib.machinery
 import importlib.util
 import os
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 
@@ -206,6 +207,28 @@ class NetinstKickstartTests(unittest.TestCase):
         self.assertNotIn("\nfirstboot --enable", "\n" + out)
         with self.assertRaises(ValueError):
             netinst_builder.skip_firstboot("no firstboot directive here\n")
+
+    def test_esp_grub_is_patched(self):
+        # D36: UEFI booting the media from USB reads the EFI/BOOT/grub.cfg *inside* the appended
+        # ESP partition, not the ISO9660 one. `-boot_image replay` copies the base's ESP
+        # verbatim, so a media rename that misses it leaves the stock Fedora menu whose entries
+        # point at a label that no longer exists, and the boot dies at GRUB with "you need to
+        # load the kernel first".
+        base = Path.home() / "Downloads" / netinst_builder.NETINST_BASE_NAME
+        if not base.is_file():
+            self.skipTest(f"base netinst ISO not present: {base.name}")
+        with tempfile.TemporaryDirectory() as td:
+            upstream = Path(td) / "esp.img"
+            patched = Path(td) / "esp-patched.img"
+            number = netinst_builder.extract_esp(base, upstream)
+            self.assertGreaterEqual(number, 1)
+            netinst_builder.patch_esp_grub(upstream, patched, None, None, False)
+            text = subprocess.run(["mtype", "-i", str(patched), "::/EFI/BOOT/grub.cfg"],
+                                  capture_output=True, text=True, check=True).stdout
+            self.assertIn('menuentry "Install Kavi\'ka OS (automated)"', text)
+            self.assertIn("inst.ks=hd:LABEL=KAVIKA:/kavika-net.ks", text)
+            self.assertIn("search --no-floppy --set=root -l 'KAVIKA'", text)
+            self.assertNotIn("Fedora-E-dvd-x86_64-44", text)
 
     def test_grub_netinst_adds_entry_and_consent(self):
         source = ('set default="1"\nset timeout=60\n'

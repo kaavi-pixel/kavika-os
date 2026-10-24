@@ -120,6 +120,42 @@ def skip_firstboot(text: str) -> str:
     return out
 
 
+def extract_esp(base: Path, destination: Path) -> int:
+    """Copy the base ISO's appended EFI System Partition out to a file; return its number.
+
+    UEFI booting from USB mounts this partition and runs \\EFI\\BOOT\\BOOTX64.EFI, whose GRUB
+    loads the EFI/BOOT/grub.cfg *inside this partition* - a different file from the ISO9660
+    one. `-boot_image replay` copies it verbatim from the base, so anything written only into
+    the ISO9660 tree never reaches it.
+    """
+    out = subprocess.run(["parted", "-s", str(base), "unit", "s", "print"],
+                         capture_output=True, text=True, check=True).stdout
+    for line in out.splitlines():
+        fields = line.split()
+        if len(fields) >= 4 and fields[0].isdigit() and "esp" in line:
+            number = int(fields[0])
+            start = int(fields[1].rstrip("s"))
+            size = int(fields[3].rstrip("s"))
+            with base.open("rb") as handle:
+                handle.seek(start * 512)
+                destination.write_bytes(handle.read(size * 512))
+            return number
+    raise ValueError("base ISO has no ESP partition to patch")
+
+
+def patch_esp_grub(source: Path, destination: Path, test_target: str | None,
+                   test_consent: str | None, compact: bool) -> None:
+    """Copy the ESP and rewrite the GRUB config inside it with the same transforms."""
+    shutil.copy2(source, destination)
+    upstream = subprocess.run(["mtype", "-i", str(destination), "::/EFI/BOOT/grub.cfg"],
+                              capture_output=True, text=True, check=True).stdout
+    patched = grub_netinst(upstream, test_target, test_consent, compact)
+    scratch = destination.with_suffix(".grub.cfg")
+    scratch.write_text(patched, encoding="utf-8")
+    subprocess.run(["mcopy", "-o", "-i", str(destination), str(scratch),
+                    "::/EFI/BOOT/grub.cfg"], check=True)
+
+
 def rewrite_kickstart_source(text: str, repo_dir: str | None) -> str:
     """Point the kickstart at the offline repo bundled on the media, or leave the network url."""
     if not repo_dir:
@@ -150,7 +186,7 @@ def main() -> int:
         parser.error("--output must be a new regular file, never a device or existing file")
     if output.suffix.lower() != ".iso" or not output.parent.is_dir():
         parser.error("--output must be a new .iso in an existing directory")
-    for tool in ("xorriso", "cpio", "implantisomd5"):
+    for tool in ("xorriso", "cpio", "implantisomd5", "parted", "mtype", "mcopy"):
         if shutil.which(tool) is None:
             parser.error(f"Missing builder tool: {tool}")
     grub_check = grub_script_check()
@@ -196,6 +232,16 @@ def main() -> int:
             subprocess.run([grub_check, str(patched)], check=True)
             grub_files[rel] = patched
 
+        # D36: the appended ESP carries its own EFI/BOOT/grub.cfg, which `-boot_image replay`
+        # copies verbatim from the base. Patch it too, or UEFI booting from USB runs the stock
+        # Fedora menu whose entries reference a label the renamed media no longer has, which
+        # fails with "you need to load the kernel first".
+        esp_upstream = work / "esp-upstream.img"
+        esp_number = extract_esp(base, esp_upstream)
+        esp_patched = work / "esp-patched.img"
+        patch_esp_grub(esp_upstream, esp_patched, args.test_target, args.test_consent,
+                       args.compact)
+
         xorriso_cmd = ["xorriso", "-indev", str(base), "-outdev", str(output),
                        "-volid", LABEL]
         for rel, patched in grub_files.items():
@@ -206,7 +252,9 @@ def main() -> int:
         ]
         if repo_dir is not None:
             xorriso_cmd += ["-map", str(repo_dir), "/"]
-        xorriso_cmd += ["-boot_image", "any", "replay", "-commit"]
+        xorriso_cmd += ["-boot_image", "any", "replay",
+                        "-append_partition", str(esp_number), "0xef", str(esp_patched),
+                        "-commit"]
         subprocess.run(xorriso_cmd, check=True)
         subprocess.run(["implantisomd5", "--force", str(output)], check=True)
 
