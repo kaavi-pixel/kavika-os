@@ -275,5 +275,23 @@ class InstallerDependencyTests(unittest.TestCase):
                       "%post must remove the live-only tmpfiles drop-in from installed roots")
 
 
+    def test_installed_system_is_configured_for_network(self):
+        # D35: without a saved connection the installed system has no route and no DNS, so dnf
+        # and the Windows provisioner's downloads fail.
+        ks = (ROOT / "image/install/kavika-net.ks").read_text()
+        self.assertRegex(ks, r"(?m)^network .*--bootproto=dhcp")
+        self.assertRegex(ks, r"(?m)^network .*--onboot=yes")
+
+    def test_media_identifies_as_kavika(self):
+        # The media must not present itself as a Fedora netinst: that confusion cost real time,
+        # and both a stock netinst's label and ours were identical.
+        ks = (ROOT / "image/install/kavika-net.ks").read_text()
+        self.assertIn("LABEL=KAVIKA", ks)
+        self.assertNotIn("LABEL=Fedora-E-dvd-x86_64-44", ks)
+        builder = (ROOT / "tools/build-netinst-install.py").read_text()
+        self.assertIn('LABEL = "KAVIKA"', builder)
+        self.assertIn('"-volid", LABEL', builder)
+
+
 if __name__ == "__main__":
     unittest.main()

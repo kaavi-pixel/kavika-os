@@ -198,13 +198,18 @@ class NetinstKickstartTests(unittest.TestCase):
 
     def test_grub_netinst_adds_entry_and_consent(self):
         source = ('set default="1"\nset timeout=60\n'
-                  'menuentry \'Install Fedora 44\' {\n'
+                  "search --no-floppy --set=root -l 'Fedora-E-dvd-x86_64-44'\n"
+                  "menuentry 'Install Fedora 44' {\n"
                   '\tlinux /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Fedora-E-dvd-x86_64-44 quiet\n'
                   '\tinitrd /images/pxeboot/initrd.img\n}\n')
         result = netinst_builder.grub_netinst(source)
         self.assertIn('menuentry "Install Kavi\'ka OS (automated)"', result)
-        self.assertIn("inst.ks=hd:LABEL=Fedora-E-dvd-x86_64-44:/kavika-net.ks", result)
+        self.assertIn("inst.ks=hd:LABEL=KAVIKA:/kavika-net.ks", result)
         self.assertIn('set default="0"', result)
+        # The media is renamed: no upstream label may survive anywhere, including the
+        # `search --set=root` line, or GRUB and the installer disagree about the media.
+        self.assertNotIn("Fedora-E-dvd-x86_64-44", result)
+        self.assertIn("search --no-floppy --set=root -l 'KAVIKA'", result)
         # without a test target there must be no baked consent token
         self.assertNotIn("kavika.target=", result)
 

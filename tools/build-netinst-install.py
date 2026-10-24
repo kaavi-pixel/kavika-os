@@ -28,7 +28,11 @@ import kavika_overlay
 
 NETINST_BASE_SHA256 = "bd285201494dd0ba09b54d05ac707de1401668b8512a573edb5922dcf9d7067e"
 NETINST_BASE_NAME = "Fedora-Everything-netinst-x86_64-44-1.7.iso"
-LABEL = "Fedora-E-dvd-x86_64-44"
+LABEL = "KAVIKA"
+# The upstream netinst's own volume id, still present in its GRUB config and stage2 paths.
+# Every reference to it is rewritten to LABEL so the media identifies itself as Kavi'ka and
+# cannot be confused with a stock Fedora netinst, which produced real confusion in testing.
+BASE_LABEL = "Fedora-E-dvd-x86_64-44"
 KICKSTART_SOURCE = "image/install/kavika-net.ks"
 KICKSTART_ON_ISO = "/kavika-net.ks"
 OVERLAY_ON_ISO = "/kavika-overlay.cpio"
@@ -62,8 +66,12 @@ def grub_netinst(text: str, test_target: str | None = None, test_consent: str | 
     %pre refuses (fail-closed). `compact` bakes `kavika.compact=1`, which selects the
     compact layout and lower size floor in the %pre for a target under 240 GiB.
     """
-    if f"inst.stage2=hd:LABEL={LABEL}" not in text:
+    if f"inst.stage2=hd:LABEL={BASE_LABEL}" not in text:
         raise ValueError("Unexpected upstream netinst GRUB configuration")
+    # Rename the media: every reference to the upstream label (the `search --set=root` line and
+    # each `inst.stage2=hd:LABEL=` / `inst.ks=hd:LABEL=`) becomes LABEL, so the rewritten config
+    # is self-consistent with the volume id xorriso writes.
+    text = text.replace(BASE_LABEL, LABEL)
     extra = ""
     if test_consent:
         extra = " " + test_consent.strip()
@@ -169,7 +177,8 @@ def main() -> int:
             subprocess.run([grub_check, str(patched)], check=True)
             grub_files[rel] = patched
 
-        xorriso_cmd = ["xorriso", "-indev", str(base), "-outdev", str(output)]
+        xorriso_cmd = ["xorriso", "-indev", str(base), "-outdev", str(output),
+                       "-volid", LABEL]
         for rel, patched in grub_files.items():
             xorriso_cmd += ["-map", str(patched), "/" + rel]
         xorriso_cmd += [
