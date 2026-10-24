@@ -196,6 +196,17 @@ class NetinstKickstartTests(unittest.TestCase):
         self.assertNotIn("plaintext", NET_KICKSTART)
         self.assertIn("rootpw --lock", NET_KICKSTART)
 
+    def test_skip_firstboot_test_helper(self):
+        # TEST-ONLY helper: Initial Setup is interactive, so a headless run can never reach the
+        # display manager unless a throwaway build disables it. It must never be silent about a
+        # missing line, or a test ISO would quietly keep an interactive first boot.
+        ks = "rootpw --lock\nfirstboot --enable\n"
+        out = netinst_builder.skip_firstboot(ks)
+        self.assertIn("# firstboot --enable", out)
+        self.assertNotIn("\nfirstboot --enable", "\n" + out)
+        with self.assertRaises(ValueError):
+            netinst_builder.skip_firstboot("no firstboot directive here\n")
+
     def test_grub_netinst_adds_entry_and_consent(self):
         source = ('set default="1"\nset timeout=60\n'
                   "search --no-floppy --set=root -l 'Fedora-E-dvd-x86_64-44'\n"

@@ -105,6 +105,21 @@ def extract_grub(base: Path, destination: Path, iso_path: str) -> None:
         iso.close()
 
 
+def skip_firstboot(text: str) -> str:
+    """TEST ONLY: drop `firstboot --enable` so a build boots straight to the display manager.
+
+    Initial Setup is interactive, so a headless KVM run can never complete it and therefore
+    can never observe whether SDDM actually starts. Disabling it in a throwaway build is the
+    only way to prove the graphical target is reachable without a human at the console. Never
+    applied to a shipped ISO.
+    """
+    out = text.replace("firstboot --enable",
+                       "# firstboot --enable  (skipped in this TEST-only build)", 1)
+    if out == text:
+        raise ValueError("kickstart has no 'firstboot --enable' line to skip")
+    return out
+
+
 def rewrite_kickstart_source(text: str, repo_dir: str | None) -> str:
     """Point the kickstart at the offline repo bundled on the media, or leave the network url."""
     if not repo_dir:
@@ -121,6 +136,8 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True, help="new .iso output path")
     parser.add_argument("--test-target", help="bake kavika.target/confirm for a disposable KVM run (e.g. /dev/vda)")
     parser.add_argument("--test-consent", help="bake an arbitrary kernel-cmdline consent string verbatim (refusal-matrix testing)")
+    parser.add_argument("--test-skip-firstboot", action="store_true",
+                        help="TEST ONLY: disable Initial Setup so a headless run can reach the display manager")
     parser.add_argument("--compact", action="store_true",
                         help="bake kavika.compact=1: compact layout and a lower size floor, for a target under 240 GiB (a small test disk). A 64 GiB guest will not fit; provision with --disk-gib 32")
     parser.add_argument("--repo-dir", type=Path, help="bundle this local repo (repodata + *.rpm) onto the media and switch the source to cdrom")
@@ -159,6 +176,8 @@ def main() -> int:
         # Kickstart: switch the install source to the bundled cdrom repo when --repo-dir is given.
         ks_text = kickstart.read_text(encoding="utf-8")
         ks_text = rewrite_kickstart_source(ks_text, str(repo_dir) if repo_dir else None)
+        if args.test_skip_firstboot:
+            ks_text = skip_firstboot(ks_text)
         ks_file = work / "kavika-net.ks"
         ks_file.write_text(ks_text, encoding="utf-8")
 
