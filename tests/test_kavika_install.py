@@ -184,6 +184,13 @@ class NetinstKickstartTests(unittest.TestCase):
         for directive in ("clearpart", "ignoredisk", "part ", "bootloader"):
             self.assertNotIn(directive, placeholder_line)
 
+    def test_refuses_the_installation_medium_as_a_target(self):
+        # The boot medium is itself a whole, unmounted, large-enough real disk, so every other
+        # check would accept it; naming it would erase the medium mid-install.
+        self.assertIn("blkid -L KAVIKA", NET_KICKSTART)
+        self.assertIn("lsblk -no PKNAME", NET_KICKSTART)
+        self.assertIn("carries the installation media booted from", NET_KICKSTART)
+
     def test_scopes_storage_via_generated_include(self):
         self.assertIn("%include /tmp/kavika-storage.ks", NET_KICKSTART)
         self.assertIn("ignoredisk --only-use=$TARGET", NET_KICKSTART)

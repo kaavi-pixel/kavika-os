@@ -129,6 +129,18 @@ case "$TARGET" in
     /dev/zram*|/dev/loop*|/dev/ram*|/dev/fd*) fail "$TARGET is a pseudo-disk";;
 esac
 
+# The installation medium is itself a whole, unmounted, large-enough real disk, so every check
+# below would accept it. Refuse it by identity: naming the stick you booted from would erase the
+# medium mid-install, and the disks in play are easy to confuse. Resolve the media by its label
+# rather than by device letter, and compare the whole disk that carries it.
+MEDIA=$(blkid -L KAVIKA 2>/dev/null | head -1)
+if [ -n "$MEDIA" ]; then
+    MEDIA_DISK=$(lsblk -no PKNAME "$MEDIA" 2>/dev/null | head -1)
+    if [ -n "$MEDIA_DISK" ] && [ "$TARGET" = "/dev/$MEDIA_DISK" ]; then
+        fail "$TARGET carries the installation media booted from; name a different disk"
+    fi
+fi
+
 NAME=${TARGET#/dev/}
 lsblk -J -b -o name,size,type,mountpoints "$TARGET" > /tmp/kavika-lsblk.json 2>/dev/null \
     || fail "cannot inspect $TARGET with lsblk"
