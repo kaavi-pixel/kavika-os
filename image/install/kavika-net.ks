@@ -33,6 +33,10 @@ rootpw --lock
 
 %packages
 @kde-desktop-environment
+# D34: the kde-desktop-environment group does NOT pull a display manager, so a system
+# installed with it alone has Plasma but nothing to start it, and boots to a text console.
+# sddm is the KDE display manager; without it graphical.target has nothing to run.
+sddm
 # The virtualization stack the live preview omits, so the installed system can provision and
 # run the Windows workspace (docs/windows-install-recipe.md).
 qemu-kvm
@@ -164,6 +168,12 @@ umount /mnt/kavika-media 2>/dev/null
 # Live-preview-only hooks must not run on the installed system.
 rm -f "$SYSROOT/etc/xdg/autostart/kavika-live.desktop"
 rm -f "$SYSROOT/var/lib/livesys/livesys-session-extra"
+# D34: the overlay's SELinux relabel drop-in exists only for the live overlay, where copy-up
+# leaves tmpfs labels. It runs `restorecon` over /var/lib/livesys, which does not exist on an
+# installed system, so the ExecStartPost fails and takes systemd-tmpfiles-setup.service down
+# with it. Many units are ordered after that service, so the failure can stall the boot before
+# graphical.target and leave the system on a text console. Remove it from installed roots.
+rm -rf "$SYSROOT/usr/lib/systemd/system/systemd-tmpfiles-setup.service.d"
 # Installer-only files are meaningless on an installed system.
 rm -f "$SYSROOT/usr/bin/liveinst" "$SYSROOT/usr/libexec/kavika/real-liveinst"
 rm -f "$SYSROOT/usr/local/sbin/kavika-install" "$SYSROOT/usr/lib/kavika/installer/kavika.ks"
@@ -188,13 +198,23 @@ if [ -f "$ESP/EFI/fedora/shimx64.efi" ]; then
 else
     echo "KAVIKA-VERIFY: no ESP shim found; fallback BOOTX64.EFI not installed" > /dev/console
 fi
-# D32: a text-mode install leaves default.target = multi-user.target, so the finished system
-# boots to a text console with no desktop. Set graphical.target so SDDM comes up at boot.
+# D34: a text-mode install leaves the installed system on multi-user.target, which starts no
+# display manager, so the finished system boots to a black text console instead of the desktop
+# even though KDE and SDDM are installed. Point default.target at graphical.target, and make
+# sure the display manager is enabled rather than relying on a preset that text mode may skip.
 if systemctl --root="$SYSROOT" set-default graphical.target; then
     echo "KAVIKA-VERIFY: default target = graphical" > /dev/console
 else
     echo "KAVIKA-VERIFY: default target NOT set to graphical" > /dev/console
 fi
+for dm in sddm gdm lightdm; do
+    if [ -f "$SYSROOT/usr/lib/systemd/system/$dm.service" ]; then
+        systemctl --root="$SYSROOT" enable "$dm.service" >/dev/null 2>&1 \
+            && echo "KAVIKA-VERIFY: display manager enabled: $dm" > /dev/console
+    fi
+done
+# Read the symlink back, so the install log shows what was actually written, not what was asked.
+echo "KAVIKA-VERIFY: default.target -> $(readlink "$SYSROOT/etc/systemd/system/default.target" 2>/dev/null)" > /dev/console
 %end
 
 reboot
