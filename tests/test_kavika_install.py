@@ -160,6 +160,30 @@ class NetinstKickstartTests(unittest.TestCase):
         self.assertIn("kavika.target ($TARGET) != kavika.confirm ($CONFIRM)", NET_KICKSTART)
         self.assertIn("exit 1", NET_KICKSTART)
 
+    def test_refusal_is_readable_on_the_console_and_says_what_to_do(self):
+        # D37: a refusal used to leave a dead pane whose only visible error was a missing
+        # kickstart file, hiding the reason and stranding the operator with no explanation.
+        self.assertIn("installation NOT authorised", NET_KICKSTART)
+        self.assertIn("Nothing has been written to any disk.", NET_KICKSTART)
+        self.assertIn("kavika.target=/dev/sdX kavika.confirm=/dev/sdX", NET_KICKSTART)
+        for tty in ("/dev/console", "/dev/tty1", "/dev/ttyS0"):
+            self.assertIn(tty, NET_KICKSTART)
+
+    def test_storage_include_is_seeded_before_the_checks(self):
+        # The %include target must exist before any refusal, so the failure Anaconda reports
+        # is the refusal itself, not "Unable to open input kickstart file".
+        pre = NET_KICKSTART.index("%pre --interpreter")
+        seed = NET_KICKSTART.index("placeholder: the consent checks did not authorise")
+        first_check = NET_KICKSTART.index("no kavika.target=")
+        self.assertLess(pre, seed)
+        self.assertLess(seed, first_check)
+        # And the placeholder must never authorise storage on its own, so that a refusal can
+        # not become an install even if it were reached.
+        placeholder_line = next(
+            line for line in NET_KICKSTART.splitlines() if "placeholder:" in line)
+        for directive in ("clearpart", "ignoredisk", "part ", "bootloader"):
+            self.assertNotIn(directive, placeholder_line)
+
     def test_scopes_storage_via_generated_include(self):
         self.assertIn("%include /tmp/kavika-storage.ks", NET_KICKSTART)
         self.assertIn("ignoredisk --only-use=$TARGET", NET_KICKSTART)

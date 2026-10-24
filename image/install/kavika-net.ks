@@ -64,6 +64,13 @@ initial-setup-gui
 
 %pre --interpreter=/usr/bin/bash --log=/root/kavika-pre.log
 set -uo pipefail
+# Anaconda reads "%include /tmp/kavika-storage.ks" AFTER %pre. If a check below refuses, %pre
+# exits before writing that file and Anaconda reports "Unable to open input kickstart file"
+# instead of the real reason, which reads as a kickstart bug rather than a refused install
+# (D37). Seed it with a comment-only placeholder: harmless if reached, and it keeps the true
+# refusal message as the failure the operator sees. It carries NO storage directives by design.
+printf '# placeholder: the consent checks did not authorise a target; no storage directives\n' \
+    > /tmp/kavika-storage.ks
 TARGET=$(sed -n 's/.*kavika\.target=\([^ ]*\).*/\1/p' /proc/cmdline)
 CONFIRM=$(sed -n 's/.*kavika\.confirm=\([^ ]*\).*/\1/p' /proc/cmdline)
 # The size floor and layout. Default is the product layout: a 128 GiB volume for the
@@ -89,8 +96,27 @@ else
     ROOT_SIZE=61440
 fi
 fail() {
-    echo "KAVIKA CONSENT-REFUSED: $*" > /dev/ttyS0 2>/dev/null
-    echo "KAVIKA CONSENT-REFUSED: $*" > /dev/console 2>/dev/null
+    # A dead pane is not a refusal message: the reason has to be readable on the machine in
+    # front of the operator, in words that say what to do next, not only on the serial
+    # console (D37). Written to the active console as well as ttyS0/tty1.
+    for tty in /dev/console /dev/tty1 /dev/ttyS0; do
+        {
+            echo
+            echo "======== Kavi'ka OS: installation NOT authorised ========"
+            echo "REFUSED: $*"
+            echo
+            echo "Nothing has been written to any disk."
+            echo
+            echo "To install, reboot, highlight \"Install Kavi'ka OS (automated)\""
+            echo "in the boot menu, press e, and append to the linux line:"
+            echo
+            echo "    kavika.target=/dev/sdX kavika.confirm=/dev/sdX"
+            echo
+            echo "naming the same whole disk twice, then press Ctrl-X."
+            echo "========================================================"
+            echo
+        } > "$tty" 2>/dev/null
+    done
     echo "KAVIKA CONSENT: $*" >&2
     exit 1
 }
