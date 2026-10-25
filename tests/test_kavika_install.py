@@ -277,9 +277,13 @@ class NetinstKickstartTests(unittest.TestCase):
         self.assertIn("search --no-floppy --set=root -l 'KAVIKA'", result)
         # without a test target there must be no baked consent token
         self.assertNotIn("kavika.target=", result)
+        # The consent tokens have to be typed at this menu by hand, so the product build must
+        # linger; only a build whose decision is pre-baked may boot unattended.
+        self.assertIn("set timeout=60", result)
 
         with_target = netinst_builder.grub_netinst(source, test_target="/dev/vda")
         self.assertIn("kavika.target=/dev/vda kavika.confirm=/dev/vda", with_target)
+        self.assertIn("set timeout=5", with_target)
 
         with_consent = netinst_builder.grub_netinst(source, test_consent="kavika.target=/dev/vda kavika.confirm=/dev/vdb")
         self.assertIn("kavika.target=/dev/vda kavika.confirm=/dev/vdb", with_consent)

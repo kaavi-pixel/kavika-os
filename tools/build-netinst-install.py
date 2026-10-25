@@ -88,7 +88,12 @@ def grub_netinst(text: str, test_target: str | None = None, test_consent: str | 
         '}\n'
     )
     text = text.replace('set default="1"', 'set default="0"')
-    text = text.replace("set timeout=60", "set timeout=5")
+    # The consent tokens are normally added BY HAND at this menu, so the entry has to stay on
+    # screen long enough to read it and press `e`. A 5-second timeout turns that into a race:
+    # miss it and the boot lands on a refusal. Only a build whose decision is already baked in
+    # (--test-target/--test-consent) may boot unattended, so only that keeps the short timeout.
+    unattended = bool(test_target or test_consent)
+    text = text.replace("set timeout=60", f"set timeout={5 if unattended else 60}")
     text = text.replace("menuentry 'Install Fedora 44'", entry + "menuentry 'Install Fedora 44'", 1)
     return text
 
