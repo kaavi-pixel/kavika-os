@@ -165,9 +165,14 @@ class NetinstKickstartTests(unittest.TestCase):
         # kickstart file, hiding the reason and stranding the operator with no explanation.
         self.assertIn("installation NOT authorised", NET_KICKSTART)
         self.assertIn("Nothing has been written to any disk.", NET_KICKSTART)
-        self.assertIn("kavika.target=/dev/sdX kavika.confirm=/dev/sdX", NET_KICKSTART)
         for tty in ("/dev/console", "/dev/tty1", "/dev/ttyS0"):
             self.assertIn(tty, NET_KICKSTART)
+        # The banner must name REAL disks. A copyable placeholder made one operator type
+        # "/dev/sdX" verbatim, which failed as "cannot inspect /dev/sd with lsblk".
+        self.assertIn("Whole disks present on this machine", NET_KICKSTART)
+        self.assertIn("lsblk -dno NAME,SIZE,MODEL", NET_KICKSTART)
+        self.assertIn("kavika.target=<DISK> kavika.confirm=<DISK>", NET_KICKSTART)
+        self.assertNotIn("/dev/sdX", NET_KICKSTART)
 
     def test_storage_include_is_seeded_before_the_checks(self):
         # The %include target must exist before any refusal, so the failure Anaconda reports

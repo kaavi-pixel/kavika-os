@@ -99,6 +99,11 @@ fail() {
     # A dead pane is not a refusal message: the reason has to be readable on the machine in
     # front of the operator, in words that say what to do next, not only on the serial
     # console (D37). Written to the active console as well as ttyS0/tty1.
+    # The candidate list is not decoration: a banner that shows only a generic placeholder
+    # invites the operator to type it verbatim, which then fails as
+    # "cannot inspect /dev/sd with lsblk". Name the real disks instead.
+    candidates=$(lsblk -dno NAME,SIZE,MODEL 2>/dev/null \
+                 | grep -vE '^[[:space:]]*(loop|zram|sr|fd|ram)' || true)
     for tty in /dev/console /dev/tty1 /dev/ttyS0; do
         {
             echo
@@ -107,12 +112,16 @@ fail() {
             echo
             echo "Nothing has been written to any disk."
             echo
+            echo "Whole disks present on this machine (pick one, the big one):"
+            printf '%s\n' "$candidates"
+            echo
             echo "To install, reboot, highlight \"Install Kavi'ka OS (automated)\""
             echo "in the boot menu, press e, and append to the linux line:"
             echo
-            echo "    kavika.target=/dev/sdX kavika.confirm=/dev/sdX"
+            echo "    kavika.target=<DISK> kavika.confirm=<DISK>"
             echo
-            echo "naming the same whole disk twice, then press Ctrl-X."
+            echo "replacing <DISK> in BOTH places with one whole disk"
+            echo "from the list above, then press Ctrl-X."
             echo "========================================================"
             echo
         } > "$tty" 2>/dev/null
