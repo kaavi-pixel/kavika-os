@@ -11,12 +11,14 @@ Confirmed by the user in answer to direct questions:
 - **The HP Envy x360 (1 TB) is the only install target.** The finished OS replaces Windows there.
 - **The Surface Laptop Studio is the test machine**, and is where the product must first "work perfectly".
 - **The Surface Pro 8 is dropped.** Its earlier approvals are withdrawn, not deferred.
-- **The route:** prove it on the Laptop Studio, then replace Windows on the Envy. Nothing is written to the Envy until that point and until a fresh explicit go-ahead.
+- **The route:** prove it on the Laptop Studio, then replace Windows on the Envy.
 - **The Envy's specs stay as recorded** (Ryzen 7 8840HS, 16 GB, 1 TB) — deliberately not re-measured yet.
+- **The Envy's Windows is already gone** (user-reported 24 October 2026: wiped accidentally during an earlier install attempt). The "do not touch the Envy" constraint is therefore moot in practice — there is no Windows left there to preserve — and its internal disk is now just a ~954 GB NVMe.
 
 Consequences:
 
-- **No erase approval covers the Envy.** Its 1 TB internal disk holds Windows and the project builds there. Nothing has been written.
+- **Standing erase permission now covers the test machines and the Envy** (user, 24 October 2026: "EVERY single test computer I have has either been Wiped, or is ok to be Wiped. I give you all permissions."). This does **not** relax the consent gate: the target must still be named explicitly on the kernel command line, and the gate still refuses unknown, mounted, too-small and pseudo disks plus the boot medium itself. Permission to wipe is not a licence to guess *which* disk.
+- **The machine the agent runs on is never a target.** It carries a 237.5 GB Hynix NVMe and holds the repo and the ISOs; the booted machine's 954 GB Samsung NVMe is a different machine, so wiping it cannot destroy the build tree.
 - **The Envy is AMD** (Ryzen 7 8840HS, Radeon 780M, AMD-V), unlike the Intel Tiger Lake Surfaces. Platform-specific findings do not transfer.
 - **Surface-specific work leaves the critical path**: the linux-surface kernel and Type Cover/touch/pen gaps no longer block the product, though they still limit what the Laptop Studio can test.
 
