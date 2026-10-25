@@ -157,11 +157,11 @@ if [ -n "$esp_config" ]; then
       die "the ESP searches for label '$esp_label' but the image is labelled '$actual_label'. UEFI would boot the stock menu, fail to find the media and report 'you need to load the kernel first'."
     fi
   else
-    echo "WARNING: the EFI System Partition does NOT carry the Kavi'ka installer menu."
-    echo "         UEFI media written from this ISO boots the upstream Fedora menu, whose"
-    echo "         entries reference a label this image no longer has, and fails with"
-    echo "         'you need to load the kernel first' (bugtracker D36)."
-    echo "         Rebuild with tools/build-netinst-install.py before trusting this media."
+    # Not an error: the writer also flashes stock Fedora media, which legitimately has no
+    # Kavi'ka menu and boots its own upstream installer. The dangerous case - renamed media
+    # whose ESP still searches for the old label - is caught by the label check above.
+    echo "note: this media carries no Kavi'ka installer menu (expected for a stock Fedora ISO)."
+    echo "      It will boot its own upstream Fedora installer menu."
   fi
 elif [ -n "$esp_offset" ]; then
   echo "note: could not read the ISO's ESP GRUB config (is mtools installed?); skipping the check"
@@ -217,15 +217,23 @@ else
 fi
 
 # A matching SHA-256 only proves the copy is faithful; it cannot tell a good image from a bad
-# one. Re-read the ESP off the DEVICE and confirm the boot path UEFI will actually take.
+# one. Re-read the ESP off the DEVICE and compare it with the image's: the UEFI boot path is
+# the one thing a byte count cannot confirm, and D36 showed a mismatched ESP boots to failure.
+# This is deliberately a comparison rather than "does it say Kavi'ka": the same writer flashes
+# stock Fedora ISOs too, which have no Kavi'ka menu and must not be rejected for it.
 if [ -n "$esp_offset" ] && command -v mtype >/dev/null 2>&1; then
   dev_config=$(mtype -i "${device}@@${esp_offset}" ::/EFI/BOOT/grub.cfg 2>/dev/null || true)
-  if [ -n "$dev_config" ] && printf '%s' "$dev_config" | grep -qF "Install Kavi'ka OS (automated)"; then
-    echo "ESP check on the device: the Kavi'ka installer menu is present; UEFI will boot it."
-  else
-    echo "WARNING: the ${device} EFI System Partition does not expose the Kavi'ka installer" >&2
-    echo "         menu. UEFI boot may land on the upstream Fedora menu and fail with" >&2
-    echo "         'you need to load the kernel first'. See bugtracker D36." >&2
+  if [ -z "$dev_config" ]; then
+    echo "note: could not read the ${device} ESP config; skipping the ESP check" >&2
+  elif [ -n "$esp_config" ] && [ "$dev_config" != "$esp_config" ]; then
+    echo "WARNING: the ${device} EFI System Partition config differs from the image's." >&2
+    echo "         The UEFI boot path does not match what was written (bugtracker D36);" >&2
+    echo "         do not rely on this media booting." >&2
     exit 1
+  else
+    echo "ESP check on the device: the UEFI boot config matches the image."
+    if printf '%s' "$dev_config" | grep -qF "Install Kavi'ka OS (automated)"; then
+      echo "           (this media boots the Kavi'ka installer menu)"
+    fi
   fi
 fi
