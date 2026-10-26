@@ -24,6 +24,8 @@ final code rather than assumed.
 | D38 | The installation medium satisfied every target check, so naming the stick you booted from would erase the medium mid-install | Review while preparing a physical install |
 | D39 | The refusal banner printed a copyable `/dev/sdX` template; the operator typed it verbatim and got a correct-but-bewildering `cannot inspect /dev/sd with lsblk` | The operator's photograph of the banner on real hardware |
 | D40 | The USB writer **rejected stock Fedora ISOs**, demanding the Kavi'ka menu in the ESP of any image it wrote | Writing stock Fedora to an external drive |
+| D42 | The **offline ISO could not install from USB at all**: its kickstart used `cdrom` as the source, which needs an optical drive, so Anaconda reported `Error setting up repositories` and fell to a prompt that cannot install | Rehearsing the real install invocation instead of a CD boot |
+| D43 | The offline repo could not satisfy **`@anaconda-tools`**, which Anaconda installs implicitly; the package transaction died with `No match for argument: nvme-cli` | The same rehearsal, after D42 was fixed and could no longer mask it |
 
 D36 and D40 share a root cause worth naming: **a byte-perfect copy of a broken image is still
 broken, and a check written for one image rejects a different valid one.** D36 was masked because
@@ -71,6 +73,43 @@ Each refusal was **fired and observed**, not merely grepped for in the source:
 In every case the banner states that nothing was written, and the misleading
 `Unable to open input kickstart file` error is gone (count: 0).
 
+## Offline media, end to end, after D42 and D43
+
+The offline ISO was re-rehearsed with the repository fix in place, booted as a USB device:
+
+```
+3) [x] Installation source                     <- no "Error setting up repositories"
+Creating disklabel on /dev/nvme0n1
+Creating efi on /dev/nvme0n1p1 .. nvme0n1p5
+Downloading 2464 RPMs, 3.54 GiB / 3.54 GiB (98%) done.
+Installing rootfiles.noarch (2464/2464)
+KAVIKA-VERIFY: os-release=Kavika
+KAVIKA-VERIFY: default target = graphical
+KAVIKA-VERIFY: display manager enabled: sddm
+KAVIKA-VERIFY: overlay delivered from /run/install/repo/kavika-overlay.cpio
+KAVIKA-VERIFY: ESP fallback EFI/BOOT/BOOTX64.EFI installed
+reboot: Restarting system
+```
+
+The whole install now runs **from the media's own repository, with no optical drive present**,
+and reboots into the installed system.
+
+## Installing to a physical disk via a VM
+
+The Envy's NVMe was installed by passing the **physical disk** into a QEMU guest as an emulated
+**NVMe** device, so the guest targets `/dev/nvme0n1` exactly as the real machine does. This
+deliberately avoids both previous failure modes: there is no boot menu to catch and no device name
+to mistype, because `--test-target` bakes the consent tokens into the entry.
+
+Three things this method requires, each learned the hard way:
+
+- **`-no-reboot`.** The kickstart ends with `reboot`; without it the guest boots the install media
+  again and reinstalls in a loop.
+- **The installer must not resolve by `/dev/sd` letter.** The wrapper script resolves the target by
+  model and serial and refuses this machine's system disk, a partition, or the install media itself.
+- **The initramfs must carry the NVMe driver**, or a disk installed in a VM will not boot in real
+  hardware. Checked after install, not assumed.
+
 ## Media identity
 
 - Volume label renamed to **`KAVIKA`** with *every* upstream label reference rewritten, including
@@ -91,8 +130,11 @@ the checks that were passing at the time.
 ## Still open
 
 - **D41** — installed system brands itself "Live Preview" (cosmetic, needs a design decision).
-- **Physical install on the Envy is unproven.** The operator's attempt reached the consent gate,
-  refused on a mistyped placeholder, and has not yet been retried. Nothing has been written to any
-  machine by this installer outside KVM.
+- **The physical install is under way.** The Envy's own NVMe was attached to the build machine and
+  Kavi'ka is being installed to it directly, by passing the disk into a QEMU guest as an NVMe
+  device (above). This replaces the failed on-target attempts, which never got past the boot menu
+  and the hand-typed consent token. **Still unproven until the disk boots in the Envy itself** —
+  installing in a VM and moving the disk to real hardware is precisely where a host-only initramfs
+  bites.
 - The live-preview ISO still offers a dead `Install Kavi'ka OS` entry that should be stripped.
 - Initial Setup's graphical rendering on first boot remains unverified.
