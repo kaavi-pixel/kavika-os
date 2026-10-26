@@ -299,12 +299,33 @@ class NetinstKickstartTests(unittest.TestCase):
         self.assertIn("kavika.target=/dev/vda kavika.confirm=/dev/vda", compacted)
         self.assertIn("kavika.compact=1", compacted)
 
-    def test_rewrite_kickstart_source_switches_to_cdrom(self):
+    def test_rewrite_kickstart_source_drops_the_url_for_an_offline_build(self):
         ks = 'lang en_GB.UTF-8\nurl --url="https://example.invalid/os/"\ntext\n'
-        self.assertEqual(netinst_builder.rewrite_kickstart_source(ks, "/some/repo"),
-                         'lang en_GB.UTF-8\ncdrom\ntext\n')
+        offline = netinst_builder.rewrite_kickstart_source(ks, "/some/repo")
+        # The source line must go. It must NOT become `cdrom`: this media boots from USB, where
+        # there is no optical drive, so `cdrom` yields "Error setting up repositories" and an
+        # interactive prompt that cannot install. The repo comes from inst.repo on the cmdline.
+        self.assertNotIn("url --url=", offline)
+        for line in offline.splitlines():
+            self.assertNotEqual(line.strip(), "cdrom")
+        self.assertIn("text\n", offline)
         # without a repo dir the network url is preserved
         self.assertEqual(netinst_builder.rewrite_kickstart_source(ks, None), ks)
+
+    def test_offline_build_reaches_its_repo_without_an_optical_drive(self):
+        # The kernel command line must carry the repo, and the entry must not rely on `cdrom`.
+        source = ('set default="1"\nset timeout=60\n'
+                  "search --no-floppy --set=root -l 'Fedora-E-dvd-x86_64-44'\n"
+                  "menuentry 'Install Fedora 44' {\n"
+                  '\tlinux /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Fedora-E-dvd-x86_64-44 quiet\n'
+                  '\tinitrd /images/pxeboot/initrd.img\n}\n')
+        online = netinst_builder.grub_netinst(source)
+        offline = netinst_builder.grub_netinst(source, repo_on_media=True)
+        self.assertNotIn("inst.repo=", online)
+        self.assertIn("inst.repo=hd:LABEL=KAVIKA:/", offline)
+        # it must still select the kickstart and stage2 the same way
+        self.assertIn("inst.ks=hd:LABEL=KAVIKA:/kavika-net.ks", offline)
+        self.assertIn("inst.stage2=hd:LABEL=KAVIKA", offline)
 
 
 if __name__ == "__main__":

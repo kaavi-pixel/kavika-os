@@ -57,7 +57,7 @@ def digest(path: Path) -> str:
 
 
 def grub_netinst(text: str, test_target: str | None = None, test_consent: str | None = None,
-                 compact: bool = False) -> str:
+                 compact: bool = False, repo_on_media: bool = False) -> str:
     """Add an automated 'Install Kavi'ka OS' entry that points at the bundled kickstart.
 
     The entry is inserted first and becomes the default. `test_consent` bakes an arbitrary
@@ -79,10 +79,15 @@ def grub_netinst(text: str, test_target: str | None = None, test_consent: str | 
         extra = f" kavika.target={test_target} kavika.confirm={test_target}"
     if compact:
         extra += " kavika.compact=1"
+    # Offline builds ship their repository on the media, and the only reliable way to reach it is
+    # dracut's hd:LABEL mechanism. A kickstart `cdrom` source CANNOT work here: this media is
+    # normally booted from a USB stick, where there is no optical drive, so Anaconda reports
+    # "Error setting up repositories" and drops to an interactive prompt that cannot install.
+    repo = f" inst.repo=hd:LABEL={LABEL}:/" if repo_on_media else ""
     entry = (
         'menuentry "Install Kavi\'ka OS (automated)" --class fedora --class gnu-linux --class gnu --class os {\n'
         f'\tlinux /images/pxeboot/vmlinuz inst.stage2=hd:LABEL={LABEL} '
-        f'inst.ks=hd:LABEL={LABEL}:{KICKSTART_ON_ISO}{extra} quiet '
+        f'inst.ks=hd:LABEL={LABEL}:{KICKSTART_ON_ISO}{repo}{extra} quiet '
         'console=tty0 console=ttyS0,115200n8\n'
         '\tinitrd /images/pxeboot/initrd.img\n'
         '}\n'
@@ -149,12 +154,13 @@ def extract_esp(base: Path, destination: Path) -> int:
 
 
 def patch_esp_grub(source: Path, destination: Path, test_target: str | None,
-                   test_consent: str | None, compact: bool) -> None:
+                   test_consent: str | None, compact: bool,
+                   repo_on_media: bool = False) -> None:
     """Copy the ESP and rewrite the GRUB config inside it with the same transforms."""
     shutil.copy2(source, destination)
     upstream = subprocess.run(["mtype", "-i", str(destination), "::/EFI/BOOT/grub.cfg"],
                               capture_output=True, text=True, check=True).stdout
-    patched = grub_netinst(upstream, test_target, test_consent, compact)
+    patched = grub_netinst(upstream, test_target, test_consent, compact, repo_on_media)
     scratch = destination.with_suffix(".grub.cfg")
     scratch.write_text(patched, encoding="utf-8")
     subprocess.run(["mcopy", "-o", "-i", str(destination), str(scratch),
@@ -162,13 +168,27 @@ def patch_esp_grub(source: Path, destination: Path, test_target: str | None,
 
 
 def rewrite_kickstart_source(text: str, repo_dir: str | None) -> str:
-    """Point the kickstart at the offline repo bundled on the media, or leave the network url."""
+    """Drop the network url for an offline build, whose repo comes off the media itself.
+
+    Deliberately NOT `cdrom`: this media is normally booted from a **USB stick**, where there is
+    no optical drive at all, so `cdrom` makes Anaconda report "Error setting up repositories" and
+    fall back to a text prompt that cannot install. The bundled repo is reached through dracut
+    instead, via `inst.repo=hd:LABEL=<label>:/` on the kernel command line (see grub_netinst), so
+    the kickstart carries no source line of its own.
+    """
     if not repo_dir:
         return text
     for line in text.splitlines():
         if line.strip().startswith("url --url="):
-            return text.replace(line, "cdrom", 1)
-    raise ValueError("kickstart has no 'url --url=' line to replace with cdrom")
+            return text.replace(
+                line,
+                "# Offline build: the repository ships on this media and is selected with\n"
+                "# inst.repo=hd:LABEL=... on the kernel command line, not by a kickstart source\n"
+                "# line. `cdrom` cannot work here - this media boots from USB, where there is no\n"
+                "# optical drive, and Anaconda then fails with 'Error setting up repositories'.",
+                1,
+            )
+    raise ValueError("kickstart has no 'url --url=' line to drop for the offline build")
 
 
 def main() -> int:
@@ -214,7 +234,10 @@ def main() -> int:
         work = Path(temp_dir)
         overlay_cpio = kavika_overlay.build_overlay_cpio(repo, work)
 
-        # Kickstart: switch the install source to the bundled cdrom repo when --repo-dir is given.
+        # Kickstart: an offline build carries its repository on the media and reaches it through
+        # inst.repo=hd:LABEL=... on the kernel command line (see grub_netinst), so the kickstart
+        # keeps no source line of its own.
+        repo_on_media = repo_dir is not None
         ks_text = kickstart.read_text(encoding="utf-8")
         ks_text = rewrite_kickstart_source(ks_text, str(repo_dir) if repo_dir else None)
         if args.test_skip_firstboot:
@@ -233,7 +256,8 @@ def main() -> int:
             extract_grub(base, upstream, iso_path)
             patched = work / ("patched-" + rel.replace("/", "-"))
             patched.write_text(grub_netinst(upstream.read_text(encoding="utf-8"), args.test_target,
-                                            args.test_consent, args.compact), encoding="utf-8")
+                                            args.test_consent, args.compact, repo_on_media),
+                               encoding="utf-8")
             subprocess.run([grub_check, str(patched)], check=True)
             grub_files[rel] = patched
 
@@ -245,7 +269,7 @@ def main() -> int:
         esp_number = extract_esp(base, esp_upstream)
         esp_patched = work / "esp-patched.img"
         patch_esp_grub(esp_upstream, esp_patched, args.test_target, args.test_consent,
-                       args.compact)
+                       args.compact, repo_on_media)
 
         xorriso_cmd = ["xorriso", "-indev", str(base), "-outdev", str(output),
                        "-volid", LABEL]
@@ -270,7 +294,7 @@ def main() -> int:
             "output_sha256": sha, "output_bytes": output.stat().st_size,
             "architecture": "x86_64", "installer_supported": True,
             "install_method": "dnf (Anaconda) + kickstart, fail-closed device consent",
-            "install_source": ("cdrom (bundled offline repo)" if repo_dir is not None else
+            "install_source": ("hd:LABEL=KAVIKA:/ (bundled offline repo)" if repo_dir is not None else
                                "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Everything/x86_64/os/"),
             "offline_repo_bundled": repo_dir is not None,
             "kickstart": KICKSTART_ON_ISO, "overlay": OVERLAY_ON_ISO,
