@@ -344,15 +344,27 @@ The agent does not perform raw writes to physical disks. The operator runs the c
 
 ## 9. Work breakdown (ordered)
 
-**Status 22 October 2026 (post-validation):** the automated dnf/netinst installer (Path B)
-is built and **verified end-to-end in a disposable KVM guest** — see
-`docs/validation/vm-install-2026-10-22-laptop-studio.md`. Items 1–5 below are done via the
-netinst build (`kavika-net.ks`, `build-netinst-install.py`, the `%pre` consent, the overlay
-`%post`). The live-image "install entry" (the earlier items 2–4 wording) remains an
-*interactive* installer only, because live installs cannot be kickstart-automated. Rungs 1
-and 2 of the validation ladder are done: rung 1 (disposable KVM target + a second fixture
-proven byte-identical) and rung 2 (refusal matrix — none/mismatch/too-small/pseudo all
-refuse and terminate before any storage write). Remaining: rung 3 (physical USB disks),
+**Status 24 October 2026 (post-validation, mid physical rung):** the automated dnf/netinst
+installer (Path B) is built and **verified end-to-end in a disposable KVM guest** — see
+`docs/validation/vm-install-2026-10-22-laptop-studio.md` — and was **re-verified on the current
+code** after the media and refusal path were hardened: install completed, rebooted, and the
+installed system came up with `os-release=Kavika`, `graphical.target`, `sddm` enabled, the overlay
+delivered and 2427/2427 packages; see
+[installer-consent-2026-10-24.md](docs/validation/installer-consent-2026-10-24.md). Items 1–5
+below are done via the netinst build (`kavika-net.ks`, `build-netinst-install.py`, the `%pre`
+consent, the overlay `%post`). The live-image "install entry" (the earlier items 2–4 wording)
+remains an *interactive* installer only, because live installs cannot be kickstart-automated.
+Rungs 1 and 2 of the validation ladder are done: rung 1 (disposable KVM target + a second fixture
+proven byte-identical) and rung 2 (refusal matrix — none/mismatch/too-small/pseudo all refuse and
+terminate before any storage write). **Rung 3 (physical USB) is in progress, and a real attempt
+has already taught us five defects:** the media had to be renamed *and* its ESP's own GRUB config
+patched before it would boot from USB at all (D36); a refusal had to print a readable banner
+instead of leaving a dead pane (D37); the boot medium had to be refused as a target in its own
+right (D38); the banner had to name the machine's **real** disks rather than a copyable
+`/dev/sdX` placeholder, which an operator typed verbatim (D39); and the writer had to stop
+rejecting stock Fedora ISOs, which its Kavi'ka-specific check had started doing (D40). **No
+machine's disk has yet been written to by this installer outside KVM** — the physical attempt
+reached the consent gate and refused on the mistyped placeholder. Remaining: rung 3 completion,
 first-boot opt-in polish (item 7), and recovery rehearsal (item 8).
 
 | # | Item | Size | Done when |
