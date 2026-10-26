@@ -196,6 +196,22 @@ class NetinstKickstartTests(unittest.TestCase):
         self.assertIn("lsblk -no PKNAME", NET_KICKSTART)
         self.assertIn("carries the installation media booted from", NET_KICKSTART)
 
+    def test_installed_system_gets_a_generic_initramfs(self):
+        # D44: dracut defaults to hostonly="yes", which bakes in the install machine's storage
+        # drivers. Install in a VM and move the disk, and the target may have no driver for its
+        # own disk - for an NVMe target, no `nvme` module and an unbootable system.
+        self.assertIn("dracut-config-generic", NET_KICKSTART)
+
+    def test_post_reconciles_the_esp_uuid_with_fstab(self):
+        # D45: if /etc/fstab names a different ESP UUID than the one on the disk, /boot/efi cannot
+        # be mounted, the boot falls into systemd emergency mode, and that asks for the ROOT
+        # password - which cannot exist (rootpw --lock). The operator sees "my password stopped
+        # working" instead of the real fault, so the installer reconciles it and marks it nofail.
+        self.assertIn("KAVIKA-VERIFY: ESP UUID MISMATCH", NET_KICKSTART)
+        self.assertIn("/boot/efi", NET_KICKSTART)
+        self.assertIn("nofail", NET_KICKSTART)
+        self.assertIn("blkid -s UUID -o value", NET_KICKSTART)
+
     def test_scopes_storage_via_generated_include(self):
         self.assertIn("%include /tmp/kavika-storage.ks", NET_KICKSTART)
         self.assertIn("ignoredisk --only-use=$TARGET", NET_KICKSTART)

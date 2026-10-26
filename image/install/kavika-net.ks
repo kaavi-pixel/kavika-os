@@ -58,6 +58,12 @@ parted
 dosfstools
 virt-install
 virt-manager
+# D44: build a GENERIC initramfs. Fedora's dracut default is hostonly="yes", which bakes in the
+# storage drivers of the machine that ran the install. Installing in a VM (or on a different
+# machine) and then moving the disk leaves an initramfs without the drivers the target needs -
+# for an NVMe target that means no `nvme` module and an unbootable system. This package flips
+# dracut to hostonly=no, which is correct for a product meant to be installed and moved.
+dracut-config-generic
 initial-setup
 initial-setup-gui
 %end
@@ -268,6 +274,35 @@ for dm in sddm gdm lightdm; do
 done
 # Read the symlink back, so the install log shows what was actually written, not what was asked.
 echo "KAVIKA-VERIFY: default.target -> $(readlink "$SYSROOT/etc/systemd/system/default.target" 2>/dev/null)" > /dev/console
+
+# D45: the installed system must look for the ESP we actually wrote to. If /etc/fstab names a
+# different ESP UUID, /boot/efi cannot be mounted and the boot falls into systemd emergency mode,
+# which asks for the ROOT password - and root is deliberately locked (rootpw --lock), so NO
+# password can be correct. That reads to an operator as "my password stopped working" and hides
+# the real fault. Compare what fstab expects against the ESP that is really there, and correct it.
+if [ -d "$SYSROOT/boot/efi" ]; then
+    esp_dev=$(findmnt -no SOURCE --target "$SYSROOT/boot/efi" 2>/dev/null)
+    esp_uuid=$(blkid -s UUID -o value "$esp_dev" 2>/dev/null)
+    fstab_uuid=$(sed -n 's|^UUID=\([^ ]*\)[[:space:]]\+/boot/efi.*|\1|p' "$SYSROOT/etc/fstab" 2>/dev/null | head -1)
+    if [ -n "$esp_uuid" ] && [ -n "$fstab_uuid" ]; then
+        if [ "$esp_uuid" = "$fstab_uuid" ]; then
+            echo "KAVIKA-VERIFY: ESP UUID matches fstab ($esp_uuid)" > /dev/console
+        else
+            echo "KAVIKA-VERIFY: ESP UUID MISMATCH disk=$esp_uuid fstab=$fstab_uuid - correcting fstab" > /dev/console
+            sed -i "s|^UUID=$fstab_uuid\([[:space:]]\+/boot/efi\)|UUID=$esp_uuid\1|" "$SYSROOT/etc/fstab"
+            echo "KAVIKA-VERIFY: fstab /boot/efi now -> $(sed -n 's|.*[[:space:]]\(/boot/efi\).*|UUID=|p' "$SYSROOT/etc/fstab" | head -1)$(sed -n 's|^UUID=\([^ ]*\)[[:space:]]\+/boot/efi.*|\1|p' "$SYSROOT/etc/fstab" | head -1)" > /dev/console
+        fi
+    else
+        echo "KAVIKA-VERIFY: could not determine ESP uuid (disk='$esp_uuid' fstab='$fstab_uuid')" > /dev/console
+    fi
+    # An unmountable ESP must never lock the operator out of their own machine: `nofail` keeps
+    # the system bootable, so a future ESP problem is a diagnostic to read rather than a wall.
+    if grep -qE "[[:space:]]/boot/efi[[:space:]]" "$SYSROOT/etc/fstab" && \
+       ! grep -qE "[[:space:]]/boot/efi[[:space:]]+.*nofail" "$SYSROOT/etc/fstab"; then
+        sed -i "s|\([[:space:]]/boot/efi[[:space:]]\+[^[:space:]]*\)|\1,nofail|" "$SYSROOT/etc/fstab"
+        echo "KAVIKA-VERIFY: /boot/efi marked nofail" > /dev/console
+    fi
+fi
 %end
 
 reboot
