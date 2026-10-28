@@ -258,6 +258,23 @@ class NetinstKickstartTests(unittest.TestCase):
         self.assertNotIn("--iscrypted", NET_KICKSTART)  # no hidden hashed credential
         self.assertIn("rootpw --lock", NET_KICKSTART)
 
+    def test_test_only_autologin_removes_password_prompts(self):
+        # A disposable test machine should boot straight into KDE without a password, while the
+        # shipped kickstart remains unchanged. The option must also remove the forced expiry and
+        # make sudo passwordless; otherwise it only moves the password prompt elsewhere.
+        ks = ("user --name=calebz --groups=wheel --password=kavika --plaintext\n"
+              "firstboot --disable\n"
+              "%post --nochroot\n"
+              'chage -R "$SYSROOT" -d 0 calebz 2>/dev/null || chroot "$SYSROOT" chage -d 0 calebz\n'
+              "%end\n")
+        out = netinst_builder.enable_test_autologin(ks)
+        self.assertIn("[Autologin]", out)
+        self.assertIn("User=calebz", out)
+        self.assertIn("Session=plasma", out)
+        self.assertIn("NOPASSWD: ALL", out)
+        self.assertNotIn("chage -R", out)
+        self.assertIn("TEST ONLY", out)
+
     def test_skip_firstboot_test_helper(self):
         # TEST-ONLY helper: Initial Setup is interactive, so a headless run can never reach the
         # display manager unless a throwaway build disables it. It must never be silent about a

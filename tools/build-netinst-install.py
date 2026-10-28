@@ -134,6 +134,36 @@ def skip_firstboot(text: str) -> str:
     raise ValueError("kickstart has no 'firstboot --enable' line to skip")
 
 
+def enable_test_autologin(text: str) -> str:
+    """TEST ONLY: boot a disposable machine straight into KDE with no password prompts.
+
+    This deliberately does not change the shipped kickstart. It removes the forced password
+    expiry, enables SDDM autologin for the install-time account, and makes wheel passwordless
+    for sudo as well. It must never be used for the Envy or another non-disposable target.
+    """
+    expiry = ('chage -R "$SYSROOT" -d 0 calebz 2>/dev/null || '
+              'chroot "$SYSROOT" chage -d 0 calebz')
+    if expiry not in text:
+        raise ValueError("kickstart has no calebz password-expiry line to remove")
+    text = text.replace(expiry, "# TEST ONLY: password expiry removed for disposable autologin", 1)
+    block = '''
+# TEST ONLY: passwordless login and sudo for a disposable test machine. Never ship this.
+mkdir -p "$SYSROOT/etc/sddm.conf.d" "$SYSROOT/etc/sudoers.d"
+cat > "$SYSROOT/etc/sddm.conf.d/50-kavika-test-autologin.conf" <<'SDDM'
+[Autologin]
+User=calebz
+Session=plasma
+SDDM
+printf '%s\n' '%wheel ALL=(ALL) NOPASSWD: ALL' > "$SYSROOT/etc/sudoers.d/90-kavika-test-nopasswd"
+chmod 440 "$SYSROOT/etc/sudoers.d/90-kavika-test-nopasswd"
+echo "KAVIKA-VERIFY: TEST-ONLY passwordless autologin and sudo enabled" > /dev/console
+'''
+    head, marker, tail = text.rpartition("%end")
+    if not marker:
+        raise ValueError("kickstart has no final %end for the test autologin block")
+    return head + block + marker + tail
+
+
 def extract_esp(base: Path, destination: Path) -> int:
     """Copy the base ISO's appended EFI System Partition out to a file; return its number.
 
@@ -203,6 +233,8 @@ def main() -> int:
     parser.add_argument("--test-consent", help="bake an arbitrary kernel-cmdline consent string verbatim (refusal-matrix testing)")
     parser.add_argument("--test-skip-firstboot", action="store_true",
                         help="TEST ONLY: disable Initial Setup so a headless run can reach the display manager")
+    parser.add_argument("--test-autologin", action="store_true",
+                        help="TEST ONLY: passwordless SDDM autologin and sudo for a disposable machine")
     parser.add_argument("--compact", action="store_true",
                         help="bake kavika.compact=1: compact layout and a lower size floor, for a target under 240 GiB (a small test disk). A 64 GiB guest will not fit; provision with --disk-gib 32")
     parser.add_argument("--repo-dir", type=Path, help="bundle this local repo (repodata + *.rpm) onto the media and switch the source to cdrom")
@@ -246,6 +278,8 @@ def main() -> int:
         ks_text = rewrite_kickstart_source(ks_text, str(repo_dir) if repo_dir else None)
         if args.test_skip_firstboot:
             ks_text = skip_firstboot(ks_text)
+        if args.test_autologin:
+            ks_text = enable_test_autologin(ks_text)
         ks_file = work / "kavika-net.ks"
         ks_file.write_text(ks_text, encoding="utf-8")
 
