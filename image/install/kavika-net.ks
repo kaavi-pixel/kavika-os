@@ -236,6 +236,20 @@ rm -rf "$SYSROOT/usr/lib/systemd/system/systemd-tmpfiles-setup.service.d"
 # Installer-only files are meaningless on an installed system.
 rm -f "$SYSROOT/usr/bin/liveinst" "$SYSROOT/usr/libexec/kavika/real-liveinst"
 rm -f "$SYSROOT/usr/local/sbin/kavika-install" "$SYSROOT/usr/lib/kavika/installer/kavika.ks"
+# D41: the overlay carries the LIVE PREVIEW identity, and %post delivers it verbatim, so an
+# installed system announced itself as "Kavi'ka OS 0.1.0 (Live Preview, Fedora KDE 44)" on every
+# boot. An installation is not a preview. Rewrite the identity in the installed root and drop the
+# VARIANT fields rather than leaving a live-image label on a real install.
+for osr in "$SYSROOT/usr/lib/os-release" "$SYSROOT/etc/os-release"; do
+    [ -f "$osr" ] || continue
+    sed -i \
+        -e "s/^VERSION=.*/VERSION=\"0.1.0 (Fedora KDE 44)\"/" \
+        -e "s/^PRETTY_NAME=.*/PRETTY_NAME=\"Kavi'ka OS 0.1.0 (Fedora KDE 44)\"/" \
+        -e "/^VARIANT=/d" \
+        -e "/^VARIANT_ID=/d" \
+        "$osr"
+done
+echo "KAVIKA-VERIFY: installed PRETTY_NAME=$(sed -n 's/^PRETTY_NAME=//p' "$SYSROOT/usr/lib/os-release" 2>/dev/null)" > /dev/console
 # Verification evidence written to the console (serial) for the validation harness.
 if grep -q 'NAME="Kavi' "$SYSROOT/etc/os-release" 2>/dev/null; then
     echo "KAVIKA-VERIFY: os-release=Kavika" > /dev/console

@@ -344,5 +344,36 @@ class NetinstKickstartTests(unittest.TestCase):
         self.assertIn("inst.stage2=hd:LABEL=KAVIKA", offline)
 
 
+class InstalledIdentityTests(unittest.TestCase):
+    def test_d41_installed_identity_drops_live_preview(self):
+        # D41: an installed system announced itself as "Live Preview" because %post delivered the
+        # overlay's os-release verbatim. Assert the rewrite exists AND that it really works on the
+        # overlay's own file, rather than trusting the text of the sed expression.
+        import pathlib, shutil, subprocess, tempfile
+        root = pathlib.Path(__file__).resolve().parents[1]
+        ks = (root / "image" / "install" / "kavika-net.ks").read_text()
+        self.assertIn("/^VARIANT_ID=/d", ks)
+        self.assertIn("/^VARIANT=/d", ks)
+        src = root / "image" / "live-preview" / "root" / "usr" / "lib" / "os-release"
+        self.assertIn("Live Preview", src.read_text())  # the overlay still is a preview
+        with tempfile.TemporaryDirectory() as d:
+            dst = pathlib.Path(d) / "os-release"
+            shutil.copyfile(src, dst)
+            subprocess.run([
+                "sed", "-i",
+                "-e", 's/^VERSION=.*/VERSION="0.1.0 (Fedora KDE 44)"/',
+                "-e", 's/^PRETTY_NAME=.*/PRETTY_NAME="Kavi\'ka OS 0.1.0 (Fedora KDE 44)"/',
+                "-e", "/^VARIANT=/d",
+                "-e", "/^VARIANT_ID=/d",
+                str(dst),
+            ], check=True)
+            out = dst.read_text()
+        self.assertNotIn("Live Preview", out)
+        self.assertNotIn("VARIANT", out)
+        self.assertIn('PRETTY_NAME="Kavi\'ka OS 0.1.0 (Fedora KDE 44)"', out)
+        # VERSION_ID must stay 44 or dnf's $releasever stops resolving on the installed system
+        self.assertIn("VERSION_ID=44", out)
+
+
 if __name__ == "__main__":
     unittest.main()
