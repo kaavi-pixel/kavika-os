@@ -244,9 +244,18 @@ class NetinstKickstartTests(unittest.TestCase):
         self.assertIn("EFI/fedora/shimx64.efi", NET_KICKSTART)
         self.assertIn('cp -f "$ESP/EFI/fedora/shimx64.efi" "$ESP/EFI/BOOT/BOOTX64.EFI"', NET_KICKSTART)
 
-    def test_no_baked_password(self):
-        self.assertNotIn("--password", NET_KICKSTART)
-        self.assertNotIn("plaintext", NET_KICKSTART)
+    def test_temporary_password_is_documented_and_forced_to_change(self):
+        # D46: initial-setup's GUI never displayed and it is ordered before the display manager,
+        # so relying on it for account creation meant the machine never reached a login screen.
+        # The account is now created at install time. A PUBLIC, DOCUMENTED temporary password is
+        # acceptable only with a forced change at first login, and root stays locked.
+        self.assertIn("user --name=calebz", NET_KICKSTART)
+        self.assertIn("--groups=wheel", NET_KICKSTART)
+        self.assertIn("PUBLIC, DOCUMENTED TEMPORARY", NET_KICKSTART)
+        self.assertIn("-d 0 calebz", NET_KICKSTART)
+        self.assertIn("firstboot --disable", NET_KICKSTART)
+        self.assertIn("mask initial-setup.service", NET_KICKSTART)
+        self.assertNotIn("--iscrypted", NET_KICKSTART)  # no hidden hashed credential
         self.assertIn("rootpw --lock", NET_KICKSTART)
 
     def test_skip_firstboot_test_helper(self):

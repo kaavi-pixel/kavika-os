@@ -125,9 +125,13 @@ def skip_firstboot(text: str) -> str:
     """
     out = text.replace("firstboot --enable",
                        "# firstboot --enable  (skipped in this TEST-only build)", 1)
-    if out == text:
-        raise ValueError("kickstart has no 'firstboot --enable' line to skip")
-    return out
+    if out != text:
+        return out
+    if "firstboot --disable" in text:
+        # D46: the shipped design now creates the account at install time and disables firstboot
+        # (initial-setup hung before the display manager), so there is nothing left to skip.
+        return text
+    raise ValueError("kickstart has no 'firstboot --enable' line to skip")
 
 
 def extract_esp(base: Path, destination: Path) -> int:
