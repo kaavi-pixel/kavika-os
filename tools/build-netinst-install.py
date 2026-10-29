@@ -115,6 +115,26 @@ def extract_grub(base: Path, destination: Path, iso_path: str) -> None:
         iso.close()
 
 
+def apply_desktop(text: str, desktop: str) -> str:
+    """Select the installed desktop without forking the installer.
+
+    KDE remains the default and is byte-identical. GNOME uses Fedora's Workstation package
+    group and GDM; everything else (consent, account creation, storage, virtualization and
+    Windows tooling) stays shared. The KWin-specific swipe mechanism does NOT transfer to
+    GNOME and is deliberately not claimed by this transformation.
+    """
+    if desktop == "kde":
+        return text
+    if desktop != "gnome":
+        raise ValueError(f"unsupported desktop: {desktop}")
+    if "@kde-desktop-environment" not in text or "\nsddm\n" not in text:
+        raise ValueError("kickstart does not contain the expected KDE package block")
+    text = text.replace("@kde-desktop-environment", "@workstation-product-environment", 1)
+    text = text.replace("\nsddm\n", "\ngdm\n", 1)
+    text = text.replace("Fedora KDE 44", "Fedora GNOME 44")
+    return text
+
+
 def skip_firstboot(text: str) -> str:
     """TEST ONLY: drop `firstboot --enable` so a build boots straight to the display manager.
 
@@ -229,6 +249,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", type=Path, required=True, help="verified Fedora 44 netinst ISO")
     parser.add_argument("--output", type=Path, required=True, help="new .iso output path")
+    parser.add_argument("--desktop", choices=("kde", "gnome"), default="kde",
+                        help="installed desktop (default kde); GNOME's swipe behaviour is unverified")
     parser.add_argument("--test-target", help="bake kavika.target/confirm for a disposable KVM run (e.g. /dev/vda)")
     parser.add_argument("--test-consent", help="bake an arbitrary kernel-cmdline consent string verbatim (refusal-matrix testing)")
     parser.add_argument("--test-skip-firstboot", action="store_true",
@@ -268,13 +290,14 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory(prefix="kavika-netinst-", dir=output.parent) as temp_dir:
         work = Path(temp_dir)
-        overlay_cpio = kavika_overlay.build_overlay_cpio(repo, work)
+        overlay_cpio = kavika_overlay.build_overlay_cpio(repo, work, desktop=args.desktop)
 
         # Kickstart: an offline build carries its repository on the media and reaches it through
         # inst.repo=hd:LABEL=... on the kernel command line (see grub_netinst), so the kickstart
         # keeps no source line of its own.
         repo_on_media = repo_dir is not None
         ks_text = kickstart.read_text(encoding="utf-8")
+        ks_text = apply_desktop(ks_text, args.desktop)
         ks_text = rewrite_kickstart_source(ks_text, str(repo_dir) if repo_dir else None)
         if args.test_skip_firstboot:
             ks_text = skip_firstboot(ks_text)

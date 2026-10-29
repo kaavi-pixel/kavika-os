@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# First-login GNOME session defaults for the Kavi'ka GNOME build.
+#
+# GNOME's workspace model is not KWin's. This requests two static workspaces instead of
+# dynamic ones, but it does NOT claim that KWin's three-finger swipe-to-Windows mechanism
+# transfers to GNOME. Gesture behaviour and the Windows workspace need separate validation
+# on a GNOME host with a touchpad.
+set -u
+
+MARKER="$HOME/.config/kavika/gnome-session-setup-done"
+[ -f "$MARKER" ] && exit 0
+
+gsettings set org.gnome.mutter dynamic-workspaces false
+gsettings set org.gnome.desktop.wm.preferences num-workspaces 2
+
+mkdir -p "$HOME/.config/kavika"
+touch "$MARKER"

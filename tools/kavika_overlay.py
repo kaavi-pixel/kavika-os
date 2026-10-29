@@ -20,11 +20,20 @@ _EXECUTABLES = (
     "usr/local/bin/kavika-windows-workspace",
     "usr/local/bin/kavika-windows-provision",
     "usr/local/bin/kavika-windows-optin",
+    "usr/local/bin/kavika-gnome-session-setup",
     "usr/local/lib/kavika/launch-windows-vm-linux.py",
     "usr/local/lib/kavika/kavika-windows-media.py",
     "usr/local/sbin/kavika-install",
     "usr/bin/liveinst",
     "usr/bin/plasma-welcome",
+)
+
+
+_KDE_ONLY = (
+    "etc/skel/.config/kwinrc",
+    "etc/skel/.config/kded_device_automounterrc",
+    "usr/bin/plasma-welcome",
+    "usr/share/kwin/scripts/kavika-preview",
 )
 
 
@@ -46,14 +55,26 @@ def normalize_payload_tree(root: Path) -> None:
                     item.write_bytes(fixed)
 
 
-def build_overlay_payload(repo: Path, payload: Path) -> Path:
+def build_overlay_payload(repo: Path, payload: Path, desktop: str = "kde") -> Path:
     """Assemble the overlay payload tree under `payload` and return it.
 
-    `repo` is the repository root (the parent of image/ and tools/). The payload is
-    image/live-preview/root plus the logo, the Windows guest launcher and the installer
-    files, all CRLF-normalized with executable bits set and reproducible timestamps.
+    `repo` is the repository root (the parent of image/ and tools/). KDE remains the default.
+    The GNOME variant removes KWin/Plasma-only files and overlays image/gnome/root; shared
+    identity, account, hardware and Windows-provisioning files stay unchanged.
     """
     shutil.copytree(repo / "image/live-preview/root", payload, ignore=_IGNORE)
+    if desktop == "gnome":
+        for relative in _KDE_ONLY:
+            target = payload / relative
+            if target.is_dir():
+                shutil.rmtree(target)
+            elif target.exists():
+                target.unlink()
+        gnome_root = repo / "image/gnome/root"
+        if gnome_root.is_dir():
+            shutil.copytree(gnome_root, payload, dirs_exist_ok=True, ignore=_IGNORE)
+    elif desktop != "kde":
+        raise ValueError(f"unsupported desktop: {desktop}")
     logo = repo / "assets/branding/kavi-ka-os-logo.png"
     shutil.copy2(logo, payload / "usr/share/kavika/logo.png")
     launcher_dst = payload / "usr/local/lib/kavika/launch-windows-vm-linux.py"
@@ -83,9 +104,9 @@ def build_overlay_payload(repo: Path, payload: Path) -> Path:
     return payload
 
 
-def build_overlay_cpio(repo: Path, work: Path) -> Path:
+def build_overlay_cpio(repo: Path, work: Path, desktop: str = "kde") -> Path:
     """Assemble the overlay payload and emit a clean, root-relative newc cpio of it."""
-    payload = build_overlay_payload(repo, work / "overlay-root")
+    payload = build_overlay_payload(repo, work / "overlay-root", desktop=desktop)
     entries = sorted(p.relative_to(payload).as_posix() for p in payload.rglob("*"))
     cpio_path = work / "kavika-overlay.cpio"
     with cpio_path.open("wb") as archive:

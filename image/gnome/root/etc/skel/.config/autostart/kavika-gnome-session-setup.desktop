@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Kavi'ka GNOME session setup
+Comment=Apply Kavi'ka workspace defaults once per user
+Exec=/usr/local/bin/kavika-gnome-session-setup
+OnlyShowIn=GNOME;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
