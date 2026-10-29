@@ -149,6 +149,14 @@ class ProvisionScriptTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 3)
         self.assertIn("ISO not found", proc.stderr)
 
+    def test_install_uses_a_new_empty_guest_subdirectory(self):
+        # The media builder writes <volume>/media before the launcher starts. Passing the
+        # volume itself as --vm-dir therefore trips the launcher's new-or-empty guard.
+        text = PROVISION.read_text()
+        self.assertIn('GUEST_DIR="$VM_DIR/guest"', text)
+        self.assertIn('--vm-dir "$GUEST_DIR"', text)
+        self.assertIn('MEDIA_DIR="$VM_DIR/media"', text)
+
     def test_missing_launcher_fails_cleanly(self):
         # qemu may or may not be on this host; force the launcher check with a real ISO path.
         with tempfile.TemporaryDirectory() as td:

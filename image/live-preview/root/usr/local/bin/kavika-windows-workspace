@@ -23,7 +23,23 @@
 
 set -u
 
-VM_DIR="${KAVIKA_WINDOWS_VM_DIR:-$HOME/.local/share/kavika/windows}"
+if [ -n "${KAVIKA_WINDOWS_VM_DIR:-}" ]; then
+    ROOT_DIR="$KAVIKA_WINDOWS_VM_DIR"
+else
+    KAVIKA_WINDOWS_VOLUME="${KAVIKA_WINDOWS_VOLUME:-/var/lib/kavika/windows}"
+    if [ -d "$KAVIKA_WINDOWS_VOLUME" ] && [ -w "$KAVIKA_WINDOWS_VOLUME" ]; then
+        ROOT_DIR="$KAVIKA_WINDOWS_VOLUME"
+    else
+        ROOT_DIR="$HOME/.local/share/kavika/windows"
+    fi
+fi
+# New provisions live in guest/ so the launcher's new-or-empty directory guard is satisfied.
+# Keep supporting guests provisioned directly under the volume by older tooling.
+if [ -f "$ROOT_DIR/guest/windows11.qcow2" ]; then
+    VM_DIR="$ROOT_DIR/guest"
+else
+    VM_DIR="$ROOT_DIR"
+fi
 WINDOWS_DESKTOP="${KAVIKA_WINDOWS_DESKTOP:-2}"
 LAUNCHER="${KAVIKA_WINDOWS_LAUNCHER:-/usr/local/lib/kavika/launch-windows-vm-linux.py}"
 BOOT_ESP="${KAVIKA_WINDOWS_BOOT_ESP:-$VM_DIR/boot-esp.img}"
@@ -59,7 +75,13 @@ switch_to_windows_desktop() {
             fi
         fi
     done
-    say "could not switch to desktop $WINDOWS_DESKTOP (no qdbus6/qdbus, or KWin did not answer); continuing"
+    if command -v busctl >/dev/null 2>&1; then
+        if busctl --user call org.kde.KWin /KWin org.kde.KWin setCurrentDesktop i \
+                "$WINDOWS_DESKTOP" >/dev/null 2>&1; then
+            return 0
+        fi
+    fi
+    say "could not switch to desktop $WINDOWS_DESKTOP (no qdbus6/qdbus/busctl, or KWin did not answer); continuing"
     return 1
 }
 

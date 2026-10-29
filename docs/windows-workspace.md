@@ -82,10 +82,11 @@ no external media is needed to start it.
 
 **Not verified. Do not claim otherwise:**
 
-- **The desktop switch has never been executed on KDE.** This host runs GNOME on Wayland, so
-  there is no KWin, no `qdbus6`, and no touchpad gesture stack to test against. The call used,
-  `qdbus6 org.kde.KWin /KWin org.kde.KWin.setCurrentDesktop <n>`, is the documented one and is
-  reported working on current Plasma 6, but it must be confirmed on an actual KDE host.
+- **The desktop switch still needs on-hardware confirmation.** This host runs GNOME on Wayland, so
+  there is no KWin or touchpad gesture stack to test against. The primary call is
+  `qdbus6 org.kde.KWin /KWin org.kde.KWin.setCurrentDesktop <n>`. After D49 there is also a
+  systemd-native fallback, `busctl --user call org.kde.KWin /KWin org.kde.KWin setCurrentDesktop i <n>`,
+  because qdbus is not guaranteed to be installed.
 - **No swipe has ever been performed.** Touchpad gestures cannot be exercised in a VM (no
   touchpad) and this host is GNOME. The three-finger behaviour is Plasma's documented default,
   not something measured here.
@@ -150,3 +151,9 @@ Asked directly on 23 October 2026. Three independent reasons, any one of which i
 The installed media do now ship the tooling, so the shortest real route is: **install** to a
 disk of at least 240 GiB, boot it, then `kavika-windows-provision --iso /path/to/Windows11.iso`,
 then `kavika-windows-workspace`.
+
+**D49 path correction (29 October 2026):** new provisions place the VM in
+`<volume>/guest` and the boot media in `<volume>/media`; the launcher requires a new or empty VM
+directory, so media and guest state cannot share one directory. The workspace resolves the same
+paths, with legacy direct-under-volume guests still supported. Compact installations use a smaller
+guest allocation such as `--disk-gib 32` rather than the default 64 GiB.

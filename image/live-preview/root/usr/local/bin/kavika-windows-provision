@@ -30,6 +30,9 @@ else
     VM_DIR="$HOME/.local/share/kavika/windows"
 fi
 MEDIA_DIR="$VM_DIR/media"
+# The launcher requires a NEW or EMPTY --vm-dir. Media is built first, so using the volume
+# itself would fail that guard before Windows Setup starts. Keep the two separate.
+GUEST_DIR="$VM_DIR/guest"
 LAUNCHER="${KAVIKA_WINDOWS_LAUNCHER:-/usr/local/lib/kavika/launch-windows-vm-linux.py}"
 MEDIA_BUILDER="${KAVIKA_WINDOWS_MEDIA_TOOL:-/usr/local/lib/kavika/kavika-windows-media.py}"
 ANSWER="${KAVIKA_WINDOWS_ANSWER:-/usr/share/kavika/autounattend.xml}"
@@ -72,7 +75,7 @@ DRY_RUN=0
 while [ $# -gt 0 ]; do
     case "$1" in
         --iso) ISO="${2:-}"; shift 2 ;;
-        --vm-dir) VM_DIR="${2:-}"; MEDIA_DIR="$VM_DIR/media"; shift 2 ;;
+        --vm-dir) VM_DIR="${2:-}"; MEDIA_DIR="$VM_DIR/media"; GUEST_DIR="$VM_DIR/guest"; shift 2 ;;
         --disk-gib) DISK_GIB="${2:-}"; shift 2 ;;
         --dry-run) DRY_RUN=1; shift ;;
         -h|--help) usage; exit 0 ;;
@@ -111,14 +114,14 @@ fi
 
 mkdir -p "$MEDIA_DIR"
 
-say "guest directory: $VM_DIR"
+say "guest directory: $GUEST_DIR"
 say "building the boot ESP and answer stick from $ISO ..."
 if ! "$PYTHON" "$MEDIA_BUILDER" --iso "$ISO" --out-dir "$MEDIA_DIR" --answer "$ANSWER"; then
     say "media build failed; nothing was installed"
     exit 5
 fi
 
-LAUNCH_ARGS=(--iso "$ISO" --vm-dir "$VM_DIR" --disk-gib "$DISK_GIB"
+LAUNCH_ARGS=(--iso "$ISO" --vm-dir "$GUEST_DIR" --disk-gib "$DISK_GIB"
              --guest-mib "$MEM_MIB" --cpus "$CPUS"
              --esp-image "$MEDIA_DIR/esp.img" --answer-image "$MEDIA_DIR/af.img"
              --display gtk --allow-reboot)

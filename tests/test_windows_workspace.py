@@ -79,6 +79,20 @@ class WindowsWorkspaceTests(unittest.TestCase):
             self.assertEqual(proc.returncode, 0, proc.stderr)
             return json.loads(record.read_text(encoding="utf-8"))
 
+    def test_workspace_uses_the_dedicated_volume_and_guest_subdirectory(self):
+        # The provisioner prefers /var/lib/kavika/windows and installs into its guest/
+        # subdirectory. The workspace must look in the same place, not only under $HOME.
+        text = SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("KAVIKA_WINDOWS_VOLUME", text)
+        self.assertIn('/var/lib/kavika/windows', text)
+        self.assertIn('$ROOT_DIR/guest', text)
+
+    def test_desktop_switch_has_a_busctl_fallback(self):
+        # qdbus is not guaranteed to be installed on the KDE system. busctl comes with
+        # systemd and can make the same KWin call without adding a package dependency.
+        text = SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("busctl --user call org.kde.KWin /KWin org.kde.KWin setCurrentDesktop i", text)
+
     def test_self_contained_guest_starts_without_a_boot_esp(self):
         # Since D21 the installed guest owns its boot files, so the ESP is optional.
         with tempfile.TemporaryDirectory() as td:

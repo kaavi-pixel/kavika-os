@@ -133,7 +133,8 @@ Everything in these tables is already tracked in features.md and the implementat
 2. **Finish the Envy account repair** through the updated KAVIKA media's **Troubleshooting → Rescue a Fedora system** path, then boot its own disk. D47 was not reproducible in the VM; do not change the shared account-creation logic based on that report alone.
 3. **D41 and D46 are fixed in source and verified**; the installed identity is Kavi'ka OS and first boot reaches SDDM/KDE.
 4. **Live preview's `Install Kavi'ka OS` entry** remains a known dead end and the live image remains diagnostic only.
-5. **Then the product milestones**: wire the Windows guest and the swipe into a booted installed system, the opt-in dialog in a real KDE session, cross-OS file sharing (F07–F09), VM lifecycle (R04/T12/T15), updates and recovery/rollback (O04/T22), Secure Boot validation (T21).
+5. **Complete Surface Windows provisioning with the D49-fixed scripts**, then verify the full-screen guest and three-finger switch on the touchpad.
+6. **Then the remaining product milestones**: the opt-in dialog in a real KDE session, cross-OS file sharing (F07–F09), VM lifecycle (R04/T12/T15), updates and recovery/rollback (O04/T22), Secure Boot validation (T21).
 
 ## Repository/publishing
 
