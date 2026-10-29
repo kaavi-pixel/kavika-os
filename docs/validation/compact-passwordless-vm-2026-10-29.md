@@ -78,6 +78,14 @@ smaller disk allocation (for example `--disk-gib 32`), not the default 64 GiB.
 
 ## Physical follow-up
 
-The first physical KIOXIA attempt was OOM-killed (D48). The physical rerun script now uses 3 GiB
-and its dry-run passes against the correctly identified target. A raw physical write still requires
-the operator's interactive sudo command; this VM result does not claim that write has happened.
+The first physical KIOXIA attempt was OOM-killed (D48). The 3 GiB rerun **completed successfully**
+on 29 October 2026. Direct disk inspection confirmed the ESP contents, all five fstab UUIDs, the
+account and autologin configuration, the Kavi'ka identity and a generic initramfs. The initramfs
+contained **15 NVMe entries**. A separate read-only (`-snapshot`) boot of the physical disk then
+reached the Kavi'ka/Plasma first-run wizard.
+
+Evidence: [kioxia-first-boot-2026-10-29.png](../evidence/kioxia-first-boot-2026-10-29.png)
+
+The disk was stopped and unmounted before handover. Refitting it in the other test computer is the
+remaining hardware-specific check; the VM and physical-disk boot results above are not claims about
+that machine's firmware or GPU.
